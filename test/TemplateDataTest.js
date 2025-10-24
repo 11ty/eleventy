@@ -1,6 +1,7 @@
 import test from "ava";
 import semver from "semver";
 import { createRequire } from "module";
+import { Merge } from "@11ty/eleventy-utils";
 
 import TemplateData from "../src/Data/TemplateData.js";
 import FileSystemSearch from "../src/FileSystemSearch.js";
@@ -696,9 +697,10 @@ test("getTemplateDataFileGlob", async (t) => {
   ]);
 });
 
-test("TemplateData.merge", (t) => {
+// https://github.com/11ty/eleventy/issues/3937
+test("TemplateData.merge is now Merge()", (t) => {
   t.deepEqual(
-    TemplateData.merge(
+    Merge(
       {
         tags: [1, 2, 3],
       },

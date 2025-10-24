@@ -1,9 +1,8 @@
-import { TemplatePath } from "@11ty/eleventy-utils";
+import { Merge, TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
 import TemplateLayoutPathResolver from "./TemplateLayoutPathResolver.js";
 import TemplateContent from "./TemplateContent.js";
-import TemplateData from "./Data/TemplateData.js";
 import layoutCache from "./LayoutCache.js";
 
 // const debug = debugUtil("Eleventy:TemplateLayout");
@@ -173,7 +172,7 @@ class TemplateLayout extends TemplateContent {
 		}
 
 		// Deep merge of layout front matter
-		let data = TemplateData.mergeDeep(this.config.dataDeepMerge, {}, ...dataToMerge);
+		let data = Merge({}, ...dataToMerge);
 		delete data[this.config.keys.layout];
 
 		return data;

@@ -2,7 +2,7 @@ import path from "node:path";
 import { statSync } from "node:fs";
 
 import lodash from "@11ty/lodash-custom";
-import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
+import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
 import chalk from "./Adapters/Packages/chalk.js";
@@ -398,14 +398,7 @@ class Template extends TemplateContent {
 		}
 
 		try {
-			let mergedData = TemplateData.mergeDeep(
-				this.config.dataDeepMerge,
-				{},
-				globalData,
-				mergedLayoutData,
-				localData,
-				frontMatterData,
-			);
+			let mergedData = Merge({}, globalData, mergedLayoutData, localData, frontMatterData);
 
 			if (this.config.freezeReservedData) {
 				ReservedData.check(mergedData);
