@@ -9,7 +9,6 @@ import chalk from "./Adapters/Packages/chalk.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
 import getDateFromGitLastUpdated from "./Util/DateGitLastUpdated.js";
 import getDateFromGitFirstAdded from "./Util/DateGitFirstAdded.js";
-import TemplateData from "./Data/TemplateData.js";
 import TemplateContent from "./TemplateContent.js";
 import TemplatePermalink from "./TemplatePermalink.js";
 import TemplateLayout from "./TemplateLayout.js";
@@ -24,6 +23,7 @@ import { fromISOtoDateUTC } from "./Util/DateParse.js";
 import ReservedData from "./Util/ReservedData.js";
 import TransformsUtil from "./Util/TransformsUtil.js";
 import { FileSystemManager } from "./Util/FileSystemManager.js";
+import { TemplatePreprocessors } from "./TemplatePreprocessors.js";
 
 const { set: lodashSet, get: lodashGet } = lodash;
 
@@ -34,6 +34,7 @@ class Template extends TemplateContent {
 	#logger;
 	#fsManager;
 	#stats;
+	#preprocessorCache;
 
 	constructor(templatePath, templateData, extensionMap, config) {
 		debugDev("new Template(%o)", templatePath);
@@ -63,6 +64,8 @@ class Template extends TemplateContent {
 
 		this.behavior = new TemplateBehavior(this.config);
 		this.behavior.setOutputFormat(this.outputFormat);
+
+		this.templatePreprocessor = new TemplatePreprocessors(this.config.preprocessors);
 	}
 
 	#initFileSlug() {
@@ -128,6 +131,10 @@ class Template extends TemplateContent {
 		types = this.getResetTypes(types);
 
 		super.resetCaches(types);
+
+		if (types.data || types.read) {
+			this.#preprocessorCache = undefined;
+		}
 
 		if (types.data) {
 			delete this._dataCache;
@@ -710,82 +717,24 @@ class Template extends TemplateContent {
 		});
 	}
 
-	static async runPreprocessors(inputPath, content, data, preprocessors) {
-		let skippedVia = false;
-		for (let [name, preprocessor] of Object.entries(preprocessors)) {
-			let { filter, callback } = preprocessor;
-
-			let filters;
-			if (Array.isArray(filter)) {
-				filters = filter;
-			} else if (typeof filter === "string") {
-				filters = filter.split(",");
-			} else {
-				throw new Error(
-					`Expected file extensions passed to "${name}" content preprocessor to be a string or array. Received: ${filter}`,
-				);
-			}
-
-			filters = filters.map((extension) => {
-				if (extension.startsWith(".") || extension === "*") {
-					return extension;
-				}
-
-				return `.${extension}`;
-			});
-
-			if (!filters.some((extension) => extension === "*" || inputPath.endsWith(extension))) {
-				// skip
-				continue;
-			}
-
-			try {
-				let ret = await callback.call(
-					{
-						inputPath,
-					},
-					data,
-					content,
-				);
-
-				// Returning explicit false is the same as ignoring the template
-				if (ret === false) {
-					skippedVia = name;
-					continue;
-				}
-
-				// Different from transforms: returning falsy (not false) here does nothing (skips the preprocessor)
-				if (ret) {
-					content = ret;
-				}
-			} catch (e) {
-				throw new EleventyBaseError(
-					`Preprocessor \`${name}\` encountered an error when transforming ${inputPath}.`,
-					e,
-				);
-			}
+	async runPreprocessors(data) {
+		// @cachedproperty
+		if (!this.#preprocessorCache) {
+			this.#preprocessorCache = this.templatePreprocessor.runAll(this, data);
 		}
 
-		return {
-			skippedVia,
-			content,
-		};
+		return this.#preprocessorCache;
 	}
 
 	async getTemplates(data) {
-		let content = await this.getPreRender();
-		let { skippedVia, content: rawInput } = await Template.runPreprocessors(
-			this.inputPath,
-			content,
-			data,
-			this.config.preprocessors,
-		);
+		let { skippedVia: skippedViaPreprocessorName, content: rawInput } =
+			await this.runPreprocessors(data);
 
-		if (skippedVia) {
+		if (skippedViaPreprocessorName) {
 			debug(
 				"Skipping %o, the %o preprocessor returned an explicit `false`",
 				this.inputPath,
-				skippedVia,
+				skippedViaPreprocessorName,
 			);
 			return [];
 		}

@@ -69,6 +69,11 @@ class TemplateMap {
 
 		let data = await template.getData();
 		let entries = await template.getTemplateMapEntries(data);
+		let { skippedVia } = await template.runPreprocessors(data);
+
+		if (skippedVia) {
+			return;
+		}
 
 		for (let map of entries) {
 			this.map.push(map);

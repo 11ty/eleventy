@@ -281,3 +281,41 @@ test("addPreprocessor and addExtension with custom `compile` (new render functio
   t.is(results[0].url, `/template/`);
   t.is(results[0].content.trim(), `Compiled content`);
 });
+
+// #3933
+test("Tags in pages excluded with preprocessing should not populate collections props", async (t) => {
+  let preprocessorRuns = 0;
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addPreprocessor("drafts", "njk", (data, content) => {
+        preprocessorRuns++;
+        if(data.draft) {
+          return false;
+        }
+        return `Hello ${content}`;
+      });
+
+      eleventyConfig.addTemplate("paged.njk", "{{ tag }}", {
+        pagination: {
+          data: "collections",
+          size: 1,
+          alias: "tag",
+          filter: ["all"],
+        },
+        permalink: "/{{ tag }}/"
+      });
+      eleventyConfig.addTemplate("source.njk", "Before", { tags: ["yep"] });
+      eleventyConfig.addTemplate("source-draft.njk", "Before", { draft: true, tags: ["nope"] });
+    }
+  });
+
+  let results = await elev.toJSON();
+  t.is(preprocessorRuns, 3);
+  t.is(results.length, 2);
+  t.truthy(results.find(entry => entry.inputPath.endsWith("source.njk")));
+  t.falsy(results.find(entry => entry.inputPath.endsWith("source-draft.njk")));
+
+  let pages = results.filter(entry => entry.inputPath.endsWith("paged.njk"));
+  t.is(pages.length, 1);
+  t.is(pages[0].content, "Hello yep");
+});
