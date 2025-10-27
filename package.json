@@ -161,7 +161,7 @@
 		"please-upgrade-node": "^3.2.0",
 		"posthtml": "^0.16.6",
 		"posthtml-match-helper": "^2.0.3",
-		"semver": "^7.7.2",
+		"semver": "^7.7.3",
 		"tinyglobby": "^0.2.14"
 	},
 	"overrides": {
