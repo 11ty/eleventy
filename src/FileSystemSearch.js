@@ -33,10 +33,6 @@ class FileSystemSearch {
 
 		// Strip leading slashes from everything!
 		globs = globs.map((entry) => {
-			// Remap absolute paths to relative paths so that ignores work as expected with cwd, #3896
-			if (path.isAbsolute(entry)) {
-				entry = path.relative(path.resolve("."), entry);
-			}
 			return TemplatePath.stripLeadingDotSlash(entry);
 		});
 

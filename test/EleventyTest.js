@@ -884,16 +884,17 @@ test("setInputDirectory config method #1503 in a plugin throws error", async (t)
 test("Accepts absolute paths for input and output", async (t) => {
   let input = path.resolve("./test/noop/");
   let output = path.resolve("./test/noop/_site");
+
   let elev = new Eleventy(input, output);
 
   let results = await elev.toJSON();
 
   // trailing slashes are expected
-  t.is(PathNormalizer.normalizeSeperator(elev.directories.input), PathNormalizer.normalizeSeperator(path.resolve("./test/noop/") + path.sep));
-  t.is(PathNormalizer.normalizeSeperator(elev.directories.includes), PathNormalizer.normalizeSeperator(path.resolve("./test/noop/_includes/") + path.sep));
-  t.is(PathNormalizer.normalizeSeperator(elev.directories.data), PathNormalizer.normalizeSeperator(path.resolve("./test/noop/_data/") + path.sep));
+  t.is(PathNormalizer.normalizeSeperator(elev.directories.input), PathNormalizer.normalizeSeperator("./test/noop/"));
+  t.is(PathNormalizer.normalizeSeperator(elev.directories.includes), PathNormalizer.normalizeSeperator("./test/noop/_includes/"));
+  t.is(PathNormalizer.normalizeSeperator(elev.directories.data), PathNormalizer.normalizeSeperator("./test/noop/_data/"));
   t.is(elev.directories.layouts, undefined);
-  t.is(PathNormalizer.normalizeSeperator(elev.directories.output), PathNormalizer.normalizeSeperator(path.resolve("./test/noop/_site/") + path.sep));
+  t.is(PathNormalizer.normalizeSeperator(elev.directories.output), PathNormalizer.normalizeSeperator("./test/noop/_site/"));
 });
 
 test("Accepts absolute paths urls for input and output, results output #3805", async (t) => {
