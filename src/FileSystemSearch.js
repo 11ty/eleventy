@@ -1,4 +1,3 @@
-import path from "node:path";
 import { glob } from "tinyglobby";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
