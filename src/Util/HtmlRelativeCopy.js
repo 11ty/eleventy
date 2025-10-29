@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "node:path";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import isValidUrl from "../Util/ValidUrl.js";
@@ -103,6 +104,78 @@ class HtmlRelativeCopy {
 	getFilePathRelativeToProjectRoot(ref, contextFilePath) {
 		let dir = TemplatePath.getDirFromFilePath(contextFilePath);
 		return TemplatePath.join(dir, ref);
+	}
+
+	/**
+	 * Recursively walk a directory and collect file paths matching a pattern.
+	 * This is a simple manual glob matcher (supports *, **, and ? via isGlobMatch).
+	 */
+	#walkAndCollect(dir, pattern, results, dotOpt) {
+		const entries = fs.readdirSync(dir, { withFileTypes: true });
+		for (const entry of entries) {
+			// Skip dotfiles if dotOpt=false
+			if (!dotOpt && entry.name.startsWith(".")) {
+				continue;
+			}
+			const full = path.join(dir, entry.name);
+			if (entry.isDirectory()) {
+				this.#walkAndCollect(full, pattern, results, dotOpt);
+			} else if (isGlobMatch(full, [pattern])) {
+				results.push(full);
+			}
+		}
+		return results;
+	}
+
+	/**
+	 * Data Cascade Option: copies files declared via `eleventyCopy`
+	 */
+	copyFromDataCascade(globs, tmplInputPath, tmplOutputPath) {
+		if (!globs) return;
+
+		const list = Array.isArray(globs) ? globs : [globs];
+		if (list.length === 0) return;
+
+		const inputDir = TemplatePath.getDirFromFilePath(tmplInputPath);
+		const outDir = TemplatePath.getDirFromFilePath(tmplOutputPath);
+		const dotOpt = !!this.#copyOptions.dot;
+
+		for (const g of list) {
+			if (!g || typeof g !== "string") continue;
+
+			const pattern = TemplatePath.join(inputDir, g);
+
+			// Gather matching files manually
+			let matches = [];
+			const rootDir = fs.existsSync(inputDir) ? inputDir : process.cwd();
+			try {
+				this.#walkAndCollect(rootDir, pattern, matches, dotOpt);
+			} catch (e) {
+				if (this.#failOnError) throw e;
+				continue;
+			}
+
+			for (const source of matches) {
+				if (!this.exists(source)) {
+					if (this.#failOnError) {
+						throw new Error(
+							"Missing input file for `html-relative` Data Cascade Copy: " +
+								TemplatePath.absolutePath(source),
+						);
+					}
+					continue;
+				}
+
+				const ref = path.relative(inputDir, source);
+				const target = TemplatePath.join(outDir, ref);
+
+				this.#userConfig.emit("eleventy#copy", {
+					source,
+					target,
+					options: this.#copyOptions,
+				});
+			}
+		}
 	}
 
 	copy(fileRef, tmplInputPath, tmplOutputPath) {
