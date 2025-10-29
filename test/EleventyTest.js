@@ -429,8 +429,10 @@ test("#142: date 'git Last Modified' populates page.date", async (t) => {
   let results = await elev.toJSON();
   let [result] = results;
 
-  // This doesn’t test the validity of the function, only that it populates page.date.
+  // Warning: this doesn’t test the validity of the function, only that it populates page.date.
   let comparisonDate = await DateGitLastUpdated("./test/stubs-142/index.njk");
+  t.truthy(result.content.trim());
+  t.truthy(comparisonDate.getTime());
   t.is(result.content.trim(), "" + comparisonDate.getTime());
 });
 
@@ -541,6 +543,8 @@ test("#2224: date 'git created' populates page.date", async (t) => {
 
   // This doesn’t test the validity of the function, only that it populates page.date.
   let comparisonDate = await DateGitFirstAdded("./test/stubs-2224/index.njk");
+  t.truthy(result.content.trim());
+  t.truthy(comparisonDate.getTime());
   t.is(result.content.trim(), "" + comparisonDate.getTime());
 });
 

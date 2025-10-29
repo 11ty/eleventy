@@ -8,6 +8,7 @@ async function getGitLastUpdatedTimeStamp(filePath) {
 			// %at author date, UNIX timestamp
 			["log", "-1", "--format=%at", filePath],
 		);
+		// parseInt removes trailing \n
 		return parseInt(timestamp, 10) * 1000;
 	} catch (e) {
 		// do nothing

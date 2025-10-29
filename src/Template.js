@@ -1063,6 +1063,7 @@ class Template extends TemplateContent {
 				if (dateValue.toLowerCase() === "git last modified") {
 					let d = await getDateFromGitLastUpdated(this.inputPath);
 					if (d) {
+						debug(`getMappedDate: found git last modified date for ${this.inputPath}: %o`, d);
 						return d;
 					}
 
@@ -1075,6 +1076,7 @@ class Template extends TemplateContent {
 				if (dateValue.toLowerCase() === "git created") {
 					let d = await getDateFromGitFirstAdded(this.inputPath);
 					if (d) {
+						debug(`getMappedDate: found git created date for ${this.inputPath}: %o`, d);
 						return d;
 					}
 
