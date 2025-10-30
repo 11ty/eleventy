@@ -120,6 +120,7 @@ test("Eleventy file watching", async (t) => {
   await elev.startWatch();
 
   let { targets, ignores } = await elev.getWatchedTargets();
+  await elev.stopWatch();
 
   t.deepEqual(targets, [
     "./package.json",
@@ -129,10 +130,6 @@ test("Eleventy file watching", async (t) => {
     "./.gitignore",
     "./.eleventyignore",
     "./test/stubs/.eleventyignore",
-    "./.eleventy.js",
-    "./eleventy.config.js",
-    "./eleventy.config.mjs",
-    "./eleventy.config.cjs",
     "./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js}",
     "./test/stubs/deps/dep1.cjs",
     "./test/stubs/deps/dep2.cjs",
@@ -143,8 +140,6 @@ test("Eleventy file watching", async (t) => {
   t.true(ignores.includes("test/stubs/_site/**"));
   t.true(ignores.includes("./.git/**"));
   t.true(ignores.includes(".cache"));
-
-  await elev.stopWatch();
 });
 
 test("Eleventy file watching (don’t watch deps of passthrough copy .js files)", async (t) => {
@@ -156,9 +151,10 @@ test("Eleventy file watching (don’t watch deps of passthrough copy .js files)"
   await elev.eleventyFiles.getFiles();
   await elev.startWatch();
 
-  t.deepEqual(await elev.eleventyFiles.getWatchPathCache(), ["./test/stubs-1325/test.11ty.js"]);
+  let paths = await elev.eleventyFiles.getWatchPathCache();
+  await elev.stopWatch();
 
-   await elev.stopWatch();
+  t.deepEqual(paths, ["./test/stubs-1325/test.11ty.js"]);
 });
 
 test("Eleventy file watching (no JS dependencies)", async (t) => {
@@ -175,6 +171,8 @@ test("Eleventy file watching (no JS dependencies)", async (t) => {
 
   let { targets, ignores } = await elev.getWatchedTargets();
 
+  await elev.stopWatch();
+
   t.deepEqual(targets, [
     "./package.json",
     "./test/stubs/**/*.njk",
@@ -183,10 +181,6 @@ test("Eleventy file watching (no JS dependencies)", async (t) => {
     "./.gitignore",
     "./.eleventyignore",
     "./test/stubs/.eleventyignore",
-    "./.eleventy.js",
-    "./eleventy.config.js",
-    "./eleventy.config.mjs",
-    "./eleventy.config.cjs",
     "./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js}",
   ]);
 
@@ -195,8 +189,6 @@ test("Eleventy file watching (no JS dependencies)", async (t) => {
   t.true(ignores.includes("test/stubs/_site/**"));
   t.true(ignores.includes("./.git/**"));
   t.true(ignores.includes(".cache"));
-
-   await elev.stopWatch();
 });
 
 test("Eleventy set input/output, one file input", async (t) => {

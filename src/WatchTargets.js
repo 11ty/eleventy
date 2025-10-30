@@ -1,5 +1,6 @@
 import { TemplatePath } from "@11ty/eleventy-utils";
 import { DepGraph } from "dependency-graph";
+import { mergeGraphs } from "@11ty/dependency-tree-esm";
 
 import JavaScriptDependencies from "./Util/JavaScriptDependencies.js";
 import eventBus from "./EventBus.js";
@@ -74,7 +75,7 @@ export default class WatchTargets {
 		}
 	}
 
-	static normalize(targets) {
+	static toArray(targets) {
 		if (!targets) {
 			return [];
 		} else if (Array.isArray(targets)) {
@@ -86,11 +87,11 @@ export default class WatchTargets {
 
 	// add only a target
 	add(targets) {
-		this.addRaw(WatchTargets.normalize(targets));
+		this.addRaw(WatchTargets.toArray(targets));
 	}
 
 	static normalizeToGlobs(targets) {
-		return WatchTargets.normalize(targets).map((entry) =>
+		return WatchTargets.toArray(targets).map((entry) =>
 			TemplatePath.convertToRecursiveGlobSync(entry),
 		);
 	}
@@ -101,16 +102,35 @@ export default class WatchTargets {
 			return;
 		}
 
-		targets = WatchTargets.normalize(targets);
-		let deps = await JavaScriptDependencies.getDependencies(targets, this.isEsm);
+		targets = WatchTargets.toArray(targets);
+		let cjsDeps = Array.from(
+			await JavaScriptDependencies.getCommonJsDependencies(targets, this.isEsm),
+		);
 		if (filterCallback) {
-			deps = deps.filter(filterCallback);
+			cjsDeps = cjsDeps.filter(filterCallback);
+		}
+		for (let target of targets) {
+			this.addToDependencyGraph(target, cjsDeps);
+		}
+		this.addRaw(cjsDeps, true);
+
+		let esmGraph = await JavaScriptDependencies.getEsmGraph(targets, this.isEsm);
+		if (filterCallback) {
+			for (let node of esmGraph.overallOrder()) {
+				if (!filterCallback(node)) {
+					esmGraph.removeNode(node);
+				}
+			}
 		}
 
-		for (let target of targets) {
-			this.addToDependencyGraph(target, deps);
+		mergeGraphs(this.graph, esmGraph);
+
+		// ESM graph includes original targets, which we do not want for addRaw so we’ll remove them before adding
+		let rawEsmGraph = esmGraph.clone();
+		for (let t of targets) {
+			rawEsmGraph.removeNode(t);
 		}
-		this.addRaw(deps, true);
+		this.addRaw(rawEsmGraph.overallOrder(), true);
 	}
 
 	setWriter(templateWriter) {
@@ -134,10 +154,9 @@ export default class WatchTargets {
 			}
 
 			// Use GlobalDependencyMap
-			if (this.#templateConfig) {
-				for (let dep of this.#templateConfig.usesGraph.getDependantsFor(filePath)) {
-					paths.add(dep);
-				}
+			let dependantsMapped = this.#templateConfig?.usesGraph.getDependantsFor(filePath) || [];
+			for (let dep of dependantsMapped) {
+				paths.add(dep);
 			}
 		}
 
