@@ -114,6 +114,8 @@ export default class WatchTargets {
 		}
 		this.addRaw(cjsDeps, true);
 
+		// https://github.com/11ty/eleventy/issues/3899
+		// Note that this fix is ESM-only, dependency-tree CJS doesn’t support returning graphs (yet?)
 		let esmGraph = await JavaScriptDependencies.getEsmGraph(targets, this.isEsm);
 		if (filterCallback) {
 			for (let node of esmGraph.overallOrder()) {
