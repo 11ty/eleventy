@@ -7,8 +7,7 @@ import debugUtil from "debug";
 
 import chalk from "./Adapters/Packages/chalk.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
-import getDateFromGitLastUpdated from "./Util/DateGitLastUpdated.js";
-import getDateFromGitFirstAdded from "./Util/DateGitFirstAdded.js";
+import { getCreatedTimestamp, getUpdatedTimestamp } from "./Util/Git.js";
 import TemplateContent from "./TemplateContent.js";
 import TemplatePermalink from "./TemplatePermalink.js";
 import TemplateLayout from "./TemplateLayout.js";
@@ -1061,10 +1060,13 @@ class Template extends TemplateContent {
 			// special strings
 			if (!this.isVirtualTemplate()) {
 				if (dateValue.toLowerCase() === "git last modified") {
-					let d = await getDateFromGitLastUpdated(this.inputPath);
-					if (d) {
-						debug(`getMappedDate: found git last modified date for ${this.inputPath}: %o`, d);
-						return d;
+					let timestamp = await getUpdatedTimestamp(this.inputPath);
+					if (timestamp) {
+						debug(
+							`getMappedDate: found git last modified timestamp for ${this.inputPath}: %o`,
+							timestamp,
+						);
+						return new Date(timestamp);
 					}
 
 					// return now if this file is not yet available in `git`
@@ -1074,10 +1076,13 @@ class Template extends TemplateContent {
 					return this._getDateInstance("ctimeMs");
 				}
 				if (dateValue.toLowerCase() === "git created") {
-					let d = await getDateFromGitFirstAdded(this.inputPath);
-					if (d) {
-						debug(`getMappedDate: found git created date for ${this.inputPath}: %o`, d);
-						return d;
+					let timestamp = await getCreatedTimestamp(this.inputPath);
+					if (timestamp) {
+						debug(
+							`getMappedDate: found git created timestamp for ${this.inputPath}: %o`,
+							timestamp,
+						);
+						return new Date(timestamp);
 					}
 
 					// return now if this file is not yet available in `git`

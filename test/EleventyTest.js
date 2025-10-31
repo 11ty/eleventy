@@ -13,8 +13,7 @@ import Eleventy, { HtmlBasePlugin } from "../src/Eleventy.js";
 import TemplateContent from "../src/TemplateContent.js";
 import TemplateMap from "../src/TemplateMap.js";
 import TemplateConfig from "../src/TemplateConfig.js";
-import DateGitFirstAdded from "../src/Util/DateGitFirstAdded.js";
-import DateGitLastUpdated from "../src/Util/DateGitLastUpdated.js";
+import { getCreatedTimestamp, getUpdatedTimestamp } from "../src/Util/Git.js";
 import PathNormalizer from "../src/Util/PathNormalizer.js";
 import { normalizeNewLines, localizeNewLines } from "./Util/normalizeNewLines.js";
 
@@ -422,14 +421,14 @@ test("#142: date 'git Last Modified' populates page.date", async (t) => {
   let [result] = results;
 
   // Warning: this doesn’t test the validity of the function, only that it populates page.date.
-  let comparisonDate = await DateGitLastUpdated("./test/stubs-142/index.njk");
+  let timestamp = await getUpdatedTimestamp("./test/stubs-142/index.njk");
   t.truthy(result.content.trim());
-  t.truthy(comparisonDate.getTime());
-  t.is(result.content.trim(), "" + comparisonDate.getTime());
+  t.truthy(timestamp);
+  t.is(result.content.trim(), "" + timestamp);
 });
 
-test("DateGitLastUpdated returns undefined on nonexistent path", async (t) => {
-  t.is(await DateGitLastUpdated("./test/invalid.invalid"), undefined);
+test("git getUpdatedTimestamp returns undefined on nonexistent path", async (t) => {
+  t.is(await getUpdatedTimestamp("./test/invalid.invalid"), undefined);
 });
 
 test("#2167: Pagination with permalink: false", async (t) => {
@@ -534,14 +533,14 @@ test("#2224: date 'git created' populates page.date", async (t) => {
   let [result] = results;
 
   // This doesn’t test the validity of the function, only that it populates page.date.
-  let comparisonDate = await DateGitFirstAdded("./test/stubs-2224/index.njk");
+  let timestamp = await getCreatedTimestamp("./test/stubs-2224/index.njk");
   t.truthy(result.content.trim());
-  t.truthy(comparisonDate.getTime());
-  t.is(result.content.trim(), "" + comparisonDate.getTime());
+  t.truthy(timestamp);
+  t.is(result.content.trim(), "" + timestamp);
 });
 
-test("DateGitFirstAdded returns undefined on nonexistent path", async (t) => {
-  t.is(await DateGitFirstAdded("./test/invalid.invalid"), undefined);
+test("git getCreatedTimestamp returns undefined on nonexistent path", async (t) => {
+  t.is(await getCreatedTimestamp("./test/invalid.invalid"), undefined);
 });
 
 test("Does pathPrefix affect page URLs", async (t) => {

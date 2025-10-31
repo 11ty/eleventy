@@ -15,7 +15,8 @@
 		},
 		"./UserConfig": {
 			"types": "./src/UserConfig.js"
-		}
+		},
+		"./utils/git": "./src/Util/Git.js"
 	},
 	"bin": {
 		"eleventy": "cmd.cjs"
