@@ -3,7 +3,6 @@ import { glob } from "tinyglobby";
 
 import EleventyFiles from "../src/EleventyFiles.js";
 import TemplateConfig from "../src/TemplateConfig.js";
-import FileSystemSearch from "../src/FileSystemSearch.js";
 import TemplatePassthroughManager from "../src/TemplatePassthroughManager.js";
 import ProjectDirectories from "../src/Util/ProjectDirectories.js";
 

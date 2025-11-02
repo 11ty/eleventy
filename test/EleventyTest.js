@@ -13,8 +13,7 @@ import Eleventy, { HtmlBasePlugin } from "../src/Eleventy.js";
 import TemplateContent from "../src/TemplateContent.js";
 import TemplateMap from "../src/TemplateMap.js";
 import TemplateConfig from "../src/TemplateConfig.js";
-import DateGitFirstAdded from "../src/Util/DateGitFirstAdded.js";
-import DateGitLastUpdated from "../src/Util/DateGitLastUpdated.js";
+import { getCreatedTimestamp, getUpdatedTimestamp } from "../src/Util/Git.js";
 import PathNormalizer from "../src/Util/PathNormalizer.js";
 import { normalizeNewLines, localizeNewLines } from "./Util/normalizeNewLines.js";
 
@@ -120,6 +119,7 @@ test("Eleventy file watching", async (t) => {
   await elev.startWatch();
 
   let { targets, ignores } = await elev.getWatchedTargets();
+  await elev.stopWatch();
 
   t.deepEqual(targets, [
     "./package.json",
@@ -129,10 +129,6 @@ test("Eleventy file watching", async (t) => {
     "./.gitignore",
     "./.eleventyignore",
     "./test/stubs/.eleventyignore",
-    "./.eleventy.js",
-    "./eleventy.config.js",
-    "./eleventy.config.mjs",
-    "./eleventy.config.cjs",
     "./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js}",
     "./test/stubs/deps/dep1.cjs",
     "./test/stubs/deps/dep2.cjs",
@@ -143,8 +139,6 @@ test("Eleventy file watching", async (t) => {
   t.true(ignores.includes("test/stubs/_site/**"));
   t.true(ignores.includes("./.git/**"));
   t.true(ignores.includes(".cache"));
-
-  await elev.stopWatch();
 });
 
 test("Eleventy file watching (don’t watch deps of passthrough copy .js files)", async (t) => {
@@ -156,9 +150,10 @@ test("Eleventy file watching (don’t watch deps of passthrough copy .js files)"
   await elev.eleventyFiles.getFiles();
   await elev.startWatch();
 
-  t.deepEqual(await elev.eleventyFiles.getWatchPathCache(), ["./test/stubs-1325/test.11ty.js"]);
+  let paths = await elev.eleventyFiles.getWatchPathCache();
+  await elev.stopWatch();
 
-   await elev.stopWatch();
+  t.deepEqual(paths, ["./test/stubs-1325/test.11ty.js"]);
 });
 
 test("Eleventy file watching (no JS dependencies)", async (t) => {
@@ -175,6 +170,8 @@ test("Eleventy file watching (no JS dependencies)", async (t) => {
 
   let { targets, ignores } = await elev.getWatchedTargets();
 
+  await elev.stopWatch();
+
   t.deepEqual(targets, [
     "./package.json",
     "./test/stubs/**/*.njk",
@@ -183,10 +180,6 @@ test("Eleventy file watching (no JS dependencies)", async (t) => {
     "./.gitignore",
     "./.eleventyignore",
     "./test/stubs/.eleventyignore",
-    "./.eleventy.js",
-    "./eleventy.config.js",
-    "./eleventy.config.mjs",
-    "./eleventy.config.cjs",
     "./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js}",
   ]);
 
@@ -195,8 +188,6 @@ test("Eleventy file watching (no JS dependencies)", async (t) => {
   t.true(ignores.includes("test/stubs/_site/**"));
   t.true(ignores.includes("./.git/**"));
   t.true(ignores.includes(".cache"));
-
-   await elev.stopWatch();
 });
 
 test("Eleventy set input/output, one file input", async (t) => {
@@ -429,13 +420,15 @@ test("#142: date 'git Last Modified' populates page.date", async (t) => {
   let results = await elev.toJSON();
   let [result] = results;
 
-  // This doesn’t test the validity of the function, only that it populates page.date.
-  let comparisonDate = await DateGitLastUpdated("./test/stubs-142/index.njk");
-  t.is(result.content.trim(), "" + comparisonDate.getTime());
+  // Warning: this doesn’t test the validity of the function, only that it populates page.date.
+  let timestamp = await getUpdatedTimestamp("./test/stubs-142/index.njk");
+  t.truthy(result.content.trim());
+  t.truthy(timestamp);
+  t.is(result.content.trim(), "" + timestamp);
 });
 
-test("DateGitLastUpdated returns undefined on nonexistent path", async (t) => {
-  t.is(await DateGitLastUpdated("./test/invalid.invalid"), undefined);
+test("git getUpdatedTimestamp returns undefined on nonexistent path", async (t) => {
+  t.is(await getUpdatedTimestamp("./test/invalid.invalid"), undefined);
 });
 
 test("#2167: Pagination with permalink: false", async (t) => {
@@ -540,12 +533,14 @@ test("#2224: date 'git created' populates page.date", async (t) => {
   let [result] = results;
 
   // This doesn’t test the validity of the function, only that it populates page.date.
-  let comparisonDate = await DateGitFirstAdded("./test/stubs-2224/index.njk");
-  t.is(result.content.trim(), "" + comparisonDate.getTime());
+  let timestamp = await getCreatedTimestamp("./test/stubs-2224/index.njk");
+  t.truthy(result.content.trim());
+  t.truthy(timestamp);
+  t.is(result.content.trim(), "" + timestamp);
 });
 
-test("DateGitFirstAdded returns undefined on nonexistent path", async (t) => {
-  t.is(await DateGitFirstAdded("./test/invalid.invalid"), undefined);
+test("git getCreatedTimestamp returns undefined on nonexistent path", async (t) => {
+  t.is(await getCreatedTimestamp("./test/invalid.invalid"), undefined);
 });
 
 test("Does pathPrefix affect page URLs", async (t) => {
@@ -884,16 +879,17 @@ test("setInputDirectory config method #1503 in a plugin throws error", async (t)
 test("Accepts absolute paths for input and output", async (t) => {
   let input = path.resolve("./test/noop/");
   let output = path.resolve("./test/noop/_site");
+
   let elev = new Eleventy(input, output);
 
   let results = await elev.toJSON();
 
   // trailing slashes are expected
-  t.is(PathNormalizer.normalizeSeperator(elev.directories.input), PathNormalizer.normalizeSeperator(path.resolve("./test/noop/") + path.sep));
-  t.is(PathNormalizer.normalizeSeperator(elev.directories.includes), PathNormalizer.normalizeSeperator(path.resolve("./test/noop/_includes/") + path.sep));
-  t.is(PathNormalizer.normalizeSeperator(elev.directories.data), PathNormalizer.normalizeSeperator(path.resolve("./test/noop/_data/") + path.sep));
+  t.is(PathNormalizer.normalizeSeperator(elev.directories.input), PathNormalizer.normalizeSeperator("./test/noop/"));
+  t.is(PathNormalizer.normalizeSeperator(elev.directories.includes), PathNormalizer.normalizeSeperator("./test/noop/_includes/"));
+  t.is(PathNormalizer.normalizeSeperator(elev.directories.data), PathNormalizer.normalizeSeperator("./test/noop/_data/"));
   t.is(elev.directories.layouts, undefined);
-  t.is(PathNormalizer.normalizeSeperator(elev.directories.output), PathNormalizer.normalizeSeperator(path.resolve("./test/noop/_site/") + path.sep));
+  t.is(PathNormalizer.normalizeSeperator(elev.directories.output), PathNormalizer.normalizeSeperator("./test/noop/_site/"));
 });
 
 test("Accepts absolute paths urls for input and output, results output #3805", async (t) => {

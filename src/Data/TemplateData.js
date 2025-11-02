@@ -305,7 +305,7 @@ class TemplateData {
 				);
 
 				let oldData = lodashGet(globalData, objectPathTarget);
-				data = TemplateData.mergeDeep(this.config.dataDeepMerge, oldData, data);
+				data = Merge(oldData, data);
 			}
 
 			dataFileConflicts[objectPathTargetString] = files[j];
@@ -422,7 +422,7 @@ class TemplateData {
 					}
 					dataSource[key] = path;
 				}
-				TemplateData.mergeDeep(this.config.dataDeepMerge, localData, cleanedDataForPath);
+				Merge(localData, cleanedDataForPath);
 			}
 		}
 		return localData;
@@ -630,18 +630,6 @@ class TemplateData {
 
 		debug("getLocalDataPaths(%o): %o", templatePath, paths);
 		return unique(paths).reverse();
-	}
-
-	static mergeDeep(deepMerge, target, ...source) {
-		if (!deepMerge && deepMerge !== undefined) {
-			return Object.assign(target, ...source);
-		} else {
-			return TemplateData.merge(target, ...source);
-		}
-	}
-
-	static merge(target, ...source) {
-		return Merge(target, ...source);
 	}
 
 	/* Like cleanupData() but does not mutate */

@@ -126,6 +126,7 @@ export default class Eleventy extends Core {
 	}
 
 	shouldTriggerConfigReset(changedFiles) {
+		// looks for all eligible config files (not just the active one, handles config file rename)
 		let configFilePaths = new Set(this.eleventyConfig.getLocalProjectConfigFiles());
 
 		// https://www.11ty.dev/docs/watch-serve/#reset-configuration
@@ -142,7 +143,7 @@ export default class Eleventy extends Core {
 			}
 		}
 
-		for (const configFilePath of configFilePaths) {
+		for (let configFilePath of configFilePaths) {
 			// Any dependencies of the config file changed
 			let configFileDependencies = new Set(this.watchTargets.getDependenciesOf(configFilePath));
 
@@ -297,7 +298,7 @@ export default class Eleventy extends Core {
 		this.watchTargets.add(this.eleventyFiles.getIgnoreFiles());
 
 		// Watch the local project config file
-		this.watchTargets.add(this.eleventyConfig.getLocalProjectConfigFiles());
+		this.watchTargets.add(this.eleventyConfig.getActiveConfigPath());
 
 		// Template and Directory Data Files
 		this.watchTargets.add(await this.eleventyFiles.getGlobWatcherTemplateDataFiles());
@@ -401,12 +402,6 @@ export default class Eleventy extends Core {
 			return;
 		}
 
-		// TODO use DirContains
-		let dataDir = TemplatePath.stripLeadingDotSlash(this.templateData.getDataDir());
-		function filterOutGlobalDataFiles(path) {
-			return !dataDir || !TemplatePath.stripLeadingDotSlash(path).startsWith(dataDir);
-		}
-
 		// Lazy resolve isEsm only for --watch
 		this.watchTargets.setProjectUsingEsm(this.isEsm);
 
@@ -414,9 +409,15 @@ export default class Eleventy extends Core {
 		let templateFiles = await this.eleventyFiles.getWatchPathCache();
 		await this.watchTargets.addDependencies(templateFiles);
 
+		// TODO use DirContains
+		let dataDir = TemplatePath.stripLeadingDotSlash(this.templateData.getDataDir());
+		function filterOutGlobalDataFiles(path) {
+			return !dataDir || !TemplatePath.stripLeadingDotSlash(path).startsWith(dataDir);
+		}
+
 		// Config file dependencies
 		await this.watchTargets.addDependencies(
-			this.eleventyConfig.getLocalProjectConfigFiles(),
+			this.eleventyConfig.getActiveConfigPath(),
 			filterOutGlobalDataFiles,
 		);
 
