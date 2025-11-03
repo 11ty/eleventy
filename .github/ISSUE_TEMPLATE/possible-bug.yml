@@ -30,20 +30,13 @@ body:
     id: bug-description
     attributes:
       label: Describe the bug
-      description: A clear and concise description of what the bug is.
+      description: A clear and concise description of how to reproduce the bug
+      value: |
+        1. I ran *this* command with *these* flags '...'
+        2. I used the following configuration and template syntax '....'
+        3. I got *this* error or I expected this to happen and it didn’t
     validations:
       required: true
-  - type: textarea
-    id: repro
-    attributes:
-      label: Reproduction steps and expected behavaior
-      description: Steps to reproduce the behavior.
-      value: |
-        1. Go to '...'
-        2. Click on '....'
-        3. Scroll down to '....'
-        4. See an error
-        5. What do you expect to happen?
   - type: input
     id: repro-url
     attributes:
