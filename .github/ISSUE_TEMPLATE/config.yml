@@ -4,7 +4,7 @@ contact_links:
     about: General education topics should be filed on our Discussions board e.g. “How do I do this in Eleventy?” or “Can Eleventy do this?” (Please search existing discussions first!)
   - name: I have a feature request for Eleventy
     url: https://github.com/11ty/eleventy/discussions/new?category=enhancement-queue
-    about: Enhancement or new Features. e.g. “I wish Eleventy did this.” Suggest an idea! (Please search existing discussion first!)
+    about: Enhancement or new Features. e.g. “I wish Eleventy did this.” Suggest an idea! (Please search existing discussions first!)
   - name: I wish the docs were different!
     url: https://github.com/11ty/11ty-website/issues/new/choose
     about: Something missing from the documentation? Something wrong? Something confusing? You want the 11ty-website repo!
