@@ -49,8 +49,8 @@ export default class Liquid extends TemplateEngine {
 			root: [this.dirs.includes, this.dirs.input], // supplemented in compile with inputPath below
 			extname: ".liquid",
 			strictFilters: true,
-			// TODO?
 			// cache: true,
+			jsTruthy: true, // Breaking in v4 #3507
 		};
 
 		let options = Object.assign(defaults, this.liquidOptions || {});

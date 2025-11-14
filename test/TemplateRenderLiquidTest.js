@@ -692,8 +692,9 @@ test("Liquid Render Scope Leak", async (t) => {
   t.is(tr1.getEngineName(), "liquid");
 
   let tr2 = await getNewTemplateRender("liquid", "./test/stubs/");
-  let fn = await tr2.getCompiledTemplate("<p>{% render 'scopeleak' %}{{ test }}</p>");
-  t.is(await fn({ test: 1 }), "<p>21</p>");
+  // see scopeleak.liquid
+  let fn = await tr2.getCompiledTemplate("<p>{% render 'scopeleak' %}-{{ test }}</p>");
+  t.is(await fn({ test: 1 }), "<p>2-1</p>");
 });
 
 // Note: this strictFilters default changed in 1.0 from false to true
@@ -1156,4 +1157,18 @@ test("Eleventy paired shortcode uses new built-in Liquid argument parsing behavi
 
   let [result] = await elev.toJSON();
   t.deepEqual(result.content, `["hi",123,456]`);
+});
+
+test("jsTruthy default changed, breaking in v4 #3507", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("index.liquid", `{% if emptyString %}notempty{% endif %}-{% if zero %}notzero{% endif %}-{% if not emptyString %}empty{% endif %}-{% if not zero %}zero{% endif %}`, {
+        emptyString: "",
+        zero: 0
+      });
+    }
+  });
+
+  let [result] = await elev.toJSON();
+  t.deepEqual(result.content, `--empty-zero`);
 });
