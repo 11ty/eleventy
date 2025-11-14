@@ -106,7 +106,7 @@ class UserConfig {
 			filters: {},
 			shortcodes: {},
 			pairedShortcodes: {},
-			parameterParsing: "legacy", // or builtin
+			parameterParsing: "builtin", // or legacy (Breaking: default swapped in v4.0.0)
 		};
 
 		/** @type {object} */
