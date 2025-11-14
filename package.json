@@ -67,7 +67,7 @@
 	"author": "Zach Leatherman <zachleatherman@gmail.com> (https://zachleat.com/)",
 	"repository": {
 		"type": "git",
-		"url": "git://github.com/11ty/eleventy.git"
+		"url": "git+https://github.com/11ty/eleventy.git"
 	},
 	"bugs": "https://github.com/11ty/eleventy/issues",
 	"homepage": "https://www.11ty.dev/",
