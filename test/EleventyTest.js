@@ -1193,7 +1193,7 @@ test("Eleventy data schema (fails) #879", async (t) => {
     message: 'Error in the data schema for: ./test/stubs-virtual/index1.html (via `eleventyDataSchema`)'
   });
 
-  t.is(e.originalError.toString(), "Error: Invalid data type for draft.");
+  t.is(e.cause.toString(), "Error: Invalid data type for draft.");
 });
 
 test("Eleventy data schema (fails, using zod) #879", async (t) => {
@@ -1219,7 +1219,7 @@ test("Eleventy data schema (fails, using zod) #879", async (t) => {
     message: 'Error in the data schema for: ./test/stubs-virtual/index1.html (via `eleventyDataSchema`)'
   });
 
-  t.is(e.originalError.toString(), 'Validation error: Expected boolean, received number at "draft", or Expected undefined, received number at "draft"');
+  t.is(e.cause.toString(), 'Validation error: Expected boolean, received number at "draft", or Expected undefined, received number at "draft"');
 });
 
 test("Eleventy data schema has access to custom collections created via API #879", async (t) => {

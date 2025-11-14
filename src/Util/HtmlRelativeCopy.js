@@ -1,6 +1,6 @@
 import path from "node:path";
 import { TemplatePath } from "@11ty/eleventy-utils";
-import isValidUrl from "../Util/ValidUrl.js";
+import { isValidUrl } from "./UrlUtil.js";
 import { isGlobMatch } from "./GlobMatcher.js";
 
 // https://github.com/11ty/eleventy/pull/3573

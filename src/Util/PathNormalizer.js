@@ -1,4 +1,4 @@
-import path from "node:path";
+import { parse, sep } from "node:path";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import { fileURLToPath } from "../Adapters/Packages/url.js";
 
@@ -9,8 +9,8 @@ export default class PathNormalizer {
 		}
 
 		let separator = "/";
-		if (inputPath.includes(path.sep)) {
-			separator = path.sep;
+		if (inputPath.includes(sep)) {
+			separator = sep;
 		}
 
 		return inputPath.split(separator).filter((entry) => entry !== ".");
@@ -35,7 +35,21 @@ export default class PathNormalizer {
 		if (!inputPath) {
 			return inputPath;
 		}
-		return inputPath.split(path.sep).join("/");
+		return inputPath.split(sep).join("/");
+	}
+
+	static addTrailingSlashToDirectory(dir) {
+		if (dir.endsWith("/")) {
+			return dir;
+		}
+
+		return dir + sep;
+	}
+
+	// returns a path
+	static getDirectoryFromFilePath(filePath) {
+		let parsed = parse(filePath);
+		return this.addTrailingSlashToDirectory(parsed.dir);
 	}
 
 	static fullNormalization(inputPath) {

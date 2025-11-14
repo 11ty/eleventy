@@ -1,6 +1,6 @@
 import { TemplatePath } from "@11ty/eleventy-utils";
 
-import isValidUrl from "../Util/ValidUrl.js";
+import { isValidUrl } from "../Util/UrlUtil.js";
 
 // Note: This filter is used in the Eleventy Navigation plugin in versions prior to 0.3.4
 export default function (url, pathPrefix) {

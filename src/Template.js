@@ -1,4 +1,4 @@
-import path from "node:path";
+import { parse } from "node:path";
 import { statSync } from "node:fs";
 
 import lodash from "@11ty/lodash-custom";
@@ -23,6 +23,8 @@ import ReservedData from "./Util/ReservedData.js";
 import TransformsUtil from "./Util/TransformsUtil.js";
 import { FileSystemManager } from "./Util/FileSystemManager.js";
 import { TemplatePreprocessors } from "./TemplatePreprocessors.js";
+import PathNormalizer from "./Util/PathNormalizer.js";
+import { getDirectoryFromUrl } from "./Util/UrlUtil.js";
 
 const { set: lodashSet, get: lodashGet } = lodash;
 
@@ -39,7 +41,7 @@ class Template extends TemplateContent {
 		debugDev("new Template(%o)", templatePath);
 		super(templatePath, config);
 
-		this.parsed = path.parse(templatePath);
+		this.parsed = parse(templatePath);
 
 		// for pagination
 		this.extraOutputSubdirectory = "";
@@ -332,11 +334,13 @@ class Template extends TemplateContent {
 			path = link.toPath(this.outputDir);
 		}
 
+		let href = link.toHref();
 		return {
 			linkInstance: link,
-			rawPath: link.toOutputPath(),
-			href: link.toHref(),
+			rawPath: link.toOutputPath(), // includes output directory
+			href,
 			path: path,
+			dir: getDirectoryFromUrl(href), // for `page.dir`
 		};
 	}
 
@@ -450,6 +454,8 @@ class Template extends TemplateContent {
 
 		// Make sure to keep these keys synchronized in src/Util/ReservedData.js
 		data.page.inputPath = this.inputPath;
+		// parsed dir never has the trailing slash
+		data.page.inputPathDir = PathNormalizer.getDirectoryFromFilePath(this.inputPath);
 		data.page.fileSlug = this.fileSlugStr;
 		data.page.filePathStem = this.filePathStem;
 		data.page.outputFileExtension = this.engine.defaultTemplateFileExtension;
@@ -648,9 +654,10 @@ class Template extends TemplateContent {
 				return;
 			}
 
-			let { href, path } = await this.getOutputLocations(data);
+			let { href, path, dir } = await this.getOutputLocations(data);
 			data.page.url = href;
 			data.page.outputPath = path;
+			data.page.dir = dir;
 		}
 	}
 

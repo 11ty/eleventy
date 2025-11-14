@@ -4,15 +4,11 @@ import debugUtil from "debug";
 import TemplateCollection from "./TemplateCollection.js";
 import EleventyErrorUtil from "./Errors/EleventyErrorUtil.js";
 import UsingCircularTemplateContentReferenceError from "./Errors/UsingCircularTemplateContentReferenceError.js";
-import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import DuplicatePermalinkOutputError from "./Errors/DuplicatePermalinkOutputError.js";
 import TemplateData from "./Data/TemplateData.js";
 import GlobalDependencyMap from "./GlobalDependencyMap.js";
 
 const debug = debugUtil("Eleventy:TemplateMap");
-
-class EleventyMapPagesError extends EleventyBaseError {}
-class EleventyDataSchemaError extends EleventyBaseError {}
 
 // These template URL filenames are allowed to exclude file extensions
 const EXTENSIONLESS_URL_ALLOWLIST = [
@@ -204,10 +200,7 @@ class TemplateMap {
 		try {
 			map._pages = await map.template.getTemplates(map.data);
 		} catch (e) {
-			throw new EleventyMapPagesError(
-				"Error generating template page(s) for " + map.inputPath + ".",
-				e,
-			);
+			throw new Error("Error generating template page(s) for " + map.inputPath + ".", { cause: e });
 		}
 
 		if (map._pages.length === 0) {
@@ -359,9 +352,9 @@ class TemplateMap {
 					try {
 						await pageEntry.data[this.config.keys.dataSchema](pageEntry.data);
 					} catch (e) {
-						throw new EleventyDataSchemaError(
+						throw new Error(
 							`Error in the data schema for: ${map.inputPath} (via \`eleventyDataSchema\`)`,
-							e,
+							{ cause: e },
 						);
 					}
 				}
