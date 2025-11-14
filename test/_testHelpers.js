@@ -7,6 +7,7 @@ import EleventyFiles from "../src/EleventyFiles.js";
 import FileSystemSearch from "../src/FileSystemSearch.js";
 import TemplateWriter from "../src/TemplateWriter.js";
 import TemplateEngineManager from "../src/Engines/TemplateEngineManager.js";
+import TemplateData from "../src/Data/TemplateData.js";
 
 export async function getTemplateConfigInstance(configObj, dirs, configObjOverride = undefined) {
 	let eleventyConfig;
@@ -91,7 +92,7 @@ export function getEleventyFilesInstance(formats, templateConfig) {
 	files.setPassthroughManager(mgr);
 	files.setFileSystemSearch(fss);
 	files.extensionMap = map;
-	// files.templateData = this.templateData;
+  files.templateData = new TemplateData(templateConfig);
 	files.init();
 
   return {

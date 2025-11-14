@@ -2,14 +2,12 @@ import path from "node:path";
 import { statSync } from "node:fs";
 
 import lodash from "@11ty/lodash-custom";
-import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
+import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
 import chalk from "./Adapters/Packages/chalk.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
-import getDateFromGitLastUpdated from "./Util/DateGitLastUpdated.js";
-import getDateFromGitFirstAdded from "./Util/DateGitFirstAdded.js";
-import TemplateData from "./Data/TemplateData.js";
+import { getCreatedTimestamp, getUpdatedTimestamp } from "./Util/Git.js";
 import TemplateContent from "./TemplateContent.js";
 import TemplatePermalink from "./TemplatePermalink.js";
 import TemplateLayout from "./TemplateLayout.js";
@@ -24,6 +22,7 @@ import { fromISOtoDateUTC } from "./Util/DateParse.js";
 import ReservedData from "./Util/ReservedData.js";
 import TransformsUtil from "./Util/TransformsUtil.js";
 import { FileSystemManager } from "./Util/FileSystemManager.js";
+import { TemplatePreprocessors } from "./TemplatePreprocessors.js";
 
 const { set: lodashSet, get: lodashGet } = lodash;
 
@@ -34,6 +33,7 @@ class Template extends TemplateContent {
 	#logger;
 	#fsManager;
 	#stats;
+	#preprocessorCache;
 
 	constructor(templatePath, templateData, extensionMap, config) {
 		debugDev("new Template(%o)", templatePath);
@@ -63,6 +63,8 @@ class Template extends TemplateContent {
 
 		this.behavior = new TemplateBehavior(this.config);
 		this.behavior.setOutputFormat(this.outputFormat);
+
+		this.templatePreprocessor = new TemplatePreprocessors(this.config.preprocessors);
 	}
 
 	#initFileSlug() {
@@ -128,6 +130,10 @@ class Template extends TemplateContent {
 		types = this.getResetTypes(types);
 
 		super.resetCaches(types);
+
+		if (types.data || types.read) {
+			this.#preprocessorCache = undefined;
+		}
 
 		if (types.data) {
 			delete this._dataCache;
@@ -202,15 +208,6 @@ class Template extends TemplateContent {
 		return this.extensionMap.removeTemplateExtension(this.parsed.base);
 	}
 
-	async _getRawPermalinkInstance(permalinkValue) {
-		let perm = new TemplatePermalink(permalinkValue, this.extraOutputSubdirectory);
-		perm.setUrlTransforms(this.config.urlTransforms);
-
-		this.behavior.setFromPermalink(perm);
-
-		return perm;
-	}
-
 	async _getLink(data) {
 		if (!data) {
 			throw new Error("Internal error: data argument missing in Template->_getLink");
@@ -220,13 +217,16 @@ class Template extends TemplateContent {
 			data[this.config.keys.permalink] ??
 			data?.[this.config.keys.computed]?.[this.config.keys.permalink];
 		let permalinkValue;
+		let isDynamicPermalinkEnabled =
+			this.config.dynamicPermalinks && data.dynamicPermalink !== false;
 
 		// `permalink: false` means render but no file system write, e.g. use in collections only)
 		// `permalink: true` throws an error
 		if (typeof permalink === "boolean") {
 			debugDev("Using boolean permalink %o", permalink);
 			permalinkValue = permalink;
-		} else if (permalink && (!this.config.dynamicPermalinks || data.dynamicPermalink === false)) {
+		} else if (permalink && !isDynamicPermalinkEnabled) {
+			// Issue #838
 			debugDev("Not using dynamic permalinks, using %o", permalink);
 			permalinkValue = permalink;
 		} else if (isPlainObject(permalink)) {
@@ -270,7 +270,7 @@ class Template extends TemplateContent {
 		}
 
 		// Override default permalink behavior. Only do this if permalink was _not_ in the data cascade
-		if (!permalink && this.config.dynamicPermalinks && data.dynamicPermalink !== false) {
+		if (!permalink && isDynamicPermalinkEnabled) {
 			let tr = await this.getTemplateRender();
 			let permalinkCompilation = tr.engine.permalinkNeedsCompilation("");
 			if (typeof permalinkCompilation === "function") {
@@ -288,7 +288,14 @@ class Template extends TemplateContent {
 		}
 
 		if (permalinkValue !== undefined) {
-			return this._getRawPermalinkInstance(permalinkValue);
+			let p = new TemplatePermalink(
+				permalinkValue,
+				this.extraOutputSubdirectory,
+				isDynamicPermalinkEnabled,
+			);
+			p.setUrlTransforms(this.config.urlTransforms);
+			this.behavior.setFromPermalink(p);
+			return p;
 		}
 
 		// No `permalink` specified in data cascade, do the default
@@ -297,6 +304,7 @@ class Template extends TemplateContent {
 			this.baseFile,
 			this.extraOutputSubdirectory,
 			this.engine.defaultTemplateFileExtension,
+			isDynamicPermalinkEnabled,
 		);
 		p.setUrlTransforms(this.config.urlTransforms);
 		return p;
@@ -398,14 +406,7 @@ class Template extends TemplateContent {
 		}
 
 		try {
-			let mergedData = TemplateData.mergeDeep(
-				this.config.dataDeepMerge,
-				{},
-				globalData,
-				mergedLayoutData,
-				localData,
-				frontMatterData,
-			);
+			let mergedData = Merge({}, globalData, mergedLayoutData, localData, frontMatterData);
 
 			if (this.config.freezeReservedData) {
 				ReservedData.check(mergedData);
@@ -452,9 +453,7 @@ class Template extends TemplateContent {
 		data.page.fileSlug = this.fileSlugStr;
 		data.page.filePathStem = this.filePathStem;
 		data.page.outputFileExtension = this.engine.defaultTemplateFileExtension;
-		data.page.templateSyntax = this.templateRender.getEnginesList(
-			data[this.config.keys.engineOverride],
-		);
+		data.page.templateSyntax = this.getEngineNames(data[this.config.keys.engineOverride]);
 
 		let newDate = await this.getMappedDate(data);
 		// Skip date assignment if custom date is falsy.
@@ -717,82 +716,24 @@ class Template extends TemplateContent {
 		});
 	}
 
-	static async runPreprocessors(inputPath, content, data, preprocessors) {
-		let skippedVia = false;
-		for (let [name, preprocessor] of Object.entries(preprocessors)) {
-			let { filter, callback } = preprocessor;
-
-			let filters;
-			if (Array.isArray(filter)) {
-				filters = filter;
-			} else if (typeof filter === "string") {
-				filters = filter.split(",");
-			} else {
-				throw new Error(
-					`Expected file extensions passed to "${name}" content preprocessor to be a string or array. Received: ${filter}`,
-				);
-			}
-
-			filters = filters.map((extension) => {
-				if (extension.startsWith(".") || extension === "*") {
-					return extension;
-				}
-
-				return `.${extension}`;
-			});
-
-			if (!filters.some((extension) => extension === "*" || inputPath.endsWith(extension))) {
-				// skip
-				continue;
-			}
-
-			try {
-				let ret = await callback.call(
-					{
-						inputPath,
-					},
-					data,
-					content,
-				);
-
-				// Returning explicit false is the same as ignoring the template
-				if (ret === false) {
-					skippedVia = name;
-					continue;
-				}
-
-				// Different from transforms: returning falsy (not false) here does nothing (skips the preprocessor)
-				if (ret) {
-					content = ret;
-				}
-			} catch (e) {
-				throw new EleventyBaseError(
-					`Preprocessor \`${name}\` encountered an error when transforming ${inputPath}.`,
-					e,
-				);
-			}
+	async runPreprocessors(data) {
+		// @cachedproperty
+		if (!this.#preprocessorCache) {
+			this.#preprocessorCache = this.templatePreprocessor.runAll(this, data);
 		}
 
-		return {
-			skippedVia,
-			content,
-		};
+		return this.#preprocessorCache;
 	}
 
 	async getTemplates(data) {
-		let content = await this.getPreRender();
-		let { skippedVia, content: rawInput } = await Template.runPreprocessors(
-			this.inputPath,
-			content,
-			data,
-			this.config.preprocessors,
-		);
+		let { skippedVia: skippedViaPreprocessorName, content: rawInput } =
+			await this.runPreprocessors(data);
 
-		if (skippedVia) {
+		if (skippedViaPreprocessorName) {
 			debug(
 				"Skipping %o, the %o preprocessor returned an explicit `false`",
 				this.inputPath,
-				skippedVia,
+				skippedViaPreprocessorName,
 			);
 			return [];
 		}
@@ -1119,9 +1060,13 @@ class Template extends TemplateContent {
 			// special strings
 			if (!this.isVirtualTemplate()) {
 				if (dateValue.toLowerCase() === "git last modified") {
-					let d = await getDateFromGitLastUpdated(this.inputPath);
-					if (d) {
-						return d;
+					let timestamp = await getUpdatedTimestamp(this.inputPath);
+					if (timestamp) {
+						debug(
+							`getMappedDate: found git last modified timestamp for ${this.inputPath}: %o`,
+							timestamp,
+						);
+						return new Date(timestamp);
 					}
 
 					// return now if this file is not yet available in `git`
@@ -1131,9 +1076,13 @@ class Template extends TemplateContent {
 					return this._getDateInstance("ctimeMs");
 				}
 				if (dateValue.toLowerCase() === "git created") {
-					let d = await getDateFromGitFirstAdded(this.inputPath);
-					if (d) {
-						return d;
+					let timestamp = await getCreatedTimestamp(this.inputPath);
+					if (timestamp) {
+						debug(
+							`getMappedDate: found git created timestamp for ${this.inputPath}: %o`,
+							timestamp,
+						);
+						return new Date(timestamp);
 					}
 
 					// return now if this file is not yet available in `git`
