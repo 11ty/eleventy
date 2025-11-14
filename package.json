@@ -67,7 +67,7 @@
 	"author": "Zach Leatherman <zachleatherman@gmail.com> (https://zachleat.com/)",
 	"repository": {
 		"type": "git",
-		"url": "git://github.com/11ty/eleventy.git"
+		"url": "git+https://github.com/11ty/eleventy.git"
 	},
 	"bugs": "https://github.com/11ty/eleventy/issues",
 	"homepage": "https://www.11ty.dev/",
@@ -138,12 +138,12 @@
 		"@11ty/eleventy-dev-server": "3.0.0-alpha.3",
 		"@11ty/eleventy-plugin-bundle": "^3.0.7",
 		"@11ty/eleventy-utils": "^2.0.7",
-		"@11ty/gray-matter": "^2.0.0",
+		"@11ty/gray-matter": "^2.0.1",
 		"@11ty/lodash-custom": "^4.17.21",
 		"@11ty/parse-date-strings": "^2.0.5",
 		"@11ty/posthtml-urls": "^1.0.1",
 		"@11ty/recursive-copy": "^4.0.2",
-		"@sindresorhus/slugify": "^2.2.1",
+		"@sindresorhus/slugify": "^3.0.0",
 		"bcp-47-normalize": "^2.3.0",
 		"chokidar": "^4.0.3",
 		"debug": "^4.4.3",
@@ -163,7 +163,7 @@
 		"posthtml": "^0.16.6",
 		"posthtml-match-helper": "^2.0.3",
 		"semver": "^7.7.3",
-		"tinyglobby": "^0.2.14"
+		"tinyglobby": "^0.2.15"
 	},
 	"overrides": {
 		"chokidar": "$chokidar",
