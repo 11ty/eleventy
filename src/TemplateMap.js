@@ -81,18 +81,10 @@ class TemplateMap {
 		return this.map;
 	}
 
-	// NEW: Helper method to add entries to the lookup Map
 	_addToInputPathMap(mapEntry) {
-		const inputPath = mapEntry.inputPath;
-
-		// Store under the original inputPath
-		this.inputPathMap.set(inputPath, mapEntry);
-
-		// Also store under absolute path if different
-		const absoluteInputPath = TemplatePath.absolutePath(inputPath);
-		if (absoluteInputPath !== inputPath) {
-			this.inputPathMap.set(absoluteInputPath, mapEntry);
-		}
+		// Store under absolute path
+		let absoluteInputPath = TemplatePath.absolutePath(mapEntry.inputPath);
+		this.inputPathMap.set(absoluteInputPath, mapEntry);
 	}
 
 	getTagTarget(str) {
