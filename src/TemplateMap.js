@@ -36,6 +36,7 @@ class TemplateMap {
 		}
 		this.eleventyConfig = eleventyConfig;
 		this.map = [];
+		this.inputPathMap = new Map(); // NEW: O(1) lookup Map for performance
 		this.collectionsData = null;
 		this.cached = false;
 		this.verboseOutput = true;
@@ -77,11 +78,18 @@ class TemplateMap {
 
 		for (let map of entries) {
 			this.map.push(map);
+			this._addToInputPathMap(map); // NEW: Add to lookup Map for O(1) access
 		}
 	}
 
 	getMap() {
 		return this.map;
+	}
+
+	_addToInputPathMap(mapEntry) {
+		// Store under absolute path
+		let absoluteInputPath = TemplatePath.absolutePath(mapEntry.inputPath);
+		this.inputPathMap.set(absoluteInputPath, mapEntry);
 	}
 
 	getTagTarget(str) {
@@ -330,14 +338,9 @@ class TemplateMap {
 		return Boolean(this.getMapEntryForInputPath(inputPath));
 	}
 
-	// TODO(slightlyoff): hot inner loop?
 	getMapEntryForInputPath(inputPath) {
 		let absoluteInputPath = TemplatePath.absolutePath(inputPath);
-		return this.map.find((entry) => {
-			if (entry.inputPath === inputPath || entry.inputPath === absoluteInputPath) {
-				return entry;
-			}
-		});
+		return this.inputPathMap.get(absoluteInputPath);
 	}
 
 	#removeTagsFromTemplateOrder(maps) {
