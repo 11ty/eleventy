@@ -1172,3 +1172,14 @@ test("jsTruthy default changed, breaking in v4 #3507", async (t) => {
   let [result] = await elev.toJSON();
   t.deepEqual(result.content, `--empty-zero`);
 });
+
+test("Use globals for page/eleventy/collections for use inside {% render %} #1541", async (t) => {
+  let elev = new Eleventy("./test/stubs/stubs-1541/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("index.liquid", `{% render "render-source.liquid" %}`);
+    }
+  });
+
+  let [result] = await elev.toJSON();
+  t.deepEqual(result.content, `/ via script collections.all size: 1`);
+});

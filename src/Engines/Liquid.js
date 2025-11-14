@@ -325,6 +325,12 @@ export default class Liquid extends TemplateEngine {
 		return async function (data) {
 			let tmpl = await tmplReady;
 
+			options.globals = {
+				page: data?.page,
+				eleventy: data?.eleventy,
+				collections: data?.collections,
+			};
+
 			return engine.render(tmpl, data, options);
 		};
 	}
