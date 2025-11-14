@@ -43,7 +43,7 @@ export default class PathNormalizer {
 			return dir;
 		}
 
-		return dir + sep;
+		return dir + "/";
 	}
 
 	// returns a path
