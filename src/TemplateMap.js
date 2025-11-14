@@ -333,15 +333,7 @@ class TemplateMap {
 		return Boolean(this.getMapEntryForInputPath(inputPath));
 	}
 
-	// OPTIMIZED: O(1) lookup instead of O(n) search - Performance improvement for template rendering
 	getMapEntryForInputPath(inputPath) {
-		// Try direct lookup first (most common case)
-		let entry = this.inputPathMap.get(inputPath);
-		if (entry) {
-			return entry;
-		}
-
-		// Try absolute path lookup if direct lookup failed
 		let absoluteInputPath = TemplatePath.absolutePath(inputPath);
 		return this.inputPathMap.get(absoluteInputPath);
 	}
