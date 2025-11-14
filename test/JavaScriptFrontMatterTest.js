@@ -39,3 +39,29 @@ test("Custom Front Matter Parsing Options (using backwards-compatible `js` inste
 
   t.is(result[0]?.content, `<div>HELLO!</div>`);
 });
+
+// https://github.com/11ty/eleventy/issues/3917
+test("Issue #3917 previous JS object front matter shouldn’t have had implicit exports turned on", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual-nowrite", "./test/stubs-virtual-nowrite/_site", {
+    config: function(eleventyConfig) {
+      eleventyConfig.addTemplate("test.njk", `---js
+{
+  eleventyComputed: {
+    summary: async function (data) {
+      let textInsert = data ? 'something' : 'nothing';
+      return "Some text";
+    }
+  }
+}
+---
+Hello`);
+    }
+  });
+  elev.disableLogger();
+
+  let result = await elev.toJSON();
+
+  t.deepEqual(result.length, 1);
+
+  t.is(result[0]?.content, `Hello`);
+});

@@ -31,7 +31,9 @@ class FileSystemSearch {
 		}
 
 		// Strip leading slashes from everything!
-		globs = globs.map((entry) => TemplatePath.stripLeadingDotSlash(entry));
+		globs = globs.map((entry) => {
+			return TemplatePath.stripLeadingDotSlash(entry);
+		});
 
 		let cwd = GlobRemap.getCwd(globs);
 		if (cwd) {

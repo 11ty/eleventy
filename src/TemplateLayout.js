@@ -1,13 +1,42 @@
-import { TemplatePath } from "@11ty/eleventy-utils";
+import { Merge, TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
 import TemplateLayoutPathResolver from "./TemplateLayoutPathResolver.js";
 import TemplateContent from "./TemplateContent.js";
-import TemplateData from "./Data/TemplateData.js";
 import layoutCache from "./LayoutCache.js";
 
 // const debug = debugUtil("Eleventy:TemplateLayout");
 const debugDev = debugUtil("Dev:Eleventy:TemplateLayout");
+
+// https://github.com/11ty/eleventy/issues/3954
+class CdataWrapper {
+	static PREFIX = "<![CDATA[STARTRAW";
+	static POSTFIX = "ENDRAW]]>";
+
+	constructor(templateSyntax) {
+		this.isEligible = CdataWrapper.isEligible(templateSyntax);
+	}
+
+	// Markdown only
+	static isEligible(templateSyntax) {
+		return templateSyntax.split(",").includes("md");
+	}
+
+	wrap(content) {
+		if (this.isEligible) {
+			return CdataWrapper.PREFIX + content + CdataWrapper.POSTFIX;
+		}
+		return content;
+	}
+
+	unwrap(content) {
+		if (this.isEligible) {
+			return content.replaceAll(CdataWrapper.PREFIX, "").replaceAll(CdataWrapper.POSTFIX, "");
+		}
+
+		return content;
+	}
+}
 
 class TemplateLayout extends TemplateContent {
 	constructor(key, extensionMap, eleventyConfig) {
@@ -143,7 +172,7 @@ class TemplateLayout extends TemplateContent {
 		}
 
 		// Deep merge of layout front matter
-		let data = TemplateData.mergeDeep(this.config.dataDeepMerge, {}, ...dataToMerge);
+		let data = Merge({}, ...dataToMerge);
 		delete data[this.config.keys.layout];
 
 		return data;
@@ -177,6 +206,8 @@ class TemplateLayout extends TemplateContent {
 
 		try {
 			fns.push({
+				inputPath: this.inputPath,
+				template: this,
 				render: await this.getCachedCompiledLayoutFunction(),
 			});
 
@@ -215,13 +246,17 @@ class TemplateLayout extends TemplateContent {
 	async renderPageEntry(pageEntry) {
 		let templateContent = pageEntry.templateContent;
 		let compiledFunctions = await this.getCompiledLayoutFunctions();
-		for (let { render } of compiledFunctions) {
+		for (let { render, template } of compiledFunctions) {
+			let templateSyntax = template.getEngineNames(pageEntry.data[this.config.keys.engineOverride]);
+
+			let cdata = new CdataWrapper(templateSyntax);
+
 			let data = {
-				content: templateContent,
+				content: cdata.wrap(templateContent),
 				...pageEntry.data,
 			};
 
-			templateContent = await render(data);
+			templateContent = cdata.unwrap(await render(data));
 		}
 
 		// Don’t set `templateContent` on pageEntry because collection items should not have layout markup
