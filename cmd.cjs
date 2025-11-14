@@ -16,7 +16,7 @@ require("please-upgrade-node")(pkg, {
 	},
 });
 
-const minimist = require("minimist");
+const mri = require("mri");
 const debug = require("debug")("Eleventy:cmd");
 
 class SimpleError extends Error {
@@ -31,7 +31,7 @@ async function exec() {
 	const { EleventyErrorHandler } = await import("./src/Errors/EleventyErrorHandler.js");
 
 	try {
-		const argv = minimist(process.argv.slice(2), {
+		const argv = mri(process.argv.slice(2), {
 			string: ["input", "output", "formats", "config", "pathprefix", "port", "to", "incremental", "loader"],
 			boolean: [
 				"quiet",
@@ -47,12 +47,23 @@ async function exec() {
 				"ignore-initial": false,
 				"to": "fs",
 			},
-			unknown: function (unknownArgument) {
-				throw new Error(
-					`We don’t know what '${unknownArgument}' is. Use --help to see the list of supported commands.`,
-				);
-			},
 		});
+
+		// mri doesn't provide the same unknown flag detection as minimist,
+		// so we implement it manually for better UX
+		const knownFlags = [
+			"input", "output", "formats", "config", "pathprefix", "port", "to",
+			"incremental", "loader", "quiet", "version", "watch", "dryrun",
+			"help", "serve", "ignore-initial"
+		];
+
+		for (const key of Object.keys(argv)) {
+			if (key !== '_' && !knownFlags.includes(key)) {
+				throw new Error(
+					`We don't know what '${key}' is. Use --help to see the list of supported commands.`,
+				);
+			}
+		}
 
 		debug("command: eleventy %o", argv);
 		const { Eleventy } = await import("./src/Eleventy.js");
