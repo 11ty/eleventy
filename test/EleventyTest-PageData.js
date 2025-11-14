@@ -49,7 +49,7 @@ test("#3794: page.inputPathDir and page.dir (with file slug and index)", async (
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
     config: function(eleventyConfig) {
       eleventyConfig.addTemplate("yawn/index.njk", `{{ page.inputPathDir }} and {{ page.dir }}`, {
-        permalink: "/{{ page.filePathStem }}.{{ page.outputFileExtension }}"
+        permalink: "{{ page.filePathStem }}.{{ page.outputFileExtension }}"
       });
     }
   });
@@ -65,7 +65,7 @@ test("#3794: page.inputPathDir and page.dir (with file slug and not-index)", asy
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
     config: function(eleventyConfig) {
       eleventyConfig.addTemplate("yawn/test.njk", `{{ page.inputPathDir }} and {{ page.dir }}`, {
-        permalink: "/{{ page.filePathStem }}.{{ page.outputFileExtension }}"
+        permalink: "{{ page.filePathStem }}.{{ page.outputFileExtension }}"
       });
     }
   });
@@ -86,7 +86,7 @@ test("#3794: page.inputPathDir and page.dir (paginated with file slug and not-in
           data: "data",
           size: 1,
         },
-        permalink: "/{{ pagination.pageNumber }}/{{ page.filePathStem }}.{{ page.outputFileExtension }}"
+        permalink: "/{{ pagination.pageNumber }}{{ page.filePathStem }}.{{ page.outputFileExtension }}"
       });
     }
   });
