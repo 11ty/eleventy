@@ -145,7 +145,7 @@
 		"@11ty/recursive-copy": "^4.0.2",
 		"@sindresorhus/slugify": "^3.0.0",
 		"bcp-47-normalize": "^2.3.0",
-		"chokidar": "^4.0.3",
+		"chokidar": "^5.0.0",
 		"debug": "^4.4.3",
 		"dependency-graph": "^1.0.0",
 		"entities": "^7.0.0",
