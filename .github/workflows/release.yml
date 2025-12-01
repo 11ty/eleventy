@@ -4,7 +4,9 @@ on:
     types: [published]
 permissions: read-all
 jobs:
-  build:
+  release:
+    # see https://github.com/11ty/eleventy/settings/environments
+    environment: GitHub Publish
     runs-on: ubuntu-latest
     permissions:
       contents: read
