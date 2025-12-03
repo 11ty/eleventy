@@ -19,7 +19,7 @@ updates:
     assignees: [zachleat]
 
   - package-ecosystem: github-actions
-    directories: ".github/workflows/**"
+    directory: ".github/workflows/**"
     schedule:
       interval: weekly
     cooldown:
