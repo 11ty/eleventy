@@ -1,6 +1,6 @@
 {
 	"name": "@11ty/eleventy",
-	"version": "4.0.0-alpha.4",
+	"version": "4.0.0-alpha.5",
 	"description": "A simpler static site generator.",
 	"publishConfig": {
 		"access": "public",
@@ -168,6 +168,7 @@
 	"overrides": {
 		"commander": "^14",
 		"chokidar": "$chokidar",
-		"fdir": "6.4.6"
+		"fdir": "6.4.6",
+		"posthtml-parser": "^0.12"
 	}
 }
