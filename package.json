@@ -166,6 +166,7 @@
 		"tinyglobby": "^0.2.15"
 	},
 	"overrides": {
+		"commander": "^14",
 		"chokidar": "$chokidar",
 		"fdir": "6.4.6"
 	}
