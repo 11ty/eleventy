@@ -312,6 +312,7 @@ export default class Liquid extends TemplateEngine {
 
 	async compile(str, inputPath) {
 		let engine = this.liquidLib;
+		let liquidOptions = this.liquidOptions;
 		let tmplReady = engine.parse(str, inputPath);
 
 		// Required for relative includes
@@ -325,11 +326,14 @@ export default class Liquid extends TemplateEngine {
 		return async function (data) {
 			let tmpl = await tmplReady;
 
-			options.globals = {
-				page: data?.page,
-				eleventy: data?.eleventy,
-				collections: data?.collections,
-			};
+			options.globals = Object.assign(
+				{
+					page: data?.page,
+					eleventy: data?.eleventy,
+					collections: data?.collections,
+				},
+				liquidOptions?.globals,
+			);
 
 			return engine.render(tmpl, data, options);
 		};
