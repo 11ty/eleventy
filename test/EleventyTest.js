@@ -6,7 +6,7 @@ import { rimrafSync } from "rimraf";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { marked } from "marked";
-import nunjucks from "nunjucks";
+import nunjucks from "@11ty/nunjucks";
 import * as sass from "sass";
 
 import Eleventy, { HtmlBasePlugin } from "../src/Eleventy.js";
