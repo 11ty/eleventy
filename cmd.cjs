@@ -4,7 +4,7 @@
 // as possible with error messaging to folks on older runtimes.
 
 const pkg = require("./package.json");
-require("please-upgrade-node")(pkg, {
+require("@11ty/node-version-check")(pkg, {
 	message: function (requiredVersion) {
 		return (
 			"Eleventy " +
