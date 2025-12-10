@@ -166,9 +166,6 @@
 		"tinyglobby": "^0.2.15"
 	},
 	"overrides": {
-		"commander": "^14",
-		"chokidar": "$chokidar",
-		"fdir": "6.4.6",
-		"posthtml-parser": "^0.12"
+		"fdir": "6.4.6"
 	}
 }
