@@ -70,7 +70,9 @@ class TemplateLayoutPathResolver {
 			return true;
 		}
 		let fullPath = this.templateConfig.directories.getLayoutPath(layoutPath);
-		if (this.templateConfig.existsCache.exists(fullPath)) {
+		let existsCache = this.templateConfig.existsCache;
+		if (existsCache.exists(fullPath) && !existsCache.isDirectory(fullPath)) {
+			// #4191
 			return true;
 		}
 		return false;
