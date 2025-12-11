@@ -293,3 +293,19 @@ test("11ty.js class templates with instance properties (data and render arrows),
 	t.deepEqual(results.length, 1);
 	t.deepEqual(results[0].content.trim(), `Hello world!`);
 });
+
+test("11ty.js class templates with instance properties (data and render arrows, new), issue #1645", async (t) => {
+	let elev = new Eleventy("./test/stubs-virtual-nowrite", "./test/stubs-virtual-nowrite/_site", {
+		config: function (eleventyConfig) {
+			eleventyConfig.addTemplate("virtual.11ty.js", new class {
+        data = () => { return { key: "world" }; }
+        render = (data) => { return `Hello ${data.key}!` }
+      });
+    }
+	});
+
+	let results = await elev.toJSON();
+
+	t.deepEqual(results.length, 1);
+	t.deepEqual(results[0].content.trim(), `Hello world!`);
+});
