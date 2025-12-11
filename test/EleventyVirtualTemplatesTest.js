@@ -221,3 +221,75 @@ test("11ty.js Virtual Templates (function), issue #3347", async (t) => {
   // TODO support rawInput on 11ty.js?
 	// t.deepEqual(results[0].rawInput, templateDefinition);
 });
+
+
+test("11ty.js class templates with invalid signature, issue #1645", async (t) => {
+	let elev = new Eleventy("./test/stubs-virtual-nowrite", "./test/stubs-virtual-nowrite/_site", {
+		config: function (eleventyConfig) {
+			eleventyConfig.addTemplate("virtual.11ty.js", class {});
+    }
+	});
+  elev.disableLogger();
+
+  await t.throwsAsync(elev.toJSON(), {
+		message: `Invalid class signature for an 11ty.js template: needs a render or data instance property.`
+	});
+});
+
+test("11ty.js class templates with instance properties (data), issue #1645", async (t) => {
+	let elev = new Eleventy("./test/stubs-virtual-nowrite", "./test/stubs-virtual-nowrite/_site", {
+		config: function (eleventyConfig) {
+			eleventyConfig.addTemplate("virtual.11ty.js", class { data() { return {} } });
+    }
+	});
+
+	let results = await elev.toJSON();
+
+	t.deepEqual(results.length, 1);
+	t.deepEqual(results[0].content.trim(), ``);
+});
+
+test("11ty.js class templates with instance properties (render), issue #1645", async (t) => {
+	let elev = new Eleventy("./test/stubs-virtual-nowrite", "./test/stubs-virtual-nowrite/_site", {
+		config: function (eleventyConfig) {
+			eleventyConfig.addTemplate("virtual.11ty.js", class { render() { return "Hello!" } });
+    }
+	});
+
+	let results = await elev.toJSON();
+
+	t.deepEqual(results.length, 1);
+	t.deepEqual(results[0].content.trim(), `Hello!`);
+});
+
+test("11ty.js class templates with instance properties (data and render), issue #1645", async (t) => {
+	let elev = new Eleventy("./test/stubs-virtual-nowrite", "./test/stubs-virtual-nowrite/_site", {
+		config: function (eleventyConfig) {
+			eleventyConfig.addTemplate("virtual.11ty.js", class {
+        data() { return { key: "world" }; }
+        render(data) { return `Hello ${data.key}!` }
+      });
+    }
+	});
+
+	let results = await elev.toJSON();
+
+	t.deepEqual(results.length, 1);
+	t.deepEqual(results[0].content.trim(), `Hello world!`);
+});
+
+test("11ty.js class templates with instance properties (data and render arrows), issue #1645", async (t) => {
+	let elev = new Eleventy("./test/stubs-virtual-nowrite", "./test/stubs-virtual-nowrite/_site", {
+		config: function (eleventyConfig) {
+			eleventyConfig.addTemplate("virtual.11ty.js", class {
+        data = () => { return { key: "world" }; }
+        render = (data) => { return `Hello ${data.key}!` }
+      });
+    }
+	});
+
+	let results = await elev.toJSON();
+
+	t.deepEqual(results.length, 1);
+	t.deepEqual(results[0].content.trim(), `Hello world!`);
+});
