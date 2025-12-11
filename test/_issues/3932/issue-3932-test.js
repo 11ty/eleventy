@@ -5,7 +5,7 @@ import { spawnAsync } from "../../../src/Util/spawn.js";
 
 const CURRENT_DIR = parse(fileURLToPath(import.meta.url)).dir;
 
-test.only("Issue #3932", async (t) => {
+test("Issue #3932", async (t) => {
 	let result = await spawnAsync(
 		"node",
 		["../../../cmd.cjs", "--to=json"],
