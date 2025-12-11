@@ -4,7 +4,7 @@ import { FilePathUtil } from "./FilePathUtil.js";
 
 import { arrayDelete } from "./ArrayUtil.js";
 
-class HtmlTransformer {
+export class HtmlTransformer {
 	// feature test for Eleventy Bundle Plugin
 	static SUPPORTS_PLUGINS_ENABLED_CALLBACK = true;
 
@@ -13,7 +13,9 @@ class HtmlTransformer {
 	constructor() {
 		// execution order is important (not order of addition/object key order)
 		this.callbacks = {};
-		this.posthtmlProcessOptions = {};
+		this.posthtmlProcessOptions = {
+			recognizeNoValueAttribute: true,
+		};
 		this.plugins = {};
 	}
 
@@ -168,5 +170,3 @@ class HtmlTransformer {
 		return result.html;
 	}
 }
-
-export { HtmlTransformer };
