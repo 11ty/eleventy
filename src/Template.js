@@ -386,7 +386,7 @@ class Template extends TemplateContent {
 
 		if (this.templateData) {
 			localData = await this.templateData.getTemplateDirectoryData(this.inputPath);
-			globalData = await this.templateData.getGlobalData(this.inputPath);
+			globalData = await this.templateData.getGlobalData();
 			debugDev("%o getData getTemplateDirectoryData and getGlobalData", this.inputPath);
 		}
 
@@ -413,7 +413,7 @@ class Template extends TemplateContent {
 			let mergedData = Merge({}, globalData, mergedLayoutData, localData, frontMatterData);
 
 			if (this.config.freezeReservedData) {
-				ReservedData.check(mergedData);
+				ReservedData.checkSubset(mergedData);
 			}
 
 			await this.addPage(mergedData);
@@ -422,18 +422,10 @@ class Template extends TemplateContent {
 
 			return mergedData;
 		} catch (e) {
-			if (
-				ReservedData.isReservedDataError(e) ||
-				(e instanceof TypeError &&
-					e.message.startsWith("Cannot add property") &&
-					e.message.endsWith("not extensible"))
-			) {
-				throw new EleventyBaseError(
-					`You attempted to set one of Eleventy’s reserved data property names${e.reservedNames ? `: ${e.reservedNames.join(", ")}` : ""}. You can opt-out of this behavior with \`eleventyConfig.setFreezeReservedData(false)\` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. \`eleventy\`, \`pkg\`, and others). Learn more: https://v3.11ty.dev/docs/data-eleventy-supplied/`,
-					e,
-				);
+			// if ReservedDataError, defer to that (from ReservedData.checkSubset above)
+			if (!ReservedData.isReservedDataError(e) && ReservedData.isFrozenError(e)) {
+				throw ReservedData.getError({ cause: e });
 			}
-
 			throw e;
 		}
 	}
@@ -628,7 +620,7 @@ class Template extends TemplateContent {
 
 			// Check for reserved properties in computed data
 			if (this.config.freezeReservedData) {
-				ReservedData.check(data[this.config.keys.computed]);
+				ReservedData.checkSubset(data[this.config.keys.computed]);
 			}
 
 			// actually add the computed data

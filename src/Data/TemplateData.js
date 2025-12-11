@@ -12,6 +12,7 @@ import { getEleventyPackageJson, getWorkingProjectPackageJson } from "../Util/Im
 import { EleventyImport, EleventyLoadContent } from "../Util/Require.js";
 import { DeepFreeze } from "../Util/Objects/DeepFreeze.js";
 import { coerce } from "../Util/SemverCoerce.js";
+import ReservedData from "../Util/ReservedData.js";
 
 const { set: lodashSet, get: lodashGet } = lodash;
 
@@ -311,6 +312,10 @@ class TemplateData {
 			dataFileConflicts[objectPathTargetString] = files[j];
 			debug(`Found global data file ${files[j]} and adding as: ${objectPathTarget}`);
 			lodashSet(globalData, objectPathTarget, data);
+
+			if (this.config.freezeReservedData) {
+				ReservedData.check(globalData, files[j]);
+			}
 		}
 
 		return globalData;

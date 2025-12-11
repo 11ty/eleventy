@@ -257,8 +257,9 @@ class TemplateLayout extends TemplateContent {
 			let cdata = new CdataWrapper(pageTemplateSyntax, layoutTemplateSyntax);
 
 			let data = {
-				content: cdata.wrap(templateContent),
 				...pageEntry.data,
+				// This should come *after* data, so `content` have override `content` props set in data cascade
+				content: cdata.wrap(templateContent),
 			};
 
 			templateContent = cdata.unwrap(await render(data));

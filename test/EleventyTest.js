@@ -965,7 +965,7 @@ eleventy:
     message: 'You attempted to set one of Eleventy’s reserved data property names. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://v3.11ty.dev/docs/data-eleventy-supplied/'
   });
 
-  t.is(e.originalError.toString(), "TypeError: Cannot add property key1, object is not extensible");
+  t.is(e.cause.toString(), "TypeError: Cannot add property key1, object is not extensible");
 });
 
 test("Eleventy setting reserved data throws error (pkg)", async (t) => {
@@ -983,7 +983,7 @@ pkg:
     message: 'You attempted to set one of Eleventy’s reserved data property names. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://v3.11ty.dev/docs/data-eleventy-supplied/'
   });
 
-  t.is(e.originalError.toString(), "TypeError: Cannot add property myOwn, object is not extensible");
+  t.is(e.cause.toString(), "TypeError: Cannot add property myOwn, object is not extensible");
 });
 
 test("Eleventy pagination works okay with reserved data throws (eleventy) Issue #3262", async (t) => {
@@ -1020,8 +1020,6 @@ page: "My page value"
   let e = await t.throwsAsync(() => elev.toJSON(), {
     message: 'You attempted to set one of Eleventy’s reserved data property names: page. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://v3.11ty.dev/docs/data-eleventy-supplied/'
   });
-
-  t.is(e.originalError.toString(), "TypeError: Cannot override reserved Eleventy properties: page");
 });
 
 test("Eleventy setting reserved data throws error (content)", async (t) => {
@@ -1034,11 +1032,9 @@ content: "My page value"
   });
   elev.disableLogger();
 
-  let e = await t.throwsAsync(() => elev.toJSON(), {
+  await t.throwsAsync(() => elev.toJSON(), {
     message: 'You attempted to set one of Eleventy’s reserved data property names: content. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://v3.11ty.dev/docs/data-eleventy-supplied/'
   });
-
-  t.is(e.originalError.toString(), "TypeError: Cannot override reserved Eleventy properties: content");
 });
 
 test("Eleventy setting reserved data throws error (collections)", async (t) => {
@@ -1051,11 +1047,9 @@ collections: []
   });
   elev.disableLogger();
 
-  let e = await t.throwsAsync(() => elev.toJSON(), {
+  await t.throwsAsync(() => elev.toJSON(), {
     message: 'You attempted to set one of Eleventy’s reserved data property names: collections. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://v3.11ty.dev/docs/data-eleventy-supplied/'
   });
-
-  t.is(e.originalError.toString(), "TypeError: Cannot override reserved Eleventy properties: collections");
 });
 
 test("Eleventy setting pkg data is okay when pkg is remapped to parkour", async (t) => {
@@ -1143,7 +1137,7 @@ parkour:
     message: 'You attempted to set one of Eleventy’s reserved data property names. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://v3.11ty.dev/docs/data-eleventy-supplied/'
   });
 
-  t.is(e.originalError.toString(), "TypeError: Cannot add property myOwn, object is not extensible");
+  t.is(e.cause.toString(), "TypeError: Cannot add property myOwn, object is not extensible");
 });
 
 test("Eleventy data schema (success) #879", async (t) => {
