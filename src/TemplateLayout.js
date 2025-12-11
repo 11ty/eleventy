@@ -13,13 +13,15 @@ class CdataWrapper {
 	static PREFIX = "<![CDATA[STARTRAW";
 	static POSTFIX = "ENDRAW]]>";
 
-	constructor(templateSyntax) {
-		this.isEligible = CdataWrapper.isEligible(templateSyntax);
+	constructor(pageTemplateSyntax = "", layoutTemplateSyntax = "") {
+		this.isEligible = CdataWrapper.isEligible(pageTemplateSyntax, layoutTemplateSyntax);
 	}
 
-	// Markdown only
-	static isEligible(templateSyntax) {
-		return templateSyntax.split(",").includes("md");
+	// Markdown in Markdown layout only
+	static isEligible(templateSyntax, layoutTemplateSyntax) {
+		return (
+			templateSyntax.split(",").includes("md") && layoutTemplateSyntax.split(",").includes("md")
+		);
 	}
 
 	wrap(content) {
@@ -244,12 +246,15 @@ class TemplateLayout extends TemplateContent {
 	// Trouble: layouts may need data variables present downstream/upstream
 	// This is called from Template->renderPageEntry
 	async renderPageEntry(pageEntry) {
+		let pageTemplateSyntax = pageEntry.template?.getEngineNames(
+			pageEntry.data[this.config.keys.engineOverride],
+		);
 		let templateContent = pageEntry.templateContent;
 		let compiledFunctions = await this.getCompiledLayoutFunctions();
-		for (let { render, template } of compiledFunctions) {
-			let templateSyntax = template.getEngineNames(pageEntry.data[this.config.keys.engineOverride]);
 
-			let cdata = new CdataWrapper(templateSyntax);
+		for (let { render, template } of compiledFunctions) {
+			let layoutTemplateSyntax = template.getEngineNames(); // templateEngineOverride not supported in layouts
+			let cdata = new CdataWrapper(pageTemplateSyntax, layoutTemplateSyntax);
 
 			let data = {
 				content: cdata.wrap(templateContent),
