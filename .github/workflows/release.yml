@@ -13,7 +13,7 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # 6.0.1
-      - uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b # 4.0.3
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # 6.1.0
         with:
           node-version: "22"
           registry-url: 'https://registry.npmjs.org'
