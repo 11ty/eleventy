@@ -610,6 +610,8 @@ export {
 export { TransformPlugin as InputPathToUrlTransformPlugin } from "./Plugins/InputPathToUrl.js";
 export { IdAttributePlugin } from "./Plugins/IdAttributePlugin.js";
 
+export { PreserveClosingTagsPlugin } from "./Plugins/PreserveClosingTagsPlugin.js";
+
 // Error messages for Removed plugins
 export function EleventyServerlessBundlerPlugin() {
 	throw new Error(

@@ -15,6 +15,7 @@ export class HtmlTransformer {
 		this.callbacks = {};
 		this.posthtmlProcessOptions = {
 			recognizeNoValueAttribute: true,
+			closingSingleTag: "closeAs",
 		};
 		this.plugins = {};
 	}
