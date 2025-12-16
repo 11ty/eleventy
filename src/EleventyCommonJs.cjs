@@ -28,8 +28,8 @@ if(!canRequireModules()) {
    3. (More work) Change your project to use ESM-first by adding \`"type": "module"\` to your package.json. Any
       \`.js\` will need to be ported to use ESM syntax (or renamed to \`.cjs\`.)
 
-   4. Upgrade your Node version (at time of writing, v22.12 or newer) to enable this behavior. If you use a version
-      of Node older than v22.12, try the --experimental-require-module command line flag in Node. Read more:
+   4. Upgrade your Node version (at time of writing, v20.19 or newer) to enable this behavior. If you use a version
+      of Node older than v20.19, try the --experimental-require-module command line flag in Node. Read more:
       https://nodejs.org/api/modules.html#loading-ecmascript-modules-using-require`);
 
 	error.skipOriginalStack = true;

@@ -160,4 +160,5 @@ async function exec() {
 	}
 }
 
+// await
 exec();
