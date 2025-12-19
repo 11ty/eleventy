@@ -78,6 +78,10 @@ class TemplateConfig {
 				"eleventy.config.js",
 				"eleventy.config.mjs",
 				"eleventy.config.cjs",
+				// TODO node 22+ only
+				"eleventy.config.ts",
+				"eleventy.config.mts",
+				"eleventy.config.cts",
 			];
 		}
 

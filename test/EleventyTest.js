@@ -129,7 +129,7 @@ test("Eleventy file watching", async (t) => {
     "./.gitignore",
     "./.eleventyignore",
     "./test/stubs/.eleventyignore",
-    "./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js}",
+    "./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js,11tydata.mts,11tydata.cts,11tydata.ts}",
     "./test/stubs/deps/dep1.cjs",
     "./test/stubs/deps/dep2.cjs",
   ]);
@@ -180,7 +180,7 @@ test("Eleventy file watching (no JS dependencies)", async (t) => {
     "./.gitignore",
     "./.eleventyignore",
     "./test/stubs/.eleventyignore",
-    "./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js}",
+    "./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js,11tydata.mts,11tydata.cts,11tydata.ts}",
   ]);
 
   t.true(ignores.includes("node_modules/**"));

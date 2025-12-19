@@ -693,7 +693,7 @@ test("getTemplateDataFileGlob", async (t) => {
   let tw = new TemplateData(eleventyConfig);
 
   t.deepEqual(await tw.getTemplateDataFileGlob(), [
-    "./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js}",
+    "./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js,11tydata.mts,11tydata.cts,11tydata.ts}",
   ]);
 });
 

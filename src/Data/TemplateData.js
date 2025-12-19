@@ -173,11 +173,21 @@ class TemplateData {
 					globSuffixesWithLeadingDot.add(`${suffix.slice(1)}.mjs`);
 					globSuffixesWithLeadingDot.add(`${suffix.slice(1)}.cjs`);
 					globSuffixesWithLeadingDot.add(`${suffix.slice(1)}.js`);
+
+					// TODO Node 22+ only
+					globSuffixesWithLeadingDot.add(`${suffix.slice(1)}.mts`);
+					globSuffixesWithLeadingDot.add(`${suffix.slice(1)}.cts`);
+					globSuffixesWithLeadingDot.add(`${suffix.slice(1)}.ts`);
 				} else {
 					// "suffix.js" without leading dot
 					globSuffixesWithoutLeadingDot.add(`${suffix || ""}.mjs`);
 					globSuffixesWithoutLeadingDot.add(`${suffix || ""}.cjs`);
 					globSuffixesWithoutLeadingDot.add(`${suffix || ""}.js`);
+
+					// TODO Node 22+ only
+					globSuffixesWithoutLeadingDot.add(`${suffix || ""}.mts`);
+					globSuffixesWithoutLeadingDot.add(`${suffix || ""}.cts`);
+					globSuffixesWithoutLeadingDot.add(`${suffix || ""}.ts`);
 				}
 			}
 		}
@@ -209,7 +219,7 @@ class TemplateData {
 			if (suffix) {
 				// TODO this check is purely for backwards compat and I kinda feel like it shouldn’t be here
 				// paths.push(`${this.inputDir}/**/*${suffix || ""}.cjs`); // Same as above
-				paths.push(`${this.inputDir}**/*${suffix || ""}.js`);
+				paths.push(`${this.inputDir}**/*${suffix || ""}.js`); // TODO typescript?
 			}
 		}
 
