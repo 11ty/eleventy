@@ -934,15 +934,16 @@ Open an issue: https://github.com/11ty/eleventy/issues/new`);
 			`in ${chalk.bold(time.toFixed(2))} ${simplePlural(time.toFixed(2), "second", "seconds")}`,
 		);
 
+		let cfgStr = this.#activeConfigurationPath
+			? `, ${TemplatePath.stripLeadingDotSlash(this.#activeConfigurationPath)}`
+			: " no config file";
 		// More than 1 second total, show estimate of per-template time
 		if (time >= 1 && writeCount > 1) {
-			ret.push(`(${((time * 1000) / writeCount).toFixed(1)}ms each, v${pkg.version})`);
+			ret.push(
+				chalk.gray(`(${((time * 1000) / writeCount).toFixed(1)}ms each, v${pkg.version}${cfgStr})`),
+			);
 		} else {
-			ret.push(`(v${MinimalCore.getVersion()})`);
-		}
-
-		if (!this.#activeConfigurationPath) {
-			ret.push("(no config file)");
+			ret.push(chalk.gray(`(v${MinimalCore.getVersion()}${cfgStr})`));
 		}
 
 		return ret.join(" ");
