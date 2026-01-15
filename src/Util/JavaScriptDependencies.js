@@ -70,6 +70,7 @@ class JavaScriptDependencies {
 		let esmFiles = inputFiles.filter((file) => this.getFlavor(file, isProjectUsingEsm) === "esm");
 		for (let file of esmFiles) {
 			try {
+				// TODO feature test for node:module->stripTypeScriptTypes and use with find(file, { preprocess })
 				let modules = await (this.isTypeScript(file) ? findTypeScript : find)(file);
 				for (let dep of modules) {
 					depSet.add(dep);
@@ -93,6 +94,7 @@ class JavaScriptDependencies {
 		let esmFiles = inputFiles.filter((file) => this.getFlavor(file, isProjectUsingEsm) === "esm");
 		for (let file of esmFiles) {
 			try {
+				// TODO feature test for node:module->stripTypeScriptTypes and use with find(file, { preprocess })
 				let graph = await (this.isTypeScript(file) ? findTypeScriptGraph : findGraph)(file);
 
 				mergeGraphs(rootGraph, graph);

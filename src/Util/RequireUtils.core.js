@@ -6,7 +6,12 @@ import eleventyPackageJson from "../../package.json" with { type: "json" };
 export { eleventyPackageJson };
 
 // noop
-export function clearRequireCache(absolutePath) {}
+export function clearRequireCache() {}
+
+// Stub for workaround for https://github.com/nodejs/node/issues/61385
+export function requireCommonJsTypeScript() {
+	throw new Error("TypeScript is not supported in this bundle of Eleventy.");
+}
 
 export function importJsonSync(path) {
 	// should not be a no-op

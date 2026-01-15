@@ -5,6 +5,7 @@ import { glob } from "tinyglobby";
 import path from "path";
 
 import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
+import { isTypeScriptSupported } from "../src/Util/FeatureTests.cjs";
 
 import { normalizeNewLines } from "./Util/normalizeNewLines.js";
 import { getRenderedTemplates as getRenderedTmpls } from "./_getRenderedTemplates.js";
@@ -511,7 +512,7 @@ test("Write Test 11ty.js", async (t) => {
   let { templateWriter: tw, eleventyFiles: evf } = getTemplateWriterInstance(["11ty.js"], eleventyConfig);
 
   let files = await glob(evf.getFileGlobs());
-  t.deepEqual(evf.getRawFiles(), ["./test/stubs/writeTestJS/**/*.{11ty.js,11ty.cjs,11ty.mjs,11ty.ts,11ty.cts,11ty.mts}"]);
+  t.deepEqual(evf.getRawFiles(), [`./test/stubs/writeTestJS/**/*.{11ty.js,11ty.cjs,11ty.mjs${isTypeScriptSupported() ? ",11ty.ts,11ty.cts,11ty.mts" : ""}}`]);
   t.deepEqual(files, ["test/stubs/writeTestJS/test.11ty.cjs"]);
 
   let { template: tmpl } = tw._createTemplate(files[0]);

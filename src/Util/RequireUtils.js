@@ -19,3 +19,7 @@ export function importJsonSync(filePath) {
 
 	return require(filePath);
 }
+
+export function requireCommonJsTypeScript(filePath) {
+	return require(filePath);
+}

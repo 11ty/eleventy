@@ -5,6 +5,7 @@ import EleventyFiles from "../src/EleventyFiles.js";
 import TemplateConfig from "../src/TemplateConfig.js";
 import TemplatePassthroughManager from "../src/TemplatePassthroughManager.js";
 import ProjectDirectories from "../src/Util/ProjectDirectories.js";
+import { isTypeScriptSupported } from "../src/Util/FeatureTests.cjs";
 
 import { getTemplateConfigInstance, getTemplateConfigInstanceCustomCallback, getEleventyFilesInstance } from "./_testHelpers.js";
 
@@ -431,7 +432,7 @@ test("Glob Watcher Files with Config Passthroughs (no template formats)", async 
   evf.init();
 
   t.deepEqual(await evf.getGlobWatcherTemplateDataFiles(), [
-    "./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js,11tydata.mts,11tydata.cts,11tydata.ts}",
+    `./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js${isTypeScriptSupported() ? ",11tydata.mts,11tydata.cts,11tydata.ts" : ""}}`,
   ]);
 });
 

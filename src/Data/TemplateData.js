@@ -13,6 +13,7 @@ import { EleventyImport, EleventyLoadContent } from "../Util/Require.js";
 import { DeepFreeze } from "../Util/Objects/DeepFreeze.js";
 import { coerce } from "../Util/SemverCoerce.js";
 import ReservedData from "../Util/ReservedData.js";
+import { isTypeScriptSupported } from "../Util/FeatureTests.cjs";
 
 const { set: lodashSet, get: lodashGet } = lodash;
 
@@ -174,20 +175,22 @@ class TemplateData {
 					globSuffixesWithLeadingDot.add(`${suffix.slice(1)}.cjs`);
 					globSuffixesWithLeadingDot.add(`${suffix.slice(1)}.js`);
 
-					// TODO Node 22+ only
-					globSuffixesWithLeadingDot.add(`${suffix.slice(1)}.mts`);
-					globSuffixesWithLeadingDot.add(`${suffix.slice(1)}.cts`);
-					globSuffixesWithLeadingDot.add(`${suffix.slice(1)}.ts`);
+					if (isTypeScriptSupported()) {
+						globSuffixesWithLeadingDot.add(`${suffix.slice(1)}.mts`);
+						globSuffixesWithLeadingDot.add(`${suffix.slice(1)}.cts`);
+						globSuffixesWithLeadingDot.add(`${suffix.slice(1)}.ts`);
+					}
 				} else {
 					// "suffix.js" without leading dot
 					globSuffixesWithoutLeadingDot.add(`${suffix || ""}.mjs`);
 					globSuffixesWithoutLeadingDot.add(`${suffix || ""}.cjs`);
 					globSuffixesWithoutLeadingDot.add(`${suffix || ""}.js`);
 
-					// TODO Node 22+ only
-					globSuffixesWithoutLeadingDot.add(`${suffix || ""}.mts`);
-					globSuffixesWithoutLeadingDot.add(`${suffix || ""}.cts`);
-					globSuffixesWithoutLeadingDot.add(`${suffix || ""}.ts`);
+					if (isTypeScriptSupported()) {
+						globSuffixesWithoutLeadingDot.add(`${suffix || ""}.mts`);
+						globSuffixesWithoutLeadingDot.add(`${suffix || ""}.cts`);
+						globSuffixesWithoutLeadingDot.add(`${suffix || ""}.ts`);
+					}
 				}
 			}
 		}

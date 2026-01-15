@@ -16,6 +16,7 @@ import TemplateConfig from "../src/TemplateConfig.js";
 import { getCreatedTimestamp, getUpdatedTimestamp } from "../src/Util/Git.js";
 import PathNormalizer from "../src/Util/PathNormalizer.js";
 import { normalizeNewLines, localizeNewLines } from "./Util/normalizeNewLines.js";
+import { isTypeScriptSupported } from "../src/Util/FeatureTests.cjs";
 
 const lodashGet = lodash.get;
 
@@ -129,7 +130,7 @@ test("Eleventy file watching", async (t) => {
     "./.gitignore",
     "./.eleventyignore",
     "./test/stubs/.eleventyignore",
-    "./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js,11tydata.mts,11tydata.cts,11tydata.ts}",
+    `./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js${isTypeScriptSupported() ? ",11tydata.mts,11tydata.cts,11tydata.ts" : ""}}`,
     "./test/stubs/deps/dep1.cjs",
     "./test/stubs/deps/dep2.cjs",
   ]);
@@ -180,7 +181,7 @@ test("Eleventy file watching (no JS dependencies)", async (t) => {
     "./.gitignore",
     "./.eleventyignore",
     "./test/stubs/.eleventyignore",
-    "./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js,11tydata.mts,11tydata.cts,11tydata.ts}",
+    `./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js${isTypeScriptSupported() ? ",11tydata.mts,11tydata.cts,11tydata.ts" : ""}}`,
   ]);
 
   t.true(ignores.includes("node_modules/**"));
