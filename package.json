@@ -133,7 +133,7 @@
 		"zod-validation-error": "^3.5.4"
 	},
 	"dependencies": {
-		"@11ty/dependency-tree": "^4.0.1",
+		"@11ty/dependency-tree": "^4.0.2",
 		"@11ty/dependency-tree-esm": "^2.0.3",
 		"@11ty/dependency-tree-typescript": "^1.0.0",
 		"@11ty/eleventy-dev-server": "^3.0.0-alpha.6",
