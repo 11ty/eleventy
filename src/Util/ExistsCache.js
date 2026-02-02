@@ -10,6 +10,11 @@ class ExistsCache {
 		this.lookupCount = 0;
 	}
 
+	reset() {
+		this.#exists = new Map();
+		this.#dirs = new Map();
+	}
+
 	get size() {
 		return this.#exists.size;
 	}

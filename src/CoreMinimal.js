@@ -719,12 +719,19 @@ Verbose Output: ${this.verboseMode}`;
 		if (this.#isEsm !== undefined) {
 			return this.#isEsm;
 		}
+
 		if (this.loader == "esm") {
 			this.#isEsm = true;
 		} else if (this.loader == "cjs") {
 			this.#isEsm = false;
 		} else if (this.loader == "auto") {
-			this.#isEsm = this.projectPackageJson?.type === "module";
+			// Note: Node defaults to CommonJS if missing, Deno defaults to ESM
+			// https://docs.deno.com/runtime/fundamentals/node/#commonjs-support
+			if (typeof Deno !== "undefined") {
+				this.#isEsm = this.projectPackageJson?.type !== "commonjs";
+			} else {
+				this.#isEsm = this.projectPackageJson?.type === "module";
+			}
 		} else {
 			throw new Error("The 'loader' option must be one of 'esm', 'cjs', or 'auto'");
 		}
@@ -934,15 +941,16 @@ Open an issue: https://github.com/11ty/eleventy/issues/new`);
 			`in ${chalk.bold(time.toFixed(2))} ${simplePlural(time.toFixed(2), "second", "seconds")}`,
 		);
 
+		let cfgStr = this.#activeConfigurationPath
+			? `, ${TemplatePath.stripLeadingDotSlash(this.#activeConfigurationPath)}`
+			: " no config file";
 		// More than 1 second total, show estimate of per-template time
 		if (time >= 1 && writeCount > 1) {
-			ret.push(`(${((time * 1000) / writeCount).toFixed(1)}ms each, v${pkg.version})`);
+			ret.push(
+				chalk.gray(`(${((time * 1000) / writeCount).toFixed(1)}ms each, v${pkg.version}${cfgStr})`),
+			);
 		} else {
-			ret.push(`(v${MinimalCore.getVersion()})`);
-		}
-
-		if (!this.#activeConfigurationPath) {
-			ret.push("(no config file)");
+			ret.push(chalk.gray(`(v${MinimalCore.getVersion()}${cfgStr})`));
 		}
 
 		return ret.join(" ");

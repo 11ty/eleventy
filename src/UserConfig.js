@@ -25,8 +25,6 @@ class UserConfig {
 	#pluginExecution = false;
 	/** @type {boolean} */
 	#quietModeLocked = false;
-	/** @type {boolean} */
-	#dataDeepMergeModified = false;
 	/** @type {number|undefined} */
 	#uniqueId;
 	/** @type {number} */
@@ -109,7 +107,7 @@ class UserConfig {
 			filters: {},
 			shortcodes: {},
 			pairedShortcodes: {},
-			parameterParsing: "legacy", // or builtin
+			parameterParsing: "builtin", // or legacy (Breaking: default swapped in v4.0.0)
 		};
 
 		/** @type {object} */
@@ -167,7 +165,6 @@ class UserConfig {
 		this.ignores = new Set(defaultIgnores);
 		this.watchIgnores = new Set(defaultIgnores);
 
-		this.dataDeepMerge = true;
 		this.extensionMap = new Set();
 		this.extensionMapClasses = {};
 		/** @type {object} */
@@ -331,9 +328,9 @@ class UserConfig {
 	 * Markdown
 	 */
 
-	// This is a method for plugins, probably shouldn’t use this in projects.
-	// Projects should use `setLibrary` as documented here:
-	// https://github.com/11ty/eleventy/blob/master/docs/engines/markdown.md#use-your-own-options
+	// Don’t use this, projects should use `amendLibrary` as documented here:
+	// https://www.11ty.dev/docs/languages/markdown/#optional-amend-the-library-instance
+	// Warning: this is in use by the Syntax Highlighting plugin (as of v5.0.2)
 	addMarkdownHighlighter(highlightFn) {
 		this.markdownHighlighter = highlightFn;
 	}
@@ -791,7 +788,6 @@ class UserConfig {
 	/*
 	 * Template Formats
 	 */
-
 	setTemplateFormats(templateFormats) {
 		this.templateFormats = templateFormats;
 	}
@@ -857,16 +853,6 @@ class UserConfig {
 		this.useGitIgnore = !!enabled;
 	}
 
-	setDataDeepMerge(deepMerge) {
-		this.#dataDeepMergeModified = true;
-		this.dataDeepMerge = !!deepMerge;
-	}
-
-	// Used by the Upgrade Helper Plugin
-	isDataDeepMergeModified() {
-		return this.#dataDeepMergeModified;
-	}
-
 	addWatchTarget(additionalWatchTargets, options = {}) {
 		// Reset the config when the target path changes
 		if (options.resetConfig) {
@@ -886,13 +872,6 @@ class UserConfig {
 		} else {
 			this.serverOptions = DeepCopy(this.serverOptions, options);
 		}
-	}
-
-	setBrowserSyncConfig() {
-		this._attemptedBrowserSyncUse = true;
-		debug(
-			"The `setBrowserSyncConfig` method was removed in Eleventy 2.0.0. Use `setServerOptions` with the new Eleventy development server or the `@11ty/eleventy-browser-sync` plugin moving forward.",
-		);
 	}
 
 	setChokidarConfig(options = {}) {
@@ -941,12 +920,12 @@ class UserConfig {
 	addExtension(fileExtension, options = {}) {
 		let extensions;
 
-		// Array support added in 2.0.0-canary.19
+		// Array support 2.0.0-canary.19+
 		if (Array.isArray(fileExtension)) {
 			extensions = fileExtension;
 		} else {
-			// single string
-			extensions = [fileExtension];
+			// Comma separated support 4.0.0-alpha.7+
+			extensions = (fileExtension || "").split(",");
 		}
 
 		for (let extension of extensions) {
@@ -1258,7 +1237,6 @@ class UserConfig {
 			useGitIgnore: this.useGitIgnore,
 			ignores: this.ignores,
 			watchIgnores: this.watchIgnores,
-			dataDeepMerge: this.dataDeepMerge,
 			watchJavaScriptDependencies: this.watchJavaScriptDependencies,
 			additionalWatchTargets: this.additionalWatchTargets,
 			watchTargetsConfigReset: this.watchTargetsConfigReset,
@@ -1310,12 +1288,20 @@ class UserConfig {
 	}
 
 	_normalizeTemplateFormats() {
-		throw new Error("The internal _normalizeTemplateFormats() method was removed in Eleventy 3.0");
+		throw new Error("The internal _normalizeTemplateFormats() method was removed in Eleventy v3");
 	}
 
 	configureTemplateHandling(options = {}) {
 		// Was used for sync/async swapping on file write operations
 		throw new Error("Internal configuration API method `configureTemplateHandling` was removed.");
+	}
+
+	setDataDeepMerge(deepMerge) {
+		if (Boolean(deepMerge) === false) {
+			throw new Error(
+				"The `setDataDeepMerge(false)` Configuration API feature was removed in Eleventy v4. Read more at https://github.com/11ty/eleventy/issues/3937",
+			);
+		}
 	}
 
 	// No-op functions for backwards compat
@@ -1324,6 +1310,13 @@ class UserConfig {
 	setEjsOptions() {}
 	addHandlebarsShortcode() {}
 	addPairedHandlebarsShortcode() {}
+
+	// Used by the Upgrade Helper Plugin v1 (no longer relevant)
+	// https://github.com/11ty/eleventy-upgrade-help/blob/v1.x/src/data-deep-merge.js#L5-L9
+	isDataDeepMergeModified() {}
+
+	// No-op from v2
+	setBrowserSyncConfig() {}
 }
 
 export default UserConfig;

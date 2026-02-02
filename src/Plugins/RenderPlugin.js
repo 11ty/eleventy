@@ -51,7 +51,11 @@ async function compile(content, templateLang, options = {}) {
 	if (
 		tr.engine.name === "11ty.js" ||
 		tr.engine.name === "11ty.cjs" ||
-		tr.engine.name === "11ty.mjs"
+		tr.engine.name === "11ty.mjs" ||
+		// TODO Node 22+
+		tr.engine.name === "11ty.ts" ||
+		tr.engine.name === "11ty.cts" ||
+		tr.engine.name === "11ty.mts"
 	) {
 		throw new Error(
 			"11ty.js is not yet supported as a template engine for `renderTemplate`. Use `renderFile` instead!",

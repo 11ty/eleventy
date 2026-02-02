@@ -1,8 +1,8 @@
+import debugUtil from "debug";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import TemplateEngineManager from "./Engines/TemplateEngineManager.js";
 
-// import debugUtil from "debug";
-// const debug = debugUtil("Eleventy:TemplateRender");
+const debugConfiguration = debugUtil("Eleventy:UserConfig");
 
 class TemplateRenderUnknownEngineError extends EleventyBaseError {}
 
@@ -19,6 +19,12 @@ export default class TemplateRender {
 
 		this.engineNameOrPath = tmplPath;
 		this.parseMarkdownWith = this.config.markdownTemplateEngine;
+		if (this.parseMarkdownWith === "md") {
+			this.parseMarkdownWith = false;
+			debugConfiguration(
+				"Misconfiguration warning: the preprocessing template syntax for Markdown files cannot be Markdown, we’re assuming you meant `false` to skip preprocessing altogether (via the `markdownTemplateEngine` configuration property or the `setMarkdownTemplateEngine` configuration method). Read more: https://www.11ty.dev/docs/config/#default-template-engine-for-markdown-files",
+			);
+		}
 		this.parseHtmlWith = this.config.htmlTemplateEngine;
 	}
 

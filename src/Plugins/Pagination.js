@@ -337,7 +337,8 @@ class Pagination {
 			// Previous method:
 			// let clonedData = DeepCopy(paginationData, parentData);
 
-			let { /*linkInstance,*/ rawPath, path, href } = await cloned.getOutputLocations(clonedData);
+			let { /*linkInstance,*/ rawPath, path, href, dir } =
+				await cloned.getOutputLocations(clonedData);
 			// TODO subdirectory to links if the site doesn’t live at /
 			if (rawPath) {
 				links.push("/" + rawPath);
@@ -348,6 +349,7 @@ class Pagination {
 			// page.url and page.outputPath are used to avoid another getOutputLocations call later, see Template->addComputedData
 			clonedData.page.url = href;
 			clonedData.page.outputPath = path;
+			clonedData.page.dir = dir;
 
 			entries.push({
 				pageNumber,

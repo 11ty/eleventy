@@ -70,6 +70,28 @@ export default class JavaScript extends TemplateEngine {
 
 				return new mod();
 			} else {
+				// JavaScript lol
+				if (mod.toString().trimStart().startsWith("class ")) {
+					// we already know that mod.prototype.data and mod.prototype.render do not exist (per above)
+					// now we look for instance properties for `data` or `render`, issue #1645
+					let modInstance = new mod();
+					if (Object.hasOwn(modInstance, "data") || Object.hasOwn(modInstance, "render")) {
+						if (!Object.hasOwn(modInstance, "render")) {
+							mod.prototype.render = noop;
+						}
+
+						if (!Object.hasOwn(modInstance, "data") && !mod.data && originalModData) {
+							mod.prototype.data = originalModData;
+						}
+
+						return modInstance;
+					} else {
+						throw new Error(
+							"Invalid class signature for an 11ty.js template: needs a render or data instance property.",
+						);
+					}
+				}
+
 				return {
 					...(originalModData ? { data: originalModData } : undefined),
 					render: mod,

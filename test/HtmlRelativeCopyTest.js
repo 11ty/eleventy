@@ -7,7 +7,11 @@ import { TransformPlugin as InputPathToUrlTransformPlugin } from "../src/Plugins
 import { default as HtmlBasePlugin } from "../src/Plugins/HtmlBasePlugin.js";
 import Eleventy from "../src/Eleventy.js";
 
-test("Basic usage", async (t) => {
+test.afterEach.always("Directory cleanup", () => {
+  rimrafSync("test/stubs-autocopy/_site*", { glob: true });
+})
+
+test.serial("Basic usage", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site-basica", {
 		configPath: false,
 		config: function (eleventyConfig) {
@@ -53,11 +57,7 @@ test("Basic usage", async (t) => {
 	t.is(fs.existsSync("test/stubs-autocopy/_site-basica/test/index.html"), true);
 });
 
-test.after.always("cleanup dirs", () => {
-	rimrafSync("test/stubs-autocopy/_site-basica");
-});
-
-test("More complex image path (parent dir)", async (t) => {
+test.serial("More complex image path (parent dir)", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site-basicb", {
 		configPath: false,
 		config: function (eleventyConfig) {
@@ -104,11 +104,7 @@ test("More complex image path (parent dir)", async (t) => {
 	t.is(fs.existsSync("test/stubs-autocopy/_site-basicb/test/index.html"), true);
 });
 
-test.after.always("cleanup dirs", () => {
-	rimrafSync("test/stubs-autocopy/_site-basicb");
-});
-
-test("No matches", async (t) => {
+test.serial("No matches", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site2", {
 		configPath: false,
 		config: function (eleventyConfig) {
@@ -135,11 +131,7 @@ test("No matches", async (t) => {
 	t.is(fs.existsSync("test/stubs-autocopy/_site2/test/index.html"), true);
 });
 
-test.after.always("cleanup dirs", () => {
-	rimrafSync("test/stubs-autocopy/_site2");
-});
-
-test("Match but does not exist (throws error)", async (t) => {
+test.serial("Match but does not exist (throws error)", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site3", {
 		configPath: false,
 		config: function (eleventyConfig) {
@@ -166,7 +158,7 @@ test("Match but does not exist (throws error)", async (t) => {
 	t.is(fs.existsSync("test/stubs-autocopy/_site3/test/index.html"), false);
 });
 
-test("Match but does not exist (no error, using `failOnError: false`)", async (t) => {
+test.serial("Match but does not exist (no error, using `failOnError: false`)", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site4", {
 		configPath: false,
 		config: function (eleventyConfig) {
@@ -194,11 +186,7 @@ test("Match but does not exist (no error, using `failOnError: false`)", async (t
 	t.is(fs.existsSync("test/stubs-autocopy/_site4/test/index.html"), true);
 });
 
-test.after.always("cleanup dirs", () => {
-	rimrafSync("test/stubs-autocopy/_site4");
-});
-
-test("Copying dotfiles are not allowed", async (t) => {
+test.serial("Copying dotfiles are not allowed", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site5", {
 		configPath: false,
 		config: function (eleventyConfig) {
@@ -231,11 +219,7 @@ test("Copying dotfiles are not allowed", async (t) => {
 	t.is(fs.existsSync("test/stubs-autocopy/_site5/test/index.html"), true);
 });
 
-test.after.always("cleanup dirs", () => {
-	rimrafSync("test/stubs-autocopy/_site5");
-});
-
-test("Using with InputPathToUrl plugin", async (t) => {
+test.serial("Using with InputPathToUrl plugin", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site6", {
 		configPath: false,
 		config: function (eleventyConfig) {
@@ -268,11 +252,7 @@ test("Using with InputPathToUrl plugin", async (t) => {
 	t.is(fs.existsSync("test/stubs-autocopy/_site6/test2/index.html"), true);
 });
 
-test.after.always("cleanup dirs", () => {
-	rimrafSync("test/stubs-autocopy/_site6");
-});
-
-test("Using with InputPathToUrl plugin (reverse addPlugin order)", async (t) => {
+test.serial("Using with InputPathToUrl plugin (reverse addPlugin order)", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site7", {
 		configPath: false,
 		config: function (eleventyConfig) {
@@ -304,11 +284,7 @@ test("Using with InputPathToUrl plugin (reverse addPlugin order)", async (t) => 
 	t.is(fs.existsSync("test/stubs-autocopy/_site7/test2/index.html"), true);
 });
 
-test.after.always("cleanup dirs", () => {
-	rimrafSync("test/stubs-autocopy/_site7");
-});
-
-test("Use with HtmlBasePlugin usage", async (t) => {
+test.serial("Use with HtmlBasePlugin usage", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site8a", {
 		configPath: false,
 		pathPrefix: "yolo",
@@ -356,11 +332,7 @@ test("Use with HtmlBasePlugin usage", async (t) => {
 	t.is(fs.existsSync("test/stubs-autocopy/_site8a/test/index.html"), true);
 });
 
-test.after.always("cleanup dirs", () => {
-	rimrafSync("test/stubs-autocopy/_site8a");
-});
-
-test("Using with InputPathToUrl plugin and HtmlBasePlugin", async (t) => {
+test.serial("Using with InputPathToUrl plugin and HtmlBasePlugin", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site8b", {
 		configPath: false,
 		pathPrefix: "yolo",
@@ -395,11 +367,7 @@ test("Using with InputPathToUrl plugin and HtmlBasePlugin", async (t) => {
 	t.is(fs.existsSync("test/stubs-autocopy/_site8b/test2/index.html"), true);
 });
 
-test.after.always("cleanup dirs", () => {
-	rimrafSync("test/stubs-autocopy/_site8b");
-});
-
-test("Multiple addPlugin calls (use both globs)", async (t) => {
+test.serial("Multiple addPlugin calls (use both globs)", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site9", {
 		configPath: false,
 		config: function (eleventyConfig) {
@@ -456,11 +424,7 @@ test("Multiple addPlugin calls (use both globs)", async (t) => {
 	t.is(fs.existsSync("test/stubs-autocopy/_site9/test/index.html"), true);
 });
 
-test.after.always("cleanup dirs", () => {
-	rimrafSync("test/stubs-autocopy/_site9");
-});
-
-test("Array of globs", async (t) => {
+test.serial("Array of globs", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site10", {
 		configPath: false,
 		config: function (eleventyConfig) {
@@ -514,11 +478,7 @@ test("Array of globs", async (t) => {
 	t.is(fs.existsSync("test/stubs-autocopy/_site10/test/index.html"), true);
 });
 
-test.after.always("cleanup dirs", () => {
-	rimrafSync("test/stubs-autocopy/_site10");
-});
-
-test("overwrite: false", async (t) => {
+test.serial("overwrite: false", async (t) => {
 	fs.mkdirSync("./test/stubs-autocopy/_site11/test/", { recursive: true })
 	fs.copyFileSync("./test/stubs-autocopy/possum.png", "./test/stubs-autocopy/_site11/test/possum.png");
 
@@ -566,11 +526,7 @@ test("overwrite: false", async (t) => {
 	t.is(fs.existsSync("test/stubs-autocopy/_site11/test/index.html"), true);
 });
 
-test.after.always("cleanup dirs", () => {
-	rimrafSync("test/stubs-autocopy/_site11");
-});
-
-test("Input -> output remapping not yet supported (throws error)", async (t) => {
+test.serial("Input -> output remapping not yet supported (throws error)", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site12", {
 		configPath: false,
 		config: function (eleventyConfig) {
@@ -598,7 +554,7 @@ test("Input -> output remapping not yet supported (throws error)", async (t) => 
 	t.is(fs.existsSync("test/stubs-autocopy/_site12/test/index.html"), false);
 });
 
-test("Invalid copy mode throws error", async (t) => {
+test.serial("Invalid copy mode throws error", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site13", {
 		configPath: false,
 		config: function (eleventyConfig) {

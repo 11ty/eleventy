@@ -1,5 +1,5 @@
 import test from "ava";
-import Nunjucks from "nunjucks";
+import Nunjucks from "@11ty/nunjucks";
 
 import TemplateRender from "../src/TemplateRender.js";
 import EleventyExtensionMap from "../src/EleventyExtensionMap.js";

@@ -45,7 +45,7 @@ These run in various environments:
 
 ## Community Roadmap
 
-- [Top Feature Requests](https://github.com/11ty/eleventy/issues?q=label%3Aneeds-votes+sort%3Areactions-%2B1-desc+label%3Aenhancement) (Add your own votes using the 👍 reaction)
+- [Top Feature Requests](https://github.com/11ty/eleventy/discussions/categories/enhancement-queue?discussions_q=is%3Aopen+category%3A%22Enhancement+Queue%22+sort%3Atop) (Vote for your favorites!)
 - [Top Bugs 😱](https://github.com/11ty/eleventy/issues?q=is%3Aissue+is%3Aopen+label%3Abug+sort%3Areactions) (Add your own votes using the 👍 reaction)
 
 ## Plugins

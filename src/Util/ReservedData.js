@@ -1,9 +1,15 @@
 class EleventyReservedDataError extends TypeError {}
 
 class ReservedData {
+	static fullProperties = [
+		"pkg", // Object.freeze’d upstream
+		"eleventy", // Object.freeze’d upstream
+		// "page" is only frozen for specific subproperties below
+		"content",
+		"collections",
+	];
+
 	static properties = [
-		// "pkg", // Object.freeze’d upstream
-		// "eleventy", // Object.freeze’d upstream
 		// "page" is only frozen for specific subproperties below
 		"content",
 		"collections",
@@ -22,12 +28,12 @@ class ReservedData {
 	];
 
 	// Check in the data cascade for reserved data properties.
-	static getReservedKeys(data) {
+	static getReservedKeys(data, globalProperties = this.fullProperties) {
 		if (!data) {
 			return [];
 		}
 
-		let keys = this.properties.filter((key) => {
+		let keys = globalProperties.filter((key) => {
 			return key in data;
 		});
 
@@ -46,19 +52,50 @@ class ReservedData {
 		return keys;
 	}
 
-	static check(data) {
-		let reserved = ReservedData.getReservedKeys(data);
-		if (reserved.length === 0) {
+	static #check(data, sourceLocation, propertiesList) {
+		let reservedNames = ReservedData.getReservedKeys(data, propertiesList);
+		if (reservedNames.length === 0) {
 			return;
 		}
+		throw this.getError({
+			reservedNames,
+			sourceLocation,
+		});
+	}
 
-		let error = new EleventyReservedDataError(
-			`Cannot override reserved Eleventy properties: ${reserved.join(", ")}`,
+	// check for frozen objects too
+	static check(data, sourceLocation) {
+		this.#check(data, sourceLocation, this.fullProperties);
+	}
+
+	static checkSubset(data, sourceLocation) {
+		this.#check(data, sourceLocation, this.properties);
+	}
+
+	static getError(options = {}) {
+		let { reservedNames, cause, sourceLocation } = options || {};
+
+		if (cause) {
+			reservedNames ??= cause.reservedNames;
+		}
+
+		let e = new EleventyReservedDataError(
+			`You attempted to set one of Eleventy’s reserved data property names${reservedNames ? `: ${reservedNames.join(", ")}` : ""}${sourceLocation ? ` (source: ${sourceLocation})` : ""}. You can opt-out of this behavior with \`eleventyConfig.setFreezeReservedData(false)\` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. \`eleventy\`, \`pkg\`, and others). Learn more: https://v3.11ty.dev/docs/data-eleventy-supplied/`,
+			{ cause },
 		);
 
-		error.reservedNames = reserved;
+		if (reservedNames) {
+			e.reservedNames = reservedNames;
+		}
+		return e;
+	}
 
-		throw error;
+	static isFrozenError(e) {
+		return (
+			e instanceof TypeError &&
+			e.message.startsWith("Cannot add property") &&
+			e.message.endsWith("not extensible")
+		);
 	}
 
 	static isReservedDataError(e) {

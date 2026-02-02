@@ -9,7 +9,7 @@ class TemplateFileSlug {
 		}
 
 		this.inputPath = inputPath;
-		this.cleanInputPath = inputPath.replace(/^.\//, "");
+		this.cleanInputPath = TemplatePath.stripLeadingDotSlash(inputPath);
 
 		let dirs = this.cleanInputPath.split("/");
 		this.dirs = dirs;

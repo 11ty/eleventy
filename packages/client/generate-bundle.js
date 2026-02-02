@@ -14,7 +14,7 @@ await bundleClient("./src/BundleCore.js", "./dist/eleventy.core.js", {
 	name: `Eleventy v${pkg.version} (@11ty/client Bundle)`,
 	moduleRoot: "../../",
 	// No core-bundled plugins, reduced feature set
-	adapterSuffixes: [".client.js", ".core.js"],
+	adapterSuffixes: [".client.js", ".core.js", ".core.cjs"],
 	external: ["node:fs", "node:crypto", "@sindresorhus/slugify"],
 	esbuild: {
 		keepNames: false,
@@ -28,7 +28,7 @@ console.log(`${PREFIX}Wrote dist/eleventy.core.js: ${size("./dist/eleventy.core.
 await bundleClient("./src/BundleEleventy.js", `./dist/eleventy.js`, {
 	name: `Eleventy v${pkg.version} (@11ty/client/eleventy Bundle)`,
 	moduleRoot: "../../",
-	adapterSuffixes: [".core.js"],
+	adapterSuffixes: [".core.js", ".core.cjs"],
 	// Adds named export FileSystem for using the file system in other packages
 	fileSystemMode: "publish",
 });
@@ -44,7 +44,7 @@ await bundleClient(
 	{
 		name: `Eleventy v${pkg.version} (@11ty/client/liquid Engine Bundle)`,
 		moduleRoot: "../../",
-		adapterSuffixes: [".core.js"],
+		adapterSuffixes: [".core.js", ".core.cjs"],
 	},
 );
 console.log(
@@ -69,7 +69,7 @@ await bundleClient(
 	{
 		name: `Eleventy v${pkg.version} (@11ty/client/md Engine Bundle)`,
 		moduleRoot: "../../",
-		adapterSuffixes: [".core.js"],
+		adapterSuffixes: [".core.js", ".core.cjs"],
 	},
 );
 console.log(
@@ -82,7 +82,7 @@ await bundleClient(
 	{
 		name: `Eleventy v${pkg.version} (i18n Plugin)`,
 		moduleRoot: "../../",
-		adapterSuffixes: [".core.js"],
+		adapterSuffixes: [".core.js", ".core.cjs"],
 	},
 );
 console.log(

@@ -1,6 +1,6 @@
 import path from "node:path";
 import { TemplatePath } from "@11ty/eleventy-utils";
-import isValidUrl from "../Util/ValidUrl.js";
+import { isValidUrl } from "../Util/UrlUtil.js";
 
 function getValidPath(contentMap, testPath) {
 	// if the path is coming from Markdown, it may be encoded

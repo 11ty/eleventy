@@ -612,3 +612,46 @@ test("HTML base plugin can resolve by name", async (t) => {
   });
   await elev.init();
 });
+
+test("Using recognizeNoValueAttribute for boolean attributes without quotes #2766", async (t) => {
+  let elev = new Eleventy({
+    input: "./test/stubs-virtual/",
+    pathPrefix: "/prefixed/",
+    configPath: false,
+    config: function (eleventyConfig) {
+      eleventyConfig.setUseTemplateCache(false);
+      eleventyConfig.addTemplate("index.njk", `---
+permalink: /deep/
+---
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<link rel="stylesheet" crossorigin>
+<link rel="stylesheet" href="/test.css">
+</head>
+</html>`)
+      eleventyConfig.addPlugin(HtmlBasePlugin);
+    },
+  });
+
+  await elev.initializeConfig();
+
+  elev.setIsVerbose(false);
+  elev.disableLogger();
+
+  let results = await elev.toJSON();
+  t.is(
+    getContentFor(results, "/deep/index.html"),
+    `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<link rel="stylesheet" crossorigin>
+<link rel="stylesheet" href="/prefixed/test.css">
+</head>
+</html>`
+  );
+});

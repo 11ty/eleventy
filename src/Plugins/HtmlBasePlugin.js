@@ -2,7 +2,7 @@ import { DeepCopy } from "@11ty/eleventy-utils";
 import urlFilter from "../Filters/Url.js";
 import PathPrefixer from "../Util/PathPrefixer.js";
 import { HtmlTransformer } from "../Util/HtmlTransformer.js";
-import isValidUrl from "../Util/ValidUrl.js";
+import { isValidUrl } from "../Util/UrlUtil.js";
 
 function addPathPrefixToUrl(url, pathPrefix, base) {
 	let u;

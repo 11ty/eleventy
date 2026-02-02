@@ -138,10 +138,10 @@ export default class ProjectDirectories {
 			return;
 		}
 
-		// Normalize absolute paths to relative, #3805
-		// if(path.isAbsolute(dirOrFile)) {
-		// 	dirOrFile = path.relative(".", dirOrFile);
-		// }
+		// Normalize absolute paths to relative, #3805 #3896
+		if (path.isAbsolute(dirOrFile)) {
+			dirOrFile = path.relative(".", dirOrFile);
+		}
 
 		// Input has to exist (assumed glob if it does not exist)
 		let inputExists = existsSync(dirOrFile);
@@ -230,6 +230,12 @@ export default class ProjectDirectories {
 
 		if (dir !== undefined) {
 			this.#raw.output = dir;
+
+			// Normalize absolute paths to relative, #3805 #3896
+			if (path.isAbsolute(dir)) {
+				dir = path.relative(".", dir);
+			}
+
 			this.#dirs.output = ProjectDirectories.normalizeDirectory(dir || "");
 		}
 	}
