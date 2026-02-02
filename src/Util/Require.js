@@ -12,8 +12,8 @@ class EleventyImportError extends EleventyBaseError {}
 
 const requestPromiseCache = new Map();
 
-function isTypeScript(filePath) {
-	return filePath.endsWith(".ts") || filePath.endsWith(".cts") || filePath.endsWith(".mts");
+function isCommonJSTypeScript(filePath, type) {
+	return (type === "cjs" && filePath.endsWith(".ts")) || filePath.endsWith(".cts"); // no .mts here
 }
 
 function getImportErrorMessage(filePath, type) {
@@ -103,9 +103,9 @@ async function dynamicImportAbsolutePath(absolutePath, options = {}) {
 	// in https://github.com/11ty/eleventy/pull/3493 Was a bit faster but
 	// error messaging was worse for require(esm)
 
-	// Workaround for https://github.com/nodejs/node/issues/61385
+	// Workaround for Node issue https://github.com/nodejs/node/issues/61385
 	// Remove this when fixed upstream!
-	if (type === "cjs" && isTypeScript(absolutePath)) {
+	if (isCommonJSTypeScript(absolutePath, type)) {
 		return requireCommonJsTypeScript(absolutePath);
 	}
 

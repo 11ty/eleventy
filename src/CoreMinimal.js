@@ -719,12 +719,19 @@ Verbose Output: ${this.verboseMode}`;
 		if (this.#isEsm !== undefined) {
 			return this.#isEsm;
 		}
+
 		if (this.loader == "esm") {
 			this.#isEsm = true;
 		} else if (this.loader == "cjs") {
 			this.#isEsm = false;
 		} else if (this.loader == "auto") {
-			this.#isEsm = this.projectPackageJson?.type === "module";
+			// Note: Node defaults to CommonJS if missing, Deno defaults to ESM
+			// https://docs.deno.com/runtime/fundamentals/node/#commonjs-support
+			if (typeof Deno !== "undefined") {
+				this.#isEsm = this.projectPackageJson?.type !== "commonjs";
+			} else {
+				this.#isEsm = this.projectPackageJson?.type === "module";
+			}
 		} else {
 			throw new Error("The 'loader' option must be one of 'esm', 'cjs', or 'auto'");
 		}
