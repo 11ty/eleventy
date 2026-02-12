@@ -703,7 +703,7 @@ class Template extends TemplateContent {
 				return;
 			}
 
-			let { href, path, dir } = await this.getOutputLocations(data);
+			let { href, path } = await this.getOutputLocations(data);
 			data.page.url = href;
 			data.page.outputPath = path;
 
