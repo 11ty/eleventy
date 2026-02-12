@@ -44,6 +44,7 @@ class JavaScriptDependencies {
 			(file) => this.getFlavor(file, isProjectUsingEsm) === "cjs",
 		);
 
+		// TODO require(esm) means some files *could* be wrong here
 		for (let file of commonJsFiles) {
 			try {
 				let modules = dependencyTree(file, {
