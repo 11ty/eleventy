@@ -42,6 +42,7 @@ class EleventyServe {
 	#chokidar;
 	// these are *not* normalized
 	#watchTargets = new Set();
+	#editCallbacks = [];
 
 	constructor() {
 		this.logger = new ConsoleLogger();
@@ -170,6 +171,28 @@ class EleventyServe {
 			{
 				pathPrefix: PathPrefixer.normalizePathPrefix(this.config.pathPrefix),
 				logger: this.logger,
+				onClientMessage: async (type, data) => {
+					let paths = [];
+					if (type === "eleventy.editReset") {
+						// Reset previous modified files
+						paths.push(...this.eleventyConfig.resetDataOverrides());
+
+						// Reset configuration file
+						paths.push(this.eleventyConfig.getActiveConfigPath());
+					} else if (type === "eleventy.edit") {
+						for (let dataFileSelector of Object.keys(data)) {
+							let [filePath, selector] = dataFileSelector.split("#");
+							this.eleventyConfig.addDataEditOverride(filePath, selector, data[dataFileSelector]);
+							paths.push(filePath);
+						}
+					}
+
+					for (let filePath of new Set(paths)) {
+						for (let fn of this.#editCallbacks) {
+							await fn(filePath);
+						}
+					}
+				},
 			},
 			DEFAULT_SERVER_OPTIONS,
 			this.config.serverOptions,
@@ -339,6 +362,14 @@ class EleventyServe {
 		} else {
 			await this.server.reload(reloadEvent);
 		}
+	}
+
+	// TODO change this to onmessage
+	onEdit(callback) {
+		if (typeof callback !== "function") {
+			return;
+		}
+		this.#editCallbacks.push(callback);
 	}
 }
 

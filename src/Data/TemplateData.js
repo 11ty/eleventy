@@ -389,6 +389,7 @@ class TemplateData {
 		if (this.dirs) {
 			eleventy.directories = Object.assign({}, this.dirs.getUserspaceInstance());
 		}
+		eleventy.pendingEditCount = this.templateConfig.getPendingDataOverrides();
 
 		// `eleventy` is Reserved
 		if (this.config.freezeReservedData) {
@@ -571,8 +572,6 @@ class TemplateData {
 		}
 	}
 
-	// ignoreProcessing = false for global data files
-	// ignoreProcessing = true for local data files
 	async getDataValue(path) {
 		let extension = TemplatePath.getExtension(path);
 
@@ -604,6 +603,11 @@ class TemplateData {
 			if (typeof returnValue === "function") {
 				let configApiGlobalData = await this.getInitialGlobalData();
 				returnValue = await returnValue(configApiGlobalData || {});
+			}
+
+			let editOverrides = this.templateConfig.getDataOverrideForPath(path);
+			if (editOverrides) {
+				returnValue = Merge(returnValue, editOverrides);
 			}
 
 			dataBench.after();

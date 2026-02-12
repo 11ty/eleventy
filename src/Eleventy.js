@@ -496,6 +496,10 @@ export default class Eleventy extends Core {
 	 * @param {Number} port - The HTTP port to serve Eleventy from.
 	 */
 	async serve(port) {
+		this.eleventyServe.onEdit(async (path) => {
+			this.watcher.emit("change", path);
+		});
+
 		// Port is optional and in this case likely via --port on the command line
 		// May defer to configuration API options `port` property
 		return this.eleventyServe.serve(port);

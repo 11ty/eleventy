@@ -29,10 +29,8 @@ test("Get Options", async (t) => {
   let es = await getServerInstance();
   es.setOutputDir("_site");
 
-  t.deepEqual(es.options, {
-    pathPrefix: "/",
-    port: 8080,
-  });
+  t.is(es.options.pathPrefix, "/");
+  t.is(es.options.port, 8080);
 });
 
 test("Get Options (with a pathPrefix)", async (t) => {
@@ -42,20 +40,16 @@ test("Get Options (with a pathPrefix)", async (t) => {
   let es = await getServerInstance(eleventyConfig);
   es.setOutputDir("_site");
 
-  t.deepEqual(es.options, {
-    pathPrefix: "/web/",
-    port: 8080,
-  });
+  t.is(es.options.pathPrefix, "/web/");
+  t.is(es.options.port, 8080);
 });
 
 test("Get Options (override in config)", async (t) => {
   let es = await getServerInstance();
   es.setOutputDir("_site");
 
-  t.deepEqual(es.options, {
-    pathPrefix: "/",
-    port: 8080,
-  });
+  t.is(es.options.pathPrefix, "/");
+  t.is(es.options.port, 8080);
 });
 
 test("Sanity test that default output is set correctly", async (t) => {

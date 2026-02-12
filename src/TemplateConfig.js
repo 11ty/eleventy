@@ -1,5 +1,6 @@
 import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
+import lodash from "@11ty/lodash-custom";
 
 import chalk from "./Adapters/Packages/chalk.js";
 import getDefaultConfig from "./Adapters/getDefaultConfig.js";
@@ -12,6 +13,7 @@ import eventBus from "./EventBus.js";
 import ProjectTemplateFormats from "./Util/ProjectTemplateFormats.js";
 import { isTypeScriptSupported } from "./Util/FeatureTests.cjs";
 
+const { set: lodashSet } = lodash;
 const debug = debugUtil("Eleventy:TemplateConfig");
 const debugDev = debugUtil("Dev:Eleventy:TemplateConfig");
 
@@ -53,6 +55,7 @@ class TemplateConfig {
 	#usesGraph;
 	#previousBuildModifiedFile;
 	#activeConfigPath;
+	#dataEditOverrides = {};
 
 	constructor(customRootConfig, projectConfigPath) {
 		/** @type {object} */
@@ -600,6 +603,39 @@ class TemplateConfig {
 	 */
 	get existsCache() {
 		return this.#existsCache;
+	}
+
+	addDataEditOverride(filePath, dataSelector, value) {
+		if (!this.#dataEditOverrides[filePath]) {
+			this.#dataEditOverrides[filePath] = {};
+		}
+		lodashSet(this.#dataEditOverrides[filePath], dataSelector, value);
+	}
+
+	getDataOverrideForPath(filePath) {
+		filePath = TemplatePath.stripLeadingDotSlash(filePath);
+
+		return this.#dataEditOverrides[filePath];
+	}
+
+	deleteDataOverrideForPath(filePath) {
+		filePath = TemplatePath.stripLeadingDotSlash(filePath);
+		delete this.#dataEditOverrides[filePath];
+	}
+
+	getAllDataOverrides() {
+		return this.#dataEditOverrides;
+	}
+
+	resetDataOverrides() {
+		let filePaths = Object.keys(this.#dataEditOverrides);
+		this.#dataEditOverrides = {};
+		return filePaths;
+	}
+
+	// only a count of files changed, not edits
+	getPendingDataOverrides() {
+		return Object.keys(this.#dataEditOverrides).length;
 	}
 }
 

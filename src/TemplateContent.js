@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import matter from "@11ty/gray-matter";
 import lodash from "@11ty/lodash-custom";
-import { DeepCopy, TemplatePath } from "@11ty/eleventy-utils";
+import { Merge, DeepCopy, TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
 import JavaScriptFrontMatter from "./Engines/FrontMatter/JavaScript.js";
@@ -448,6 +448,11 @@ class TemplateContent {
 		}
 
 		let data = Object.assign(frontMatterData, extraData, virtualTemplateData);
+
+		let editOverrides = this.eleventyConfig.getDataOverrideForPath(this.inputPath);
+		if (editOverrides) {
+			data = Merge(data, editOverrides);
+		}
 
 		return {
 			data,

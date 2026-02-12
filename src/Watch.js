@@ -122,6 +122,10 @@ export class Watch {
 		this.#chokidar.on(event, callback);
 	}
 
+	emit(event, ...args) {
+		this.#chokidar.emit(event, ...args);
+	}
+
 	async close() {
 		return this.#chokidar?.close();
 	}
