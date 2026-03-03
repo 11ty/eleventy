@@ -4,15 +4,11 @@ import debugUtil from "debug";
 import TemplateCollection from "./TemplateCollection.js";
 import EleventyErrorUtil from "./Errors/EleventyErrorUtil.js";
 import UsingCircularTemplateContentReferenceError from "./Errors/UsingCircularTemplateContentReferenceError.js";
-import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import DuplicatePermalinkOutputError from "./Errors/DuplicatePermalinkOutputError.js";
 import TemplateData from "./Data/TemplateData.js";
 import GlobalDependencyMap from "./GlobalDependencyMap.js";
 
 const debug = debugUtil("Eleventy:TemplateMap");
-
-class EleventyMapPagesError extends EleventyBaseError {}
-class EleventyDataSchemaError extends EleventyBaseError {}
 
 // These template URL filenames are allowed to exclude file extensions
 const EXTENSIONLESS_URL_ALLOWLIST = [
@@ -36,6 +32,7 @@ class TemplateMap {
 		}
 		this.eleventyConfig = eleventyConfig;
 		this.map = [];
+		this.inputPathMap = new Map(); // NEW: O(1) lookup Map for performance
 		this.collectionsData = null;
 		this.cached = false;
 		this.verboseOutput = true;
@@ -69,14 +66,26 @@ class TemplateMap {
 
 		let data = await template.getData();
 		let entries = await template.getTemplateMapEntries(data);
+		let { skippedVia } = await template.runPreprocessors(data);
+
+		if (skippedVia) {
+			return;
+		}
 
 		for (let map of entries) {
 			this.map.push(map);
+			this._addToInputPathMap(map); // NEW: Add to lookup Map for O(1) access
 		}
 	}
 
 	getMap() {
 		return this.map;
+	}
+
+	_addToInputPathMap(mapEntry) {
+		// Store under absolute path
+		let absoluteInputPath = TemplatePath.absolutePath(mapEntry.inputPath);
+		this.inputPathMap.set(absoluteInputPath, mapEntry);
 	}
 
 	getTagTarget(str) {
@@ -191,10 +200,7 @@ class TemplateMap {
 		try {
 			map._pages = await map.template.getTemplates(map.data);
 		} catch (e) {
-			throw new EleventyMapPagesError(
-				"Error generating template page(s) for " + map.inputPath + ".",
-				e,
-			);
+			throw new Error("Error generating template page(s) for " + map.inputPath + ".", { cause: e });
 		}
 
 		if (map._pages.length === 0) {
@@ -325,14 +331,9 @@ class TemplateMap {
 		return Boolean(this.getMapEntryForInputPath(inputPath));
 	}
 
-	// TODO(slightlyoff): hot inner loop?
 	getMapEntryForInputPath(inputPath) {
 		let absoluteInputPath = TemplatePath.absolutePath(inputPath);
-		return this.map.find((entry) => {
-			if (entry.inputPath === inputPath || entry.inputPath === absoluteInputPath) {
-				return entry;
-			}
-		});
+		return this.inputPathMap.get(absoluteInputPath);
 	}
 
 	#removeTagsFromTemplateOrder(maps) {
@@ -351,9 +352,9 @@ class TemplateMap {
 					try {
 						await pageEntry.data[this.config.keys.dataSchema](pageEntry.data);
 					} catch (e) {
-						throw new EleventyDataSchemaError(
+						throw new Error(
 							`Error in the data schema for: ${map.inputPath} (via \`eleventyDataSchema\`)`,
-							e,
+							{ cause: e },
 						);
 					}
 				}

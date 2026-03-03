@@ -1,4 +1,4 @@
-class Benchmark {
+export default class Benchmark {
 	constructor() {
 		// TypeScript slop
 		this.timeSpent = 0;
@@ -49,5 +49,3 @@ class Benchmark {
 		return this.timeSpent;
 	}
 }
-
-export default Benchmark;

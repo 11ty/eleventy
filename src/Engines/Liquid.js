@@ -49,8 +49,8 @@ export default class Liquid extends TemplateEngine {
 			root: [this.dirs.includes, this.dirs.input], // supplemented in compile with inputPath below
 			extname: ".liquid",
 			strictFilters: true,
-			// TODO?
 			// cache: true,
+			jsTruthy: true, // Breaking in v4 #3507
 		};
 
 		let options = Object.assign(defaults, this.liquidOptions || {});
@@ -312,6 +312,7 @@ export default class Liquid extends TemplateEngine {
 
 	async compile(str, inputPath) {
 		let engine = this.liquidLib;
+		let liquidOptions = this.liquidOptions;
 		let tmplReady = engine.parse(str, inputPath);
 
 		// Required for relative includes
@@ -324,6 +325,15 @@ export default class Liquid extends TemplateEngine {
 
 		return async function (data) {
 			let tmpl = await tmplReady;
+
+			options.globals = Object.assign(
+				{
+					page: data?.page,
+					eleventy: data?.eleventy,
+					collections: data?.collections,
+				},
+				liquidOptions?.globals,
+			);
 
 			return engine.render(tmpl, data, options);
 		};

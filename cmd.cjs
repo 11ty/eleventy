@@ -4,7 +4,7 @@
 // as possible with error messaging to folks on older runtimes.
 
 const pkg = require("./package.json");
-require("please-upgrade-node")(pkg, {
+require("@11ty/node-version-check")(pkg, {
 	message: function (requiredVersion) {
 		return (
 			"Eleventy " +
@@ -29,6 +29,16 @@ class SimpleError extends Error {
 async function exec() {
 	// Notes about friendly error messaging with outdated Node versions: https://github.com/11ty/eleventy/issues/3761
 	const { EleventyErrorHandler } = await import("./src/Errors/EleventyErrorHandler.js");
+
+	// Defensive use of Node 22.8+ Module Compile Cache
+	if(!process.env?.ELEVENTY_SKIP_NODE_COMPILE_CACHE) {
+		try {
+			const nodeMod = await import('node:module').then(mod => mod.default);
+			nodeMod.enableCompileCache?.();
+		} catch(e) {
+			debug("Node compile cache error (optional API) %o", e);
+		}
+	}
 
 	try {
 		const argv = minimist(process.argv.slice(2), {
@@ -150,4 +160,5 @@ async function exec() {
 	}
 }
 
+// await
 exec();

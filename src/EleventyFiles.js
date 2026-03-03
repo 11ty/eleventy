@@ -148,10 +148,6 @@ class EleventyFiles {
 	}
 
 	get templateData() {
-		if (!this._templateData) {
-			this._templateData = new TemplateData(this.templateConfig);
-		}
-
 		return this._templateData;
 	}
 

@@ -154,7 +154,8 @@ test("eleventyComputed intermixes with global data", async (t) => {
     input: "test/stubs-computed-global",
     output: "dist",
   }, function(cfg) {
-    cfg.setDataDeepMerge(true);
+    // Defaulted in v1
+    // cfg.setDataDeepMerge(true);
   });
 
   let dataObj = new TemplateData(eleventyConfig);

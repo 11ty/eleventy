@@ -12,6 +12,8 @@ import { getEleventyPackageJson, getWorkingProjectPackageJson } from "../Util/Im
 import { EleventyImport, EleventyLoadContent } from "../Util/Require.js";
 import { DeepFreeze } from "../Util/Objects/DeepFreeze.js";
 import { coerce } from "../Util/SemverCoerce.js";
+import ReservedData from "../Util/ReservedData.js";
+import { isTypeScriptSupported } from "../Util/FeatureTests.cjs";
 
 const { set: lodashSet, get: lodashGet } = lodash;
 
@@ -172,11 +174,23 @@ class TemplateData {
 					globSuffixesWithLeadingDot.add(`${suffix.slice(1)}.mjs`);
 					globSuffixesWithLeadingDot.add(`${suffix.slice(1)}.cjs`);
 					globSuffixesWithLeadingDot.add(`${suffix.slice(1)}.js`);
+
+					if (isTypeScriptSupported()) {
+						globSuffixesWithLeadingDot.add(`${suffix.slice(1)}.mts`);
+						globSuffixesWithLeadingDot.add(`${suffix.slice(1)}.cts`);
+						globSuffixesWithLeadingDot.add(`${suffix.slice(1)}.ts`);
+					}
 				} else {
 					// "suffix.js" without leading dot
 					globSuffixesWithoutLeadingDot.add(`${suffix || ""}.mjs`);
 					globSuffixesWithoutLeadingDot.add(`${suffix || ""}.cjs`);
 					globSuffixesWithoutLeadingDot.add(`${suffix || ""}.js`);
+
+					if (isTypeScriptSupported()) {
+						globSuffixesWithoutLeadingDot.add(`${suffix || ""}.mts`);
+						globSuffixesWithoutLeadingDot.add(`${suffix || ""}.cts`);
+						globSuffixesWithoutLeadingDot.add(`${suffix || ""}.ts`);
+					}
 				}
 			}
 		}
@@ -208,7 +222,7 @@ class TemplateData {
 			if (suffix) {
 				// TODO this check is purely for backwards compat and I kinda feel like it shouldn’t be here
 				// paths.push(`${this.inputDir}/**/*${suffix || ""}.cjs`); // Same as above
-				paths.push(`${this.inputDir}**/*${suffix || ""}.js`);
+				paths.push(`${this.inputDir}**/*${suffix || ""}.js`); // TODO typescript?
 			}
 		}
 
@@ -305,12 +319,16 @@ class TemplateData {
 				);
 
 				let oldData = lodashGet(globalData, objectPathTarget);
-				data = TemplateData.mergeDeep(this.config.dataDeepMerge, oldData, data);
+				data = Merge(oldData, data);
 			}
 
 			dataFileConflicts[objectPathTargetString] = files[j];
 			debug(`Found global data file ${files[j]} and adding as: ${objectPathTarget}`);
 			lodashSet(globalData, objectPathTarget, data);
+
+			if (this.config.freezeReservedData) {
+				ReservedData.check(globalData, files[j]);
+			}
 		}
 
 		return globalData;
@@ -422,7 +440,7 @@ class TemplateData {
 					}
 					dataSource[key] = path;
 				}
-				TemplateData.mergeDeep(this.config.dataDeepMerge, localData, cleanedDataForPath);
+				Merge(localData, cleanedDataForPath);
 			}
 		}
 		return localData;
@@ -630,18 +648,6 @@ class TemplateData {
 
 		debug("getLocalDataPaths(%o): %o", templatePath, paths);
 		return unique(paths).reverse();
-	}
-
-	static mergeDeep(deepMerge, target, ...source) {
-		if (!deepMerge && deepMerge !== undefined) {
-			return Object.assign(target, ...source);
-		} else {
-			return TemplateData.merge(target, ...source);
-		}
-	}
-
-	static merge(target, ...source) {
-		return Merge(target, ...source);
 	}
 
 	/* Like cleanupData() but does not mutate */

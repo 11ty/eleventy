@@ -26,7 +26,7 @@ class TemplateContent {
 	#initialized = false;
 	#config;
 	#templateRender;
-	#preprocessorEngine;
+	#renderPreprocessorEngine;
 	#extensionMap;
 	#configOptions;
 	#frontMatterOptions;
@@ -52,7 +52,7 @@ class TemplateContent {
 		let preprocessorEngineName = this.templateRender.getPreprocessorEngineName();
 		if (preprocessorEngineName && this.templateRender.engine.getName() !== preprocessorEngineName) {
 			let engine = await this.templateRender.getEngineByName(preprocessorEngineName);
-			this.#preprocessorEngine = engine;
+			this.#renderPreprocessorEngine = engine;
 		}
 	}
 
@@ -433,6 +433,10 @@ class TemplateContent {
 		return this._frontMatterDataCache;
 	}
 
+	getEngineNames(engineOverride) {
+		return this.templateRender.getEnginesList(engineOverride);
+	}
+
 	async getEngineOverride() {
 		return this.getFrontMatterData().then((data) => {
 			return data[this.config.keys.engineOverride];
@@ -441,8 +445,8 @@ class TemplateContent {
 
 	// checks engines
 	isTemplateCacheable() {
-		if (this.#preprocessorEngine) {
-			return this.#preprocessorEngine.cacheable;
+		if (this.#renderPreprocessorEngine) {
+			return this.#renderPreprocessorEngine.cacheable;
 		}
 		return this.engine.cacheable;
 	}
@@ -545,8 +549,8 @@ class TemplateContent {
 
 		// Don’t use markdown as the engine to parse for symbols
 		// TODO pass in engineOverride here
-		if (this.#preprocessorEngine) {
-			engine = this.#preprocessorEngine;
+		if (this.#renderPreprocessorEngine) {
+			engine = this.#renderPreprocessorEngine;
 		}
 
 		if ("parseForSymbols" in engine) {

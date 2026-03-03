@@ -1190,46 +1190,6 @@ test("Data Cascade (Deep merge)", async (t) => {
   t.is(data.parent.child, -2);
 });
 
-test("Data Cascade (Shallow merge)", async (t) => {
-  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
-    input: "test",
-    output: "dist",
-  }, function(cfg) {
-    // Default changed in 1.0
-    cfg.setDataDeepMerge(false);
-  });
-
-  let dataObj = new TemplateData(eleventyConfig);
-  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
-  dataObj.setProjectUsingEsm(true);
-  dataObj.setFileSystemSearch(new FileSystemSearch());
-  await dataObj.getGlobalData();
-
-  let tmpl = await getNewTemplate(
-    "./test/stubs/data-cascade/template.njk",
-    "./test/",
-    "./dist",
-    dataObj,
-    null,
-    eleventyConfig
-  );
-
-  let data = await tmpl.getData();
-  t.deepEqual(Object.keys(data).sort(), [
-    "datafile",
-    "eleventy",
-    "frontmatter",
-    "page",
-    "parent",
-    "pkg",
-    "tags",
-  ]);
-
-  t.deepEqual(Object.keys(data.parent).sort(), ["child", "frontmatter"]);
-
-  t.is(data.parent.child, -2);
-});
-
 test("Data Cascade Tag Merge (Deep merge)", async (t) => {
   let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
     input: "test/stubs",
@@ -1284,62 +1244,6 @@ test("Data Cascade Tag Merge (Deep Merge - Deduplication)", async (t) => {
 
   let data = await tmpl.getData();
   t.deepEqual(data.tags.sort(), ["tagA", "tagB", "tagC", "tagD"]);
-});
-
-test("Data Cascade Tag Merge (Shallow merge)", async (t) => {
-  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
-    input: "test/stubs",
-    output: "dist"
-  }, function(cfg) {
-    // Default changed in 1.0
-    cfg.setDataDeepMerge(false);
-  });
-
-  let dataObj = new TemplateData(eleventyConfig);
-  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
-  dataObj.setProjectUsingEsm(true);
-  dataObj.setFileSystemSearch(new FileSystemSearch());
-  await dataObj.getGlobalData();
-
-  let tmpl = await getNewTemplate(
-    "./test/stubs/data-cascade/template.njk",
-    "./test/stubs/",
-    "./dist",
-    dataObj,
-    null,
-    eleventyConfig
-  );
-
-  let data = await tmpl.getData();
-  t.deepEqual(data.tags.sort(), ["tagA", "tagB"]);
-});
-
-test('Local data inherits tags string ([tags] vs "tags") Shallow Merge', async (t) => {
-  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
-    input: "test/stubs",
-    output: "dist"
-  }, function(cfg) {
-    // Default changed in 1.0
-    cfg.setDataDeepMerge(false);
-  });
-
-  let dataObj = new TemplateData(eleventyConfig);
-  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
-  dataObj.setProjectUsingEsm(true);
-  dataObj.setFileSystemSearch(new FileSystemSearch());
-  await dataObj.getGlobalData();
-
-  let tmpl = await getNewTemplate(
-    "./test/stubs/local-data-tags/component.njk",
-    "./test/stubs/",
-    "./dist",
-    dataObj,
-    null,
-    eleventyConfig
-  );
-
-  let data = await tmpl.getData();
-  t.deepEqual(data.tags.sort(), ["tag1", "tag2"]);
 });
 
 test('Local data inherits tags string ([tags] vs "tags") Deep Merge', async (t) => {

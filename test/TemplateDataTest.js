@@ -1,10 +1,12 @@
 import test from "ava";
 import semver from "semver";
 import { createRequire } from "module";
+import { Merge } from "@11ty/eleventy-utils";
 
 import TemplateData from "../src/Data/TemplateData.js";
 import FileSystemSearch from "../src/FileSystemSearch.js";
 import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
+import { isTypeScriptSupported } from "../src/Util/FeatureTests.cjs";
 
 import { getTemplateConfigInstance, getTemplateConfigInstanceCustomCallback } from "./_testHelpers.js";
 
@@ -692,13 +694,14 @@ test("getTemplateDataFileGlob", async (t) => {
   let tw = new TemplateData(eleventyConfig);
 
   t.deepEqual(await tw.getTemplateDataFileGlob(), [
-    "./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js}",
+    `./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js${isTypeScriptSupported() ? ",11tydata.mts,11tydata.cts,11tydata.ts" : ""}}`,
   ]);
 });
 
-test("TemplateData.merge", (t) => {
+// https://github.com/11ty/eleventy/issues/3937
+test("TemplateData.merge is now Merge()", (t) => {
   t.deepEqual(
-    TemplateData.merge(
+    Merge(
       {
         tags: [1, 2, 3],
       },

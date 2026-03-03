@@ -1,4 +1,3 @@
-import { existsSync } from "node:fs";
 import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
@@ -11,6 +10,7 @@ import GlobalDependencyMap from "./GlobalDependencyMap.js";
 import ExistsCache from "./Util/ExistsCache.js";
 import eventBus from "./EventBus.js";
 import ProjectTemplateFormats from "./Util/ProjectTemplateFormats.js";
+import { isTypeScriptSupported } from "./Util/FeatureTests.cjs";
 
 const debug = debugUtil("Eleventy:TemplateConfig");
 const debugDev = debugUtil("Dev:Eleventy:TemplateConfig");
@@ -52,6 +52,7 @@ class TemplateConfig {
 	#existsCache = new ExistsCache();
 	#usesGraph;
 	#previousBuildModifiedFile;
+	#activeConfigPath;
 
 	constructor(customRootConfig, projectConfigPath) {
 		/** @type {object} */
@@ -78,6 +79,12 @@ class TemplateConfig {
 				"eleventy.config.mjs",
 				"eleventy.config.cjs",
 			];
+
+			if (isTypeScriptSupported()) {
+				this.projectConfigPaths.push("eleventy.config.ts");
+				this.projectConfigPaths.push("eleventy.config.mts");
+				this.projectConfigPaths.push("eleventy.config.cts");
+			}
 		}
 
 		if (customRootConfig) {
@@ -173,7 +180,7 @@ class TemplateConfig {
 	 */
 	getLocalProjectConfigFile() {
 		let configFiles = this.getLocalProjectConfigFiles();
-		let configFile = configFiles.find((path) => path && existsSync(path));
+		let configFile = configFiles.find((path) => path && this.existsCache.exists(path));
 		if (configFile) {
 			return configFile;
 		}
@@ -185,6 +192,13 @@ class TemplateConfig {
 			return TemplatePath.addLeadingDotSlashArray(paths.filter((path) => Boolean(path)));
 		}
 		return [];
+	}
+
+	getActiveConfigPath() {
+		if (!this.#activeConfigPath) {
+			this.#activeConfigPath = this.getLocalProjectConfigFile();
+		}
+		return this.#activeConfigPath;
 	}
 
 	setProjectUsingEsm(isEsmProject) {
@@ -200,6 +214,8 @@ class TemplateConfig {
 	 * Resets the configuration.
 	 */
 	async reset() {
+		this.#existsCache.reset();
+
 		debugDev("Resetting configuration: TemplateConfig and UserConfig.");
 		this.userConfig.reset();
 		this.usesGraph.reset(); // needs to be before forceReloadConfig #3711
@@ -228,6 +244,8 @@ class TemplateConfig {
 	 * Async-friendly init method
 	 */
 	async init(overrides) {
+		this.#activeConfigPath = undefined; // reset
+
 		await this.initializeRootConfig();
 
 		if (overrides) {
@@ -382,7 +400,7 @@ class TemplateConfig {
 		let localConfig = {};
 		let exportedConfig = {};
 
-		let path = this.projectConfigPaths.filter((path) => path).find((path) => existsSync(path));
+		let path = this.getActiveConfigPath();
 
 		if (this.projectConfigPaths.length > 0 && this.#configManuallyDefined && !path) {
 			throw new EleventyConfigError(

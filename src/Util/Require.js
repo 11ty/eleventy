@@ -3,7 +3,7 @@ import path from "node:path";
 import { TemplatePath } from "@11ty/eleventy-utils";
 
 import importer from "./importer.js";
-import { clearRequireCache } from "../Util/RequireUtils.js";
+import { clearRequireCache, requireCommonJsTypeScript } from "../Util/RequireUtils.js";
 import { port1 } from "./EsmResolverPortAdapter.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import eventBus from "../EventBus.js";
@@ -11,6 +11,10 @@ import eventBus from "../EventBus.js";
 class EleventyImportError extends EleventyBaseError {}
 
 const requestPromiseCache = new Map();
+
+function isTypeScript(filePath) {
+	return filePath.endsWith(".ts") || filePath.endsWith(".cts") || filePath.endsWith(".mts");
+}
 
 function getImportErrorMessage(filePath, type) {
 	return `There was a problem importing '${path.relative(".", filePath)}' via ${type}`;
@@ -98,6 +102,12 @@ async function dynamicImportAbsolutePath(absolutePath, options = {}) {
 	// Removed a `require` short circuit from this piece originally added
 	// in https://github.com/11ty/eleventy/pull/3493 Was a bit faster but
 	// error messaging was worse for require(esm)
+
+	// Workaround for https://github.com/nodejs/node/issues/61385
+	// Remove this when fixed upstream!
+	if (type === "cjs" && isTypeScript(absolutePath)) {
+		return requireCommonJsTypeScript(absolutePath);
+	}
 
 	let urlPath;
 	try {

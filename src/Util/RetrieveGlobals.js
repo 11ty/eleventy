@@ -2,7 +2,11 @@ import { RetrieveGlobals as NodeRetrieveGlobals } from "node-retrieve-globals";
 import { parseCode, walkCode, importFromString } from "import-module-string";
 import { isBuiltin } from "node:module";
 
-export async function RetrieveGlobals(code, filePath) {
+export async function RetrieveGlobals(code, filePath, options = {}) {
+	let { isJavaScriptFrontMatterCompat } = Object.assign(
+		{ isJavaScriptFrontMatterCompat: false },
+		options,
+	);
 	let data = {
 		page: {
 			// Theoretically fileSlug and filePathStem could be added here but require extensionMap
@@ -15,7 +19,8 @@ export async function RetrieveGlobals(code, filePath) {
 
 	let nonBuiltinImports = Array.from(imports).filter((name) => !isBuiltin(name));
 	if (nonBuiltinImports.length === 0) {
-		return importFromString(code, { ast, data, filePath });
+		let implicitExports = isJavaScriptFrontMatterCompat ? false : true;
+		return importFromString(code, { ast, data, filePath, implicitExports });
 	}
 
 	// TODO re-use already parsed AST from `import-module-string` in `node-retrieve-globals`

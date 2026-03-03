@@ -1,4 +1,4 @@
-function withResolvers() {
+export function withResolvers() {
 	if ("withResolvers" in Promise) {
 		return Promise.withResolvers();
 	}
@@ -11,5 +11,3 @@ function withResolvers() {
 	});
 	return { promise, resolve, reject };
 }
-
-export { withResolvers };

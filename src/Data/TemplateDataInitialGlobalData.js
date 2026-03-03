@@ -1,5 +1,6 @@
 import lodash from "@11ty/lodash-custom";
 
+import ReservedData from "../Util/ReservedData.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
 
 const { set: lodashSet } = lodash;
@@ -31,6 +32,11 @@ class TemplateDataInitialGlobalData {
 
 				lodashSet(globalData, key, returnValue);
 			}
+		}
+
+		if (this.config.freezeReservedData) {
+			// TODO-ish might come from the `config` callback too
+			ReservedData.check(globalData, this.templateConfig.getActiveConfigPath());
 		}
 
 		return globalData;

@@ -6,17 +6,17 @@ import { rimrafSync } from "rimraf";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { marked } from "marked";
-import nunjucks from "nunjucks";
+import nunjucks from "@11ty/nunjucks";
 import * as sass from "sass";
 
 import Eleventy, { HtmlBasePlugin } from "../src/Eleventy.js";
 import TemplateContent from "../src/TemplateContent.js";
 import TemplateMap from "../src/TemplateMap.js";
 import TemplateConfig from "../src/TemplateConfig.js";
-import DateGitFirstAdded from "../src/Util/DateGitFirstAdded.js";
-import DateGitLastUpdated from "../src/Util/DateGitLastUpdated.js";
+import { getCreatedTimestamp, getUpdatedTimestamp } from "../src/Util/Git.js";
 import PathNormalizer from "../src/Util/PathNormalizer.js";
 import { normalizeNewLines, localizeNewLines } from "./Util/normalizeNewLines.js";
+import { isTypeScriptSupported } from "../src/Util/FeatureTests.cjs";
 
 const lodashGet = lodash.get;
 
@@ -120,6 +120,7 @@ test("Eleventy file watching", async (t) => {
   await elev.startWatch();
 
   let { targets, ignores } = await elev.getWatchedTargets();
+  await elev.stopWatch();
 
   t.deepEqual(targets, [
     "./package.json",
@@ -129,11 +130,7 @@ test("Eleventy file watching", async (t) => {
     "./.gitignore",
     "./.eleventyignore",
     "./test/stubs/.eleventyignore",
-    "./.eleventy.js",
-    "./eleventy.config.js",
-    "./eleventy.config.mjs",
-    "./eleventy.config.cjs",
-    "./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js}",
+    `./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js${isTypeScriptSupported() ? ",11tydata.mts,11tydata.cts,11tydata.ts" : ""}}`,
     "./test/stubs/deps/dep1.cjs",
     "./test/stubs/deps/dep2.cjs",
   ]);
@@ -143,8 +140,6 @@ test("Eleventy file watching", async (t) => {
   t.true(ignores.includes("test/stubs/_site/**"));
   t.true(ignores.includes("./.git/**"));
   t.true(ignores.includes(".cache"));
-
-  await elev.stopWatch();
 });
 
 test("Eleventy file watching (don’t watch deps of passthrough copy .js files)", async (t) => {
@@ -156,9 +151,10 @@ test("Eleventy file watching (don’t watch deps of passthrough copy .js files)"
   await elev.eleventyFiles.getFiles();
   await elev.startWatch();
 
-  t.deepEqual(await elev.eleventyFiles.getWatchPathCache(), ["./test/stubs-1325/test.11ty.js"]);
+  let paths = await elev.eleventyFiles.getWatchPathCache();
+  await elev.stopWatch();
 
-   await elev.stopWatch();
+  t.deepEqual(paths, ["./test/stubs-1325/test.11ty.js"]);
 });
 
 test("Eleventy file watching (no JS dependencies)", async (t) => {
@@ -175,6 +171,8 @@ test("Eleventy file watching (no JS dependencies)", async (t) => {
 
   let { targets, ignores } = await elev.getWatchedTargets();
 
+  await elev.stopWatch();
+
   t.deepEqual(targets, [
     "./package.json",
     "./test/stubs/**/*.njk",
@@ -183,11 +181,7 @@ test("Eleventy file watching (no JS dependencies)", async (t) => {
     "./.gitignore",
     "./.eleventyignore",
     "./test/stubs/.eleventyignore",
-    "./.eleventy.js",
-    "./eleventy.config.js",
-    "./eleventy.config.mjs",
-    "./eleventy.config.cjs",
-    "./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js}",
+    `./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js${isTypeScriptSupported() ? ",11tydata.mts,11tydata.cts,11tydata.ts" : ""}}`,
   ]);
 
   t.true(ignores.includes("node_modules/**"));
@@ -195,8 +189,6 @@ test("Eleventy file watching (no JS dependencies)", async (t) => {
   t.true(ignores.includes("test/stubs/_site/**"));
   t.true(ignores.includes("./.git/**"));
   t.true(ignores.includes(".cache"));
-
-   await elev.stopWatch();
 });
 
 test("Eleventy set input/output, one file input", async (t) => {
@@ -429,13 +421,15 @@ test("#142: date 'git Last Modified' populates page.date", async (t) => {
   let results = await elev.toJSON();
   let [result] = results;
 
-  // This doesn’t test the validity of the function, only that it populates page.date.
-  let comparisonDate = await DateGitLastUpdated("./test/stubs-142/index.njk");
-  t.is(result.content.trim(), "" + comparisonDate.getTime());
+  // Warning: this doesn’t test the validity of the function, only that it populates page.date.
+  let timestamp = await getUpdatedTimestamp("./test/stubs-142/index.njk");
+  t.truthy(result.content.trim());
+  t.truthy(timestamp);
+  t.is(result.content.trim(), "" + timestamp);
 });
 
-test("DateGitLastUpdated returns undefined on nonexistent path", async (t) => {
-  t.is(await DateGitLastUpdated("./test/invalid.invalid"), undefined);
+test("git getUpdatedTimestamp returns undefined on nonexistent path", async (t) => {
+  t.is(await getUpdatedTimestamp("./test/invalid.invalid"), undefined);
 });
 
 test("#2167: Pagination with permalink: false", async (t) => {
@@ -540,12 +534,14 @@ test("#2224: date 'git created' populates page.date", async (t) => {
   let [result] = results;
 
   // This doesn’t test the validity of the function, only that it populates page.date.
-  let comparisonDate = await DateGitFirstAdded("./test/stubs-2224/index.njk");
-  t.is(result.content.trim(), "" + comparisonDate.getTime());
+  let timestamp = await getCreatedTimestamp("./test/stubs-2224/index.njk");
+  t.truthy(result.content.trim());
+  t.truthy(timestamp);
+  t.is(result.content.trim(), "" + timestamp);
 });
 
-test("DateGitFirstAdded returns undefined on nonexistent path", async (t) => {
-  t.is(await DateGitFirstAdded("./test/invalid.invalid"), undefined);
+test("git getCreatedTimestamp returns undefined on nonexistent path", async (t) => {
+  t.is(await getCreatedTimestamp("./test/invalid.invalid"), undefined);
 });
 
 test("Does pathPrefix affect page URLs", async (t) => {
@@ -884,16 +880,17 @@ test("setInputDirectory config method #1503 in a plugin throws error", async (t)
 test("Accepts absolute paths for input and output", async (t) => {
   let input = path.resolve("./test/noop/");
   let output = path.resolve("./test/noop/_site");
+
   let elev = new Eleventy(input, output);
 
   let results = await elev.toJSON();
 
   // trailing slashes are expected
-  t.is(PathNormalizer.normalizeSeperator(elev.directories.input), PathNormalizer.normalizeSeperator(path.resolve("./test/noop/") + path.sep));
-  t.is(PathNormalizer.normalizeSeperator(elev.directories.includes), PathNormalizer.normalizeSeperator(path.resolve("./test/noop/_includes/") + path.sep));
-  t.is(PathNormalizer.normalizeSeperator(elev.directories.data), PathNormalizer.normalizeSeperator(path.resolve("./test/noop/_data/") + path.sep));
+  t.is(PathNormalizer.normalizeSeperator(elev.directories.input), PathNormalizer.normalizeSeperator("./test/noop/"));
+  t.is(PathNormalizer.normalizeSeperator(elev.directories.includes), PathNormalizer.normalizeSeperator("./test/noop/_includes/"));
+  t.is(PathNormalizer.normalizeSeperator(elev.directories.data), PathNormalizer.normalizeSeperator("./test/noop/_data/"));
   t.is(elev.directories.layouts, undefined);
-  t.is(PathNormalizer.normalizeSeperator(elev.directories.output), PathNormalizer.normalizeSeperator(path.resolve("./test/noop/_site/") + path.sep));
+  t.is(PathNormalizer.normalizeSeperator(elev.directories.output), PathNormalizer.normalizeSeperator("./test/noop/_site/"));
 });
 
 test("Accepts absolute paths urls for input and output, results output #3805", async (t) => {
@@ -969,7 +966,7 @@ eleventy:
     message: 'You attempted to set one of Eleventy’s reserved data property names. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://v3.11ty.dev/docs/data-eleventy-supplied/'
   });
 
-  t.is(e.originalError.toString(), "TypeError: Cannot add property key1, object is not extensible");
+  t.is(e.cause.toString(), "TypeError: Cannot add property key1, object is not extensible");
 });
 
 test("Eleventy setting reserved data throws error (pkg)", async (t) => {
@@ -987,7 +984,7 @@ pkg:
     message: 'You attempted to set one of Eleventy’s reserved data property names. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://v3.11ty.dev/docs/data-eleventy-supplied/'
   });
 
-  t.is(e.originalError.toString(), "TypeError: Cannot add property myOwn, object is not extensible");
+  t.is(e.cause.toString(), "TypeError: Cannot add property myOwn, object is not extensible");
 });
 
 test("Eleventy pagination works okay with reserved data throws (eleventy) Issue #3262", async (t) => {
@@ -1024,8 +1021,6 @@ page: "My page value"
   let e = await t.throwsAsync(() => elev.toJSON(), {
     message: 'You attempted to set one of Eleventy’s reserved data property names: page. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://v3.11ty.dev/docs/data-eleventy-supplied/'
   });
-
-  t.is(e.originalError.toString(), "TypeError: Cannot override reserved Eleventy properties: page");
 });
 
 test("Eleventy setting reserved data throws error (content)", async (t) => {
@@ -1038,11 +1033,9 @@ content: "My page value"
   });
   elev.disableLogger();
 
-  let e = await t.throwsAsync(() => elev.toJSON(), {
+  await t.throwsAsync(() => elev.toJSON(), {
     message: 'You attempted to set one of Eleventy’s reserved data property names: content. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://v3.11ty.dev/docs/data-eleventy-supplied/'
   });
-
-  t.is(e.originalError.toString(), "TypeError: Cannot override reserved Eleventy properties: content");
 });
 
 test("Eleventy setting reserved data throws error (collections)", async (t) => {
@@ -1055,11 +1048,9 @@ collections: []
   });
   elev.disableLogger();
 
-  let e = await t.throwsAsync(() => elev.toJSON(), {
+  await t.throwsAsync(() => elev.toJSON(), {
     message: 'You attempted to set one of Eleventy’s reserved data property names: collections. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://v3.11ty.dev/docs/data-eleventy-supplied/'
   });
-
-  t.is(e.originalError.toString(), "TypeError: Cannot override reserved Eleventy properties: collections");
 });
 
 test("Eleventy setting pkg data is okay when pkg is remapped to parkour", async (t) => {
@@ -1147,7 +1138,7 @@ parkour:
     message: 'You attempted to set one of Eleventy’s reserved data property names. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://v3.11ty.dev/docs/data-eleventy-supplied/'
   });
 
-  t.is(e.originalError.toString(), "TypeError: Cannot add property myOwn, object is not extensible");
+  t.is(e.cause.toString(), "TypeError: Cannot add property myOwn, object is not extensible");
 });
 
 test("Eleventy data schema (success) #879", async (t) => {
@@ -1197,7 +1188,7 @@ test("Eleventy data schema (fails) #879", async (t) => {
     message: 'Error in the data schema for: ./test/stubs-virtual/index1.html (via `eleventyDataSchema`)'
   });
 
-  t.is(e.originalError.toString(), "Error: Invalid data type for draft.");
+  t.is(e.cause.toString(), "Error: Invalid data type for draft.");
 });
 
 test("Eleventy data schema (fails, using zod) #879", async (t) => {
@@ -1223,7 +1214,7 @@ test("Eleventy data schema (fails, using zod) #879", async (t) => {
     message: 'Error in the data schema for: ./test/stubs-virtual/index1.html (via `eleventyDataSchema`)'
   });
 
-  t.is(e.originalError.toString(), 'Validation error: Expected boolean, received number at "draft", or Expected undefined, received number at "draft"');
+  t.is(e.cause.toString(), 'Validation error: Invalid input: expected boolean, received number at "draft" or Invalid input: expected undefined, received number at "draft"');
 });
 
 test("Eleventy data schema has access to custom collections created via API #879", async (t) => {

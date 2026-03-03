@@ -4,7 +4,8 @@ import { decodeHTML } from "entities";
 const POSTHTML_PLUGIN_NAME = "11ty/eleventy/id-attribute";
 
 function getTextNodeContent(node) {
-	if (node.attrs?.["eleventy:id-ignore"] === "") {
+	let ignoredAttr = node.attrs?.["eleventy:id-ignore"];
+	if (ignoredAttr === "" || ignoredAttr === true) {
 		delete node.attrs["eleventy:id-ignore"];
 		return "";
 	}
@@ -25,7 +26,7 @@ function getTextNodeContent(node) {
 		.join("");
 }
 
-function IdAttributePlugin(eleventyConfig, options = {}) {
+export function IdAttributePlugin(eleventyConfig, options = {}) {
 	if (!options.slugify) {
 		options.slugify = eleventyConfig.getFilter("slugify");
 	}
@@ -103,5 +104,3 @@ function IdAttributePlugin(eleventyConfig, options = {}) {
 		},
 	);
 }
-
-export { IdAttributePlugin };
