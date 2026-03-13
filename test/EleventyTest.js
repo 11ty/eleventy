@@ -1214,7 +1214,7 @@ test("Eleventy data schema (fails, using zod) #879", async (t) => {
     message: 'Error in the data schema for: ./test/stubs-virtual/index1.html (via `eleventyDataSchema`)'
   });
 
-  t.is(e.cause.toString(), 'Validation error: Expected boolean, received number at "draft", or Expected undefined, received number at "draft"');
+  t.is(e.cause.toString(), 'Validation error: Invalid input: expected boolean, received number at "draft" or Invalid input: expected undefined, received number at "draft"');
 });
 
 test("Eleventy data schema has access to custom collections created via API #879", async (t) => {
