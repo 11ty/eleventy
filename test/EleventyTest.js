@@ -16,6 +16,7 @@ import TemplateConfig from "../src/TemplateConfig.js";
 import { getCreatedTimestamp, getUpdatedTimestamp } from "../src/Util/Git.js";
 import PathNormalizer from "../src/Util/PathNormalizer.js";
 import { normalizeNewLines, localizeNewLines } from "./Util/normalizeNewLines.js";
+import { isTypeScriptSupported } from "../src/Util/FeatureTests.cjs";
 
 const lodashGet = lodash.get;
 
@@ -129,7 +130,7 @@ test("Eleventy file watching", async (t) => {
     "./.gitignore",
     "./.eleventyignore",
     "./test/stubs/.eleventyignore",
-    "./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js}",
+    `./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js${isTypeScriptSupported() ? ",11tydata.mts,11tydata.cts,11tydata.ts" : ""}}`,
     "./test/stubs/deps/dep1.cjs",
     "./test/stubs/deps/dep2.cjs",
   ]);
@@ -180,7 +181,7 @@ test("Eleventy file watching (no JS dependencies)", async (t) => {
     "./.gitignore",
     "./.eleventyignore",
     "./test/stubs/.eleventyignore",
-    "./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js}",
+    `./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js${isTypeScriptSupported() ? ",11tydata.mts,11tydata.cts,11tydata.ts" : ""}}`,
   ]);
 
   t.true(ignores.includes("node_modules/**"));
@@ -1213,7 +1214,7 @@ test("Eleventy data schema (fails, using zod) #879", async (t) => {
     message: 'Error in the data schema for: ./test/stubs-virtual/index1.html (via `eleventyDataSchema`)'
   });
 
-  t.is(e.cause.toString(), 'Validation error: Expected boolean, received number at "draft", or Expected undefined, received number at "draft"');
+  t.is(e.cause.toString(), 'Validation error: Invalid input: expected boolean, received number at "draft" or Invalid input: expected undefined, received number at "draft"');
 });
 
 test("Eleventy data schema has access to custom collections created via API #879", async (t) => {

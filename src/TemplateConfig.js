@@ -1,4 +1,3 @@
-import { existsSync } from "node:fs";
 import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
@@ -11,6 +10,7 @@ import GlobalDependencyMap from "./GlobalDependencyMap.js";
 import ExistsCache from "./Util/ExistsCache.js";
 import eventBus from "./EventBus.js";
 import ProjectTemplateFormats from "./Util/ProjectTemplateFormats.js";
+import { isTypeScriptSupported } from "./Util/FeatureTests.cjs";
 
 const debug = debugUtil("Eleventy:TemplateConfig");
 const debugDev = debugUtil("Dev:Eleventy:TemplateConfig");
@@ -79,6 +79,12 @@ class TemplateConfig {
 				"eleventy.config.mjs",
 				"eleventy.config.cjs",
 			];
+
+			if (isTypeScriptSupported()) {
+				this.projectConfigPaths.push("eleventy.config.ts");
+				this.projectConfigPaths.push("eleventy.config.mts");
+				this.projectConfigPaths.push("eleventy.config.cts");
+			}
 		}
 
 		if (customRootConfig) {

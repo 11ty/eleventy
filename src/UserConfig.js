@@ -919,12 +919,12 @@ class UserConfig {
 	addExtension(fileExtension, options = {}) {
 		let extensions;
 
-		// Array support added in 2.0.0-canary.19
+		// Array support 2.0.0-canary.19+
 		if (Array.isArray(fileExtension)) {
 			extensions = fileExtension;
 		} else {
-			// single string
-			extensions = [fileExtension];
+			// Comma separated support 4.0.0-alpha.7+
+			extensions = (fileExtension || "").split(",");
 		}
 
 		for (let extension of extensions) {

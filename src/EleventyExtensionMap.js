@@ -1,5 +1,7 @@
 import { TemplatePath } from "@11ty/eleventy-utils";
 
+import { isTypeScriptSupported } from "./Util/FeatureTests.cjs";
+
 class EleventyExtensionMap {
 	#engineManager;
 
@@ -264,6 +266,12 @@ class EleventyExtensionMap {
 				"11ty.cjs": { key: "11ty.js", extension: "11ty.cjs" },
 				"11ty.mjs": { key: "11ty.js", extension: "11ty.mjs" },
 			};
+
+			if (isTypeScriptSupported()) {
+				this._extensionToKeyMap["11ty.ts"] = { key: "11ty.js", extension: "11ty.ts" };
+				this._extensionToKeyMap["11ty.cts"] = { key: "11ty.js", extension: "11ty.cts" };
+				this._extensionToKeyMap["11ty.mts"] = { key: "11ty.js", extension: "11ty.mts" };
+			}
 
 			if ("extensionMap" in this.config) {
 				for (let entry of this.config.extensionMap) {
