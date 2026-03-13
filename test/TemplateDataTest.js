@@ -681,7 +681,7 @@ test("getRawImports", async (t) => {
   dataObj.setProjectUsingEsm(true);
   let data = await dataObj.getRawImports();
 
-  t.is(data.pkg.name, "@11ty/eleventy");
+  t.is(data.pkg.name, "@awesome.me/build");
 });
 
 test("getTemplateDataFileGlob", async (t) => {

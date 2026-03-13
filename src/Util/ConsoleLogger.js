@@ -99,12 +99,12 @@ class ConsoleLogger {
 		type = "log",
 		chalkColor = undefined,
 		forceToConsole = false,
-		prefix = "[11ty]",
+		prefix = "[build]",
 	) {
 		if (!forceToConsole && (!this.isVerbose || process.env.DEBUG)) {
 			debug(message);
 		} else if (this.#logger !== false) {
-			message = `${chalk.gray(prefix)} ${message.split("\n").join(`\n${chalk.gray(prefix)} `)}`;
+			message = `${prefix ? `${chalk.gray(prefix)} ` : ""}${message.split("\n").join(`\n${chalk.gray(prefix)} `)}`;
 
 			if (chalkColor && this.isChalkEnabled) {
 				this.logger[type](chalk[chalkColor](message));

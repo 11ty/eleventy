@@ -1,7 +1,7 @@
 {
-	"name": "@11ty/eleventy",
+	"name": "@awesome.me/build",
 	"version": "4.0.0-alpha.6",
-	"description": "A simpler static site generator.",
+	"description": "A simpler way to build awesome web sites.",
 	"publishConfig": {
 		"access": "public",
 		"provenance": true
@@ -19,7 +19,7 @@
 		"./utils/git": "./src/Util/Git.js"
 	},
 	"bin": {
-		"eleventy": "cmd.cjs"
+		"build": "cmd.cjs"
 	},
 	"license": "MIT",
 	"engines": {

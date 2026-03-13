@@ -325,7 +325,7 @@ export default class Eleventy extends Core {
 
 		await this.watcher.start();
 
-		this.logger.forceLog("Watching…");
+		this.logger.forceLog("Watching: ", await this.watcher.getWatched());
 
 		let watchDelay;
 		let watchRun = async (path) => {
