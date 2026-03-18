@@ -275,7 +275,7 @@ function RenderPlugin(eleventyConfig, options = {}) {
 				);
 				let rawLevel = 1;
 				let str = "";
-				let matches = null;
+				let matches;
 
 				// Exit when there's nothing to match
 				// or when we've found the matching "endraw" block

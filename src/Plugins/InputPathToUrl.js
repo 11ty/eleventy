@@ -98,7 +98,7 @@ function FilterPlugin(eleventyConfig) {
 		}
 
 		let inputDir = eleventyConfig.directories.input;
-		let suffix = "";
+		let suffix;
 		[suffix, targetFilePath] = parseFilePath(targetFilePath);
 		if (targetFilePath) {
 			targetFilePath = normalizeInputPath(
@@ -144,7 +144,7 @@ function TransformPlugin(eleventyConfig, defaultOptions = {}) {
 
 		let inputDir = eleventyConfig.directories.input;
 
-		let suffix = "";
+		let suffix;
 		[suffix, targetFilepathOrUrl] = parseFilePath(targetFilepathOrUrl);
 		if (targetFilepathOrUrl) {
 			targetFilepathOrUrl = normalizeInputPath(
