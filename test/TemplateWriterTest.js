@@ -1,6 +1,5 @@
 import test from "ava";
 import fs from "fs";
-import { rimrafSync } from "rimraf";
 import { glob } from "tinyglobby";
 import path from "path";
 
@@ -8,7 +7,7 @@ import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
 
 import { normalizeNewLines } from "./Util/normalizeNewLines.js";
 import { getRenderedTemplates as getRenderedTmpls } from "./_getRenderedTemplates.js";
-import { getTemplateConfigInstance, getTemplateConfigInstanceCustomCallback, getTemplateWriterInstance } from "./_testHelpers.js";
+import { getTemplateConfigInstance, getTemplateConfigInstanceCustomCallback, getTemplateWriterInstance, deleteDirectory } from "./_testHelpers.js";
 
 // TODO make sure if output is a subdir of input dir that they don’t conflict.
 test("Output is a subdir of input", async (t) => {
@@ -396,7 +395,7 @@ test("Glob Watcher Files with Passthroughs", async (t) => {
 });
 
 test("Pagination and TemplateContent", async (t) => {
-  rimrafSync("./test/stubs/pagination-templatecontent/_site/");
+  deleteDirectory("./test/stubs/pagination-templatecontent/_site/");
 
   let eleventyConfig = await getTemplateConfigInstance({
     dir: {
@@ -417,7 +416,7 @@ test("Pagination and TemplateContent", async (t) => {
 <h1>Post 2</h1>`,
   );
 
-  rimrafSync("./test/stubs/pagination-templatecontent/_site/");
+  deleteDirectory("./test/stubs/pagination-templatecontent/_site/");
 });
 
 test("Custom collection returns array", async (t) => {
@@ -592,7 +591,7 @@ test.skip("JavaScript with alias", async (t) => {
 });
 
 test("Passthrough file output", async (t) => {
-  rimrafSync("./test/stubs/template-passthrough/_site/");
+  deleteDirectory("./test/stubs/template-passthrough/_site/");
 
   let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
     input: "test/stubs/template-passthrough",
@@ -646,5 +645,5 @@ test("Passthrough file output", async (t) => {
     t.true(fs.existsSync(path));
   }
 
-  rimrafSync("./test/stubs/template-passthrough/_site/");
+  deleteDirectory("./test/stubs/template-passthrough/_site/");
 });

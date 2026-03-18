@@ -1,11 +1,40 @@
 import test from "ava";
 import fs from "node:fs";
-import { rimrafSync } from "rimraf";
 import { TemplatePath } from "@11ty/eleventy-utils";
 
 import { TransformPlugin as InputPathToUrlTransformPlugin } from "../src/Plugins/InputPathToUrl.js";
 import { default as HtmlBasePlugin } from "../src/Plugins/HtmlBasePlugin.js";
 import Eleventy from "../src/Eleventy.js";
+
+import { deleteDirectory } from "./_testHelpers.js";
+
+// TODO glob these when Node minimum is 22+
+const DIRS = [
+	"test/stubs-autocopy/_site-basica",
+	"test/stubs-autocopy/_site-basicb",
+	"test/stubs-autocopy/_site2",
+	"test/stubs-autocopy/_site4",
+	"test/stubs-autocopy/_site5",
+	"test/stubs-autocopy/_site6",
+	"test/stubs-autocopy/_site7",
+	"test/stubs-autocopy/_site8a",
+	"test/stubs-autocopy/_site8b",
+	"test/stubs-autocopy/_site9",
+	"test/stubs-autocopy/_site10",
+	"test/stubs-autocopy/_site11",
+];
+
+test.beforeEach("cleanup dirs", () => {
+	for(let dir of DIRS) {
+		deleteDirectory(dir);
+	}
+});
+
+test.after.always("cleanup dirs", () => {
+	for(let dir of DIRS) {
+		deleteDirectory(dir);
+	}
+})
 
 test("Basic usage", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site-basica", {
@@ -51,10 +80,6 @@ test("Basic usage", async (t) => {
 
 	t.is(fs.existsSync("test/stubs-autocopy/_site-basica/test/possum.png"), true);
 	t.is(fs.existsSync("test/stubs-autocopy/_site-basica/test/index.html"), true);
-});
-
-test.after.always("cleanup dirs", () => {
-	rimrafSync("test/stubs-autocopy/_site-basica");
 });
 
 test("More complex image path (parent dir)", async (t) => {
@@ -104,10 +129,6 @@ test("More complex image path (parent dir)", async (t) => {
 	t.is(fs.existsSync("test/stubs-autocopy/_site-basicb/test/index.html"), true);
 });
 
-test.after.always("cleanup dirs", () => {
-	rimrafSync("test/stubs-autocopy/_site-basicb");
-});
-
 test("No matches", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site2", {
 		configPath: false,
@@ -133,10 +154,6 @@ test("No matches", async (t) => {
 
 	t.is(fs.existsSync("test/stubs-autocopy/_site2/test/lol.lol"), false);
 	t.is(fs.existsSync("test/stubs-autocopy/_site2/test/index.html"), true);
-});
-
-test.after.always("cleanup dirs", () => {
-	rimrafSync("test/stubs-autocopy/_site2");
 });
 
 test("Match but does not exist (throws error)", async (t) => {
@@ -194,10 +211,6 @@ test("Match but does not exist (no error, using `failOnError: false`)", async (t
 	t.is(fs.existsSync("test/stubs-autocopy/_site4/test/index.html"), true);
 });
 
-test.after.always("cleanup dirs", () => {
-	rimrafSync("test/stubs-autocopy/_site4");
-});
-
 test("Copying dotfiles are not allowed", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site5", {
 		configPath: false,
@@ -231,14 +244,13 @@ test("Copying dotfiles are not allowed", async (t) => {
 	t.is(fs.existsSync("test/stubs-autocopy/_site5/test/index.html"), true);
 });
 
-test.after.always("cleanup dirs", () => {
-	rimrafSync("test/stubs-autocopy/_site5");
-});
-
 test("Using with InputPathToUrl plugin", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site6", {
 		configPath: false,
 		config: function (eleventyConfig) {
+			// Node 24: workaround for re-using input directory (and not ignoring all output directories by default)
+			eleventyConfig.ignores.add("./test/stubs-autocopy/_site*/**");
+
 			// order of addPlugin shouldn’t matter here
 			eleventyConfig.addPassthroughCopy("**/*.{html,njk}", {
 				mode: "html-relative"
@@ -268,19 +280,18 @@ test("Using with InputPathToUrl plugin", async (t) => {
 	t.is(fs.existsSync("test/stubs-autocopy/_site6/test2/index.html"), true);
 });
 
-test.after.always("cleanup dirs", () => {
-	rimrafSync("test/stubs-autocopy/_site6");
-});
-
 test("Using with InputPathToUrl plugin (reverse addPlugin order)", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site7", {
 		configPath: false,
 		config: function (eleventyConfig) {
+			// Node 24: workaround for re-using input directory (and not ignoring all output directories by default)
+			eleventyConfig.ignores.add("./test/stubs-autocopy/_site*/**");
+
 			// order of addPlugin shouldn’t matter here
 			eleventyConfig.addPlugin(InputPathToUrlTransformPlugin);
 
 			eleventyConfig.addPassthroughCopy("**/*.{html,njk}", {
-				mode: "html-relative"
+				mode: "html-relative",
 			});
 
 			eleventyConfig.on("eleventy.passthrough", copyMap => {
@@ -295,7 +306,6 @@ test("Using with InputPathToUrl plugin (reverse addPlugin order)", async (t) => 
 	elev.disableLogger();
 
 	let [copy, templates] = await elev.write();
-
 	t.is(copy.length, 0);
 	t.is(templates.length, 2);
 	t.is(templates.filter(entry => entry.url.endsWith("/test2/"))[0].content, `<a href="/test1/">Test 2</a>`);
@@ -304,15 +314,14 @@ test("Using with InputPathToUrl plugin (reverse addPlugin order)", async (t) => 
 	t.is(fs.existsSync("test/stubs-autocopy/_site7/test2/index.html"), true);
 });
 
-test.after.always("cleanup dirs", () => {
-	rimrafSync("test/stubs-autocopy/_site7");
-});
-
 test("Use with HtmlBasePlugin usage", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site8a", {
 		configPath: false,
 		pathPrefix: "yolo",
 		config: function (eleventyConfig) {
+			// Node 24: workaround for re-using input directory (and not ignoring all output directories by default)
+			eleventyConfig.ignores.add("./test/stubs-autocopy/_site*/**");
+
 			eleventyConfig.addPlugin(HtmlBasePlugin);
 			eleventyConfig.addPassthroughCopy("**/*.png", {
 				mode: "html-relative"
@@ -356,15 +365,14 @@ test("Use with HtmlBasePlugin usage", async (t) => {
 	t.is(fs.existsSync("test/stubs-autocopy/_site8a/test/index.html"), true);
 });
 
-test.after.always("cleanup dirs", () => {
-	rimrafSync("test/stubs-autocopy/_site8a");
-});
-
 test("Using with InputPathToUrl plugin and HtmlBasePlugin", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site8b", {
 		configPath: false,
 		pathPrefix: "yolo",
 		config: function (eleventyConfig) {
+			// Node 24: workaround for re-using input directory (and not ignoring all output directories by default)
+			eleventyConfig.ignores.add("./test/stubs-autocopy/_site*/**");
+
 			// order of addPlugin shouldn’t matter here
 			eleventyConfig.addPassthroughCopy("**/*.{html,njk}", {
 				mode: "html-relative"
@@ -393,10 +401,6 @@ test("Using with InputPathToUrl plugin and HtmlBasePlugin", async (t) => {
 
 	t.is(fs.existsSync("test/stubs-autocopy/_site8b/test2/test1.njk"), false);
 	t.is(fs.existsSync("test/stubs-autocopy/_site8b/test2/index.html"), true);
-});
-
-test.after.always("cleanup dirs", () => {
-	rimrafSync("test/stubs-autocopy/_site8b");
 });
 
 test("Multiple addPlugin calls (use both globs)", async (t) => {
@@ -456,10 +460,6 @@ test("Multiple addPlugin calls (use both globs)", async (t) => {
 	t.is(fs.existsSync("test/stubs-autocopy/_site9/test/index.html"), true);
 });
 
-test.after.always("cleanup dirs", () => {
-	rimrafSync("test/stubs-autocopy/_site9");
-});
-
 test("Array of globs", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site10", {
 		configPath: false,
@@ -514,10 +514,6 @@ test("Array of globs", async (t) => {
 	t.is(fs.existsSync("test/stubs-autocopy/_site10/test/index.html"), true);
 });
 
-test.after.always("cleanup dirs", () => {
-	rimrafSync("test/stubs-autocopy/_site10");
-});
-
 test("overwrite: false", async (t) => {
 	fs.mkdirSync("./test/stubs-autocopy/_site11/test/", { recursive: true })
 	fs.copyFileSync("./test/stubs-autocopy/possum.png", "./test/stubs-autocopy/_site11/test/possum.png");
@@ -564,10 +560,6 @@ test("overwrite: false", async (t) => {
 
 	t.is(fs.existsSync("test/stubs-autocopy/_site11/test/possum.png"), true);
 	t.is(fs.existsSync("test/stubs-autocopy/_site11/test/index.html"), true);
-});
-
-test.after.always("cleanup dirs", () => {
-	rimrafSync("test/stubs-autocopy/_site11");
 });
 
 test("Input -> output remapping not yet supported (throws error)", async (t) => {
