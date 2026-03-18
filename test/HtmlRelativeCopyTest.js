@@ -8,20 +8,12 @@ import { default as HtmlBasePlugin } from "../src/Plugins/HtmlBasePlugin.js";
 import Eleventy from "../src/Eleventy.js";
 import { deleteDirectory } from "./_testHelpers.js";
 
-// test.beforeEach("Directory cleanup", () => {
-// 	for(let dir of globSync("test/stubs-autocopy/_site*", {
-//     onlyDirectories: true
-//   })) {
-// 		deleteDirectory(dir);
-// 	}
-// })
-
 test.after.always("Directory cleanup", () => {
   let dirs = globSync("./test/stubs-autocopy/_site*", {
     onlyDirectories: true,
     expandDirectories: false,
   });
-  console.log( {dirs} );
+
 	for(let dir of dirs) {
 		deleteDirectory(dir);
 	}
