@@ -1,8 +1,8 @@
-# Code Coverage for Eleventy v3.1.2
+# Code Coverage for Eleventy v3.1.3
 
 | Filename                                                   | % Lines | % Statements | % Functions | % Branches |
 | ---------------------------------------------------------- | ------- | ------------ | ----------- | ---------- |
-| `total`                                                    | 90.67%  | 90.67%       | 90.51%      | 89.18%     |
+| `total`                                                    | 90.68%  | 90.68%       | 90.52%      | 89.24%     |
 | `cmd.cjs`                                                  | 71.61%  | 71.61%       | 25%         | 68.18%     |
 | `src/Eleventy.js`                                          | 91.11%  | 91.11%       | 87.09%      | 84.15%     |
 | `src/EleventyExtensionMap.js`                              | 97.18%  | 97.18%       | 96.15%      | 94.31%     |
@@ -12,7 +12,7 @@
 | `src/EleventyWatchTargets.js`                              | 93.29%  | 93.29%       | 90%         | 90.47%     |
 | `src/EventBus.js`                                          | 100%    | 100%         | 100%        | 100%       |
 | `src/FileSystemSearch.js`                                  | 100%    | 100%         | 100%        | 100%       |
-| `src/GlobalDependencyMap.js`                               | 81.85%  | 81.85%       | 85%         | 88.23%     |
+| `src/GlobalDependencyMap.js`                               | 81.85%  | 81.85%       | 85.36%      | 88.34%     |
 | `src/LayoutCache.js`                                       | 77.55%  | 77.55%       | 87.5%       | 87.5%      |
 | `src/Template.js`                                          | 94.91%  | 94.91%       | 93.84%      | 90.73%     |
 | `src/TemplateBehavior.js`                                  | 90.58%  | 90.58%       | 100%        | 84.21%     |
@@ -23,7 +23,7 @@
 | `src/TemplateGlob.js`                                      | 94.28%  | 94.28%       | 100%        | 91.66%     |
 | `src/TemplateLayout.js`                                    | 90.83%  | 90.83%       | 83.33%      | 88.57%     |
 | `src/TemplateLayoutPathResolver.js`                        | 88.97%  | 88.97%       | 75%         | 90.9%      |
-| `src/TemplateMap.js`                                       | 95.17%  | 95.17%       | 94.87%      | 94.65%     |
+| `src/TemplateMap.js`                                       | 95.17%  | 95.17%       | 94.87%      | 94.62%     |
 | `src/TemplatePassthrough.js`                               | 92.8%   | 92.8%        | 100%        | 90%        |
 | `src/TemplatePassthroughManager.js`                        | 86.95%  | 86.95%       | 96.29%      | 83.52%     |
 | `src/TemplatePermalink.js`                                 | 87.69%  | 87.69%       | 91.66%      | 92.95%     |
@@ -45,14 +45,14 @@
 | `src/Engines/JavaScript.js`                                | 81.25%  | 81.25%       | 93.75%      | 86.44%     |
 | `src/Engines/Liquid.js`                                    | 99.09%  | 99.09%       | 100%        | 95.94%     |
 | `src/Engines/Markdown.js`                                  | 96%     | 96%          | 85.71%      | 92.59%     |
-| `src/Engines/Nunjucks.js`                                  | 92.32%  | 92.32%       | 100%        | 87.5%      |
+| `src/Engines/Nunjucks.js`                                  | 92.32%  | 92.32%       | 100%        | 88.57%     |
 | `src/Engines/TemplateEngine.js`                            | 89.32%  | 89.32%       | 83.87%      | 92.68%     |
 | `src/Engines/TemplateEngineManager.js`                     | 93.78%  | 93.78%       | 100%        | 92.64%     |
 | `src/Engines/FrontMatter/JavaScript.js`                    | 100%    | 100%         | 100%        | 100%       |
 | `src/Engines/Util/ContextAugmenter.js`                     | 91.04%  | 91.04%       | 50%         | 88.23%     |
 | `src/Errors/DuplicatePermalinkOutputError.js`              | 100%    | 100%         | 100%        | 100%       |
 | `src/Errors/EleventyBaseError.js`                          | 100%    | 100%         | 100%        | 100%       |
-| `src/Errors/EleventyErrorHandler.js`                       | 94.07%  | 94.07%       | 100%        | 77.77%     |
+| `src/Errors/EleventyErrorHandler.js`                       | 94.07%  | 94.07%       | 100%        | 78.37%     |
 | `src/Errors/EleventyErrorUtil.js`                          | 100%    | 100%         | 100%        | 100%       |
 | `src/Errors/TemplateContentPrematureUseError.js`           | 100%    | 100%         | 100%        | 100%       |
 | `src/Errors/TemplateContentUnrenderedTemplateError.js`     | 100%    | 100%         | 100%        | 100%       |
@@ -85,7 +85,7 @@
 | `src/Util/GlobMatcher.js`                                  | 90.9%   | 90.9%        | 100%        | 66.66%     |
 | `src/Util/GlobRemap.js`                                    | 97.64%  | 97.64%       | 90%         | 100%       |
 | `src/Util/HtmlRelativeCopy.js`                             | 90.6%   | 90.6%        | 100%        | 89.18%     |
-| `src/Util/HtmlTransformer.js`                              | 90.11%  | 90.11%       | 88.88%      | 90.69%     |
+| `src/Util/HtmlTransformer.js`                              | 90.11%  | 90.11%       | 88.23%      | 90.69%     |
 | `src/Util/ImportJsonSync.js`                               | 84.41%  | 84.41%       | 83.33%      | 92.3%      |
 | `src/Util/IsAsyncFunction.js`                              | 100%    | 100%         | 50%         | 100%       |
 | `src/Util/JavaScriptDependencies.js`                       | 89.09%  | 89.09%       | 50%         | 85.71%     |
@@ -94,14 +94,14 @@
 | `src/Util/PathNormalizer.js`                               | 93.1%   | 93.1%        | 100%        | 86.66%     |
 | `src/Util/PathPrefixer.js`                                 | 100%    | 100%         | 100%        | 100%       |
 | `src/Util/Pluralize.js`                                    | 100%    | 100%         | 100%        | 100%       |
-| `src/Util/ProjectDirectories.js`                           | 96.74%  | 96.74%       | 97.29%      | 96.11%     |
+| `src/Util/ProjectDirectories.js`                           | 96.74%  | 96.74%       | 97.36%      | 96.15%     |
 | `src/Util/ProjectTemplateFormats.js`                       | 94.02%  | 94.02%       | 90%         | 94.73%     |
 | `src/Util/PromiseUtil.js`                                  | 46.66%  | 46.66%       | 100%        | 66.66%     |
-| `src/Util/Require.js`                                      | 82.94%  | 82.94%       | 75%         | 82.05%     |
+| `src/Util/Require.js`                                      | 83.72%  | 83.72%       | 75%         | 85.71%     |
 | `src/Util/ReservedData.js`                                 | 97.1%   | 97.1%        | 100%        | 92.85%     |
 | `src/Util/SetUnion.js`                                     | 100%    | 100%         | 100%        | 100%       |
 | `src/Util/SpawnAsync.js`                                   | 96.55%  | 96.55%       | 100%        | 87.5%      |
-| `src/Util/TemplateDepGraph.js`                             | 96.25%  | 96.25%       | 100%        | 93.61%     |
+| `src/Util/TemplateDepGraph.js`                             | 96.25%  | 96.25%       | 100%        | 93.75%     |
 | `src/Util/TransformsUtil.js`                               | 94.28%  | 94.28%       | 100%        | 83.33%     |
 | `src/Util/ValidUrl.js`                                     | 100%    | 100%         | 100%        | 100%       |
 | `src/Util/Objects/DeepFreeze.js`                           | 90%     | 90%          | 100%        | 80%        |
