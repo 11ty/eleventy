@@ -157,7 +157,7 @@
 		"liquidjs": "^10.25.0",
 		"markdown-it": "^14.1.1",
 		"minimist": "^1.2.8",
-		"moo": "0.5.2",
+		"moo": "0.5.3",
 		"node-retrieve-globals": "^6.0.1",
 		"picomatch": "^4.0.3",
 		"posthtml": "^0.16.7",
