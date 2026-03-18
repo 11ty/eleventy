@@ -1,20 +1,39 @@
 import test from "ava";
 import fs from "node:fs";
-import { rimrafSync } from "rimraf";
 import { TemplatePath } from "@11ty/eleventy-utils";
+import { globSync } from "tinyglobby";
 
 import { TransformPlugin as InputPathToUrlTransformPlugin } from "../src/Plugins/InputPathToUrl.js";
 import { default as HtmlBasePlugin } from "../src/Plugins/HtmlBasePlugin.js";
 import Eleventy from "../src/Eleventy.js";
+import { deleteDirectory } from "./_testHelpers.js";
 
-test.afterEach.always("Directory cleanup", () => {
-  rimrafSync("test/stubs-autocopy/_site*", { glob: true });
+// test.beforeEach("Directory cleanup", () => {
+// 	for(let dir of globSync("test/stubs-autocopy/_site*", {
+//     onlyDirectories: true
+//   })) {
+// 		deleteDirectory(dir);
+// 	}
+// })
+
+test.after.always("Directory cleanup", () => {
+  let dirs = globSync("./test/stubs-autocopy/_site*", {
+    onlyDirectories: true,
+    expandDirectories: false,
+  });
+  console.log( {dirs} );
+	for(let dir of dirs) {
+		deleteDirectory(dir);
+	}
 })
 
-test.serial("Basic usage", async (t) => {
+test("Basic usage", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site-basica", {
 		configPath: false,
 		config: function (eleventyConfig) {
+			// Node 24: workaround for re-using input directory (and not ignoring all output directories by default)
+			eleventyConfig.ignores.add("./test/stubs-autocopy/_site*/**");
+
 			eleventyConfig.addPassthroughCopy("**/*.png", {
 				mode: "html-relative"
 			})
@@ -57,10 +76,13 @@ test.serial("Basic usage", async (t) => {
 	t.is(fs.existsSync("test/stubs-autocopy/_site-basica/test/index.html"), true);
 });
 
-test.serial("More complex image path (parent dir)", async (t) => {
+test("More complex image path (parent dir)", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site-basicb", {
 		configPath: false,
 		config: function (eleventyConfig) {
+			// Node 24: workaround for re-using input directory (and not ignoring all output directories by default)
+			eleventyConfig.ignores.add("./test/stubs-autocopy/_site*/**");
+
 			eleventyConfig.addPassthroughCopy("**/*.png", {
 				mode: "html-relative"
 			})
@@ -104,10 +126,13 @@ test.serial("More complex image path (parent dir)", async (t) => {
 	t.is(fs.existsSync("test/stubs-autocopy/_site-basicb/test/index.html"), true);
 });
 
-test.serial("No matches", async (t) => {
+test("No matches", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site2", {
 		configPath: false,
 		config: function (eleventyConfig) {
+			// Node 24: workaround for re-using input directory (and not ignoring all output directories by default)
+			eleventyConfig.ignores.add("./test/stubs-autocopy/_site*/**");
+
 			eleventyConfig.addPassthroughCopy("**/*.jpeg", {
 				mode: "html-relative"
 			})
@@ -131,7 +156,7 @@ test.serial("No matches", async (t) => {
 	t.is(fs.existsSync("test/stubs-autocopy/_site2/test/index.html"), true);
 });
 
-test.serial("Match but does not exist (throws error)", async (t) => {
+test("Match but does not exist (throws error)", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site3", {
 		configPath: false,
 		config: function (eleventyConfig) {
@@ -158,10 +183,13 @@ test.serial("Match but does not exist (throws error)", async (t) => {
 	t.is(fs.existsSync("test/stubs-autocopy/_site3/test/index.html"), false);
 });
 
-test.serial("Match but does not exist (no error, using `failOnError: false`)", async (t) => {
+test("Match but does not exist (no error, using `failOnError: false`)", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site4", {
 		configPath: false,
 		config: function (eleventyConfig) {
+			// Node 24: workaround for re-using input directory (and not ignoring all output directories by default)
+			eleventyConfig.ignores.add("./test/stubs-autocopy/_site*/**");
+
 			eleventyConfig.addPassthroughCopy("**/*.png", {
 				mode: "html-relative",
 				failOnError: false,
@@ -186,10 +214,13 @@ test.serial("Match but does not exist (no error, using `failOnError: false`)", a
 	t.is(fs.existsSync("test/stubs-autocopy/_site4/test/index.html"), true);
 });
 
-test.serial("Copying dotfiles are not allowed", async (t) => {
+test("Copying dotfiles are not allowed", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site5", {
 		configPath: false,
 		config: function (eleventyConfig) {
+			// Node 24: workaround for re-using input directory (and not ignoring all output directories by default)
+			eleventyConfig.ignores.add("./test/stubs-autocopy/_site*/**");
+
 			// WARNING: don’t do this
 			eleventyConfig.addPassthroughCopy("**/*", {
 				mode: "html-relative",
@@ -219,10 +250,13 @@ test.serial("Copying dotfiles are not allowed", async (t) => {
 	t.is(fs.existsSync("test/stubs-autocopy/_site5/test/index.html"), true);
 });
 
-test.serial("Using with InputPathToUrl plugin", async (t) => {
+test("Using with InputPathToUrl plugin", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site6", {
 		configPath: false,
 		config: function (eleventyConfig) {
+			// Node 24: workaround for re-using input directory (and not ignoring all output directories by default)
+			eleventyConfig.ignores.add("./test/stubs-autocopy/_site*/**");
+
 			// order of addPlugin shouldn’t matter here
 			eleventyConfig.addPassthroughCopy("**/*.{html,njk}", {
 				mode: "html-relative"
@@ -252,10 +286,13 @@ test.serial("Using with InputPathToUrl plugin", async (t) => {
 	t.is(fs.existsSync("test/stubs-autocopy/_site6/test2/index.html"), true);
 });
 
-test.serial("Using with InputPathToUrl plugin (reverse addPlugin order)", async (t) => {
+test("Using with InputPathToUrl plugin (reverse addPlugin order)", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site7", {
 		configPath: false,
 		config: function (eleventyConfig) {
+			// Node 24: workaround for re-using input directory (and not ignoring all output directories by default)
+			eleventyConfig.ignores.add("./test/stubs-autocopy/_site*/**");
+
 			// order of addPlugin shouldn’t matter here
 			eleventyConfig.addPlugin(InputPathToUrlTransformPlugin);
 
@@ -284,11 +321,14 @@ test.serial("Using with InputPathToUrl plugin (reverse addPlugin order)", async 
 	t.is(fs.existsSync("test/stubs-autocopy/_site7/test2/index.html"), true);
 });
 
-test.serial("Use with HtmlBasePlugin usage", async (t) => {
+test("Use with HtmlBasePlugin usage", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site8a", {
 		configPath: false,
 		pathPrefix: "yolo",
 		config: function (eleventyConfig) {
+			// Node 24: workaround for re-using input directory (and not ignoring all output directories by default)
+			eleventyConfig.ignores.add("./test/stubs-autocopy/_site*/**");
+
 			eleventyConfig.addPlugin(HtmlBasePlugin);
 			eleventyConfig.addPassthroughCopy("**/*.png", {
 				mode: "html-relative"
@@ -332,11 +372,14 @@ test.serial("Use with HtmlBasePlugin usage", async (t) => {
 	t.is(fs.existsSync("test/stubs-autocopy/_site8a/test/index.html"), true);
 });
 
-test.serial("Using with InputPathToUrl plugin and HtmlBasePlugin", async (t) => {
+test("Using with InputPathToUrl plugin and HtmlBasePlugin", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site8b", {
 		configPath: false,
 		pathPrefix: "yolo",
 		config: function (eleventyConfig) {
+			// Node 24: workaround for re-using input directory (and not ignoring all output directories by default)
+			eleventyConfig.ignores.add("./test/stubs-autocopy/_site*/**");
+
 			// order of addPlugin shouldn’t matter here
 			eleventyConfig.addPassthroughCopy("**/*.{html,njk}", {
 				mode: "html-relative"
@@ -367,10 +410,13 @@ test.serial("Using with InputPathToUrl plugin and HtmlBasePlugin", async (t) => 
 	t.is(fs.existsSync("test/stubs-autocopy/_site8b/test2/index.html"), true);
 });
 
-test.serial("Multiple addPlugin calls (use both globs)", async (t) => {
+test("Multiple addPlugin calls (use both globs)", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site9", {
 		configPath: false,
 		config: function (eleventyConfig) {
+			// Node 24: workaround for re-using input directory (and not ignoring all output directories by default)
+			eleventyConfig.ignores.add("./test/stubs-autocopy/_site*/**");
+
 			eleventyConfig.addPassthroughCopy("**/*.jpg", {
 				mode: "html-relative"
 			});
@@ -424,10 +470,13 @@ test.serial("Multiple addPlugin calls (use both globs)", async (t) => {
 	t.is(fs.existsSync("test/stubs-autocopy/_site9/test/index.html"), true);
 });
 
-test.serial("Array of globs", async (t) => {
+test("Array of globs", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site10", {
 		configPath: false,
 		config: function (eleventyConfig) {
+			// Node 24: workaround for re-using input directory (and not ignoring all output directories by default)
+			eleventyConfig.ignores.add("./test/stubs-autocopy/_site*/**");
+
 			eleventyConfig.addPassthroughCopy(["**/*.jpg", "**/*.png"], {
 				mode: "html-relative"
 			});
@@ -478,13 +527,16 @@ test.serial("Array of globs", async (t) => {
 	t.is(fs.existsSync("test/stubs-autocopy/_site10/test/index.html"), true);
 });
 
-test.serial("overwrite: false", async (t) => {
+test("overwrite: false", async (t) => {
 	fs.mkdirSync("./test/stubs-autocopy/_site11/test/", { recursive: true })
 	fs.copyFileSync("./test/stubs-autocopy/possum.png", "./test/stubs-autocopy/_site11/test/possum.png");
 
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site11", {
 		configPath: false,
 		config: function (eleventyConfig) {
+			// Node 24: workaround for re-using input directory (and not ignoring all output directories by default)
+			eleventyConfig.ignores.add("./test/stubs-autocopy/_site*/**");
+
 			eleventyConfig.addPassthroughCopy("**/*.png", {
 				mode: "html-relative",
 				copyOptions: {
@@ -526,10 +578,13 @@ test.serial("overwrite: false", async (t) => {
 	t.is(fs.existsSync("test/stubs-autocopy/_site11/test/index.html"), true);
 });
 
-test.serial("Input -> output remapping not yet supported (throws error)", async (t) => {
+test("Input -> output remapping not yet supported (throws error)", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site12", {
 		configPath: false,
 		config: function (eleventyConfig) {
+			// Node 24: workaround for re-using input directory (and not ignoring all output directories by default)
+			eleventyConfig.ignores.add("./test/stubs-autocopy/_site*/**");
+
 			// not yet supported
 			eleventyConfig.addPassthroughCopy({"**/*.png": "yo"}, {
 				mode: "html-relative"
@@ -554,10 +609,13 @@ test.serial("Input -> output remapping not yet supported (throws error)", async 
 	t.is(fs.existsSync("test/stubs-autocopy/_site12/test/index.html"), false);
 });
 
-test.serial("Invalid copy mode throws error", async (t) => {
+test("Invalid copy mode throws error", async (t) => {
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site13", {
 		configPath: false,
 		config: function (eleventyConfig) {
+			// Node 24: workaround for re-using input directory (and not ignoring all output directories by default)
+			eleventyConfig.ignores.add("./test/stubs-autocopy/_site*/**");
+
 			// not yet supported
 			eleventyConfig.addPassthroughCopy({"**/*.png": "yo"}, {
 				mode: "throw-an-error"

@@ -1,3 +1,4 @@
+import { existsSync, rmSync } from "node:fs";
 import { isPlainObject } from "@11ty/eleventy-utils";
 import TemplateConfig from "../src/TemplateConfig.js";
 import ProjectDirectories from "../src/Util/ProjectDirectories.js";
@@ -108,4 +109,10 @@ export function sortEleventyResults(a, b) {
     return -1;
   }
   return 0;
+}
+
+export function deleteDirectory(dir) {
+  if(existsSync(dir)) {
+    rmSync(dir, { recursive: true });
+  }
 }

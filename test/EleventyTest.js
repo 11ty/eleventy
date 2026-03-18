@@ -2,7 +2,6 @@ import test from "ava";
 import fs from "node:fs";
 import path from "node:path";
 import lodash from "@11ty/lodash-custom";
-import { rimrafSync } from "rimraf";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { marked } from "marked";
@@ -17,6 +16,7 @@ import { getCreatedTimestamp, getUpdatedTimestamp } from "../src/Util/Git.js";
 import PathNormalizer from "../src/Util/PathNormalizer.js";
 import { normalizeNewLines, localizeNewLines } from "./Util/normalizeNewLines.js";
 import { isTypeScriptSupported } from "../src/Util/FeatureTests.cjs";
+import { deleteDirectory } from "./_testHelpers.js";
 
 const lodashGet = lodash.get;
 
@@ -736,7 +736,7 @@ test("Access to raw input of file (dryRun), issue #1206", async (t) => {
   t.deepEqual(results[1].content, `This is the second template.This is the first template.{{ page.rawInput }}`);
   t.deepEqual(results[1].rawInput, `This is the second template.{{ collections.tag1[0].rawInput }}`);
 
-	rimrafSync("./test/stubs-1206/_site/");
+	deleteDirectory("./test/stubs-1206/_site/");
 });
 
 test("eleventy.before and eleventy.after Event Arguments, directories", async (t) => {

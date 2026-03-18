@@ -1,10 +1,11 @@
 import test from "ava";
 import fs from "fs";
-import { rimrafSync } from "rimraf";
 import { feedPlugin } from "@11ty/eleventy-plugin-rss";
 
 import Eleventy from "../src/Eleventy.js";
 import DuplicatePermalinkOutputError from "../src/Errors/DuplicatePermalinkOutputError.js";
+
+import { deleteDirectory } from "./_testHelpers.js";
 
 test("Virtual templates, issue #1612", async (t) => {
 	let elev = new Eleventy("./test/stubs-virtual-nowrite", "./test/stubs-virtual-nowrite/_site", {
@@ -117,7 +118,7 @@ test("Virtual template writes to file system, issue #1612", async (t) => {
 	t.deepEqual(results[0].rawInput, `# Hello`);
 	t.true(fs.existsSync("./test/stubs-virtual/_site/virtual/index.html"));
 
-	rimrafSync("./test/stubs-virtual/_site/");
+	deleteDirectory("./test/stubs-virtual/_site/");
 });
 
 test("Virtual templates conflict", async (t) => {
