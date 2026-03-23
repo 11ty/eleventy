@@ -103,7 +103,7 @@
 		"@eslint/js": "^10.0.1",
 		"@iarna/toml": "^2.2.5",
 		"@mdx-js/node-loader": "^3.1.1",
-		"@stylistic/eslint-plugin-js": "^4.4.1",
+		"@stylistic/eslint-plugin": "^5.10.0",
 		"@types/node": "^25.5.0",
 		"@vue/server-renderer": "^3.5.30",
 		"@zachleat/noop": "^1.0.7",
