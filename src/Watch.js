@@ -14,6 +14,8 @@ export class Watch {
 	#watchedGlobs = [];
 	/** @type {Set} */
 	#ignoredGlobs = [];
+	/** @type {Promise} */
+	#ready;
 
 	constructor(config) {
 		if (!config || config.constructor.name !== "TemplateConfig") {
@@ -107,15 +109,24 @@ export class Watch {
 				return path;
 			})
 			.filter(Boolean);
-
 		this.#chokidar = chokidar.watch(targets, options);
 
 		// Note: if there are no watch targets the `ready` event doesn’t fire so skip it
 		if (targets.length > 0) {
-			await new Promise((resolve) => {
+			this.#ready = await new Promise((resolve) => {
 				this.#chokidar.on("ready", () => resolve());
 			});
+		} else {
+			this.#ready = Promise.resolve();
 		}
+	}
+
+	async getWatched() {
+		if (this.#ready) {
+			await this.#ready;
+		}
+
+		return this.#chokidar.getWatched();
 	}
 
 	on(event, callback) {

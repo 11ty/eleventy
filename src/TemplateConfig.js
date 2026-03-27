@@ -77,6 +77,9 @@ class TemplateConfig {
 			}
 		} else {
 			this.projectConfigPaths = [
+				"buildawesome.config.js",
+				"buildawesome.config.mjs",
+				"buildawesome.config.cjs",
 				".eleventy.js",
 				"eleventy.config.js",
 				"eleventy.config.mjs",
