@@ -1,6 +1,5 @@
 import test from "ava";
 import fs from "fs";
-import { rimrafSync } from "rimraf";
 
 import TemplatePassthroughManager from "../src/TemplatePassthroughManager.js";
 import TemplateConfig from "../src/TemplateConfig.js";
@@ -8,7 +7,7 @@ import FileSystemSearch from "../src/FileSystemSearch.js";
 import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
 import ProjectDirectories from "../src/Util/ProjectDirectories.js";
 
-import { getTemplateConfigInstance, getTemplateConfigInstanceCustomCallback, getEleventyFilesInstance } from "./_testHelpers.js";
+import { getTemplateConfigInstance, getTemplateConfigInstanceCustomCallback, getEleventyFilesInstance, deleteDirectory } from "./_testHelpers.js";
 
 test("Get paths from Config", async (t) => {
   let eleventyConfig = new TemplateConfig();
@@ -239,7 +238,7 @@ test("Look for uniqueness on template passthrough paths #1677", async (t) => {
     message: `Multiple passthrough copy files are trying to write to the same output file (./test/stubs/template-passthrough-duplicates/_site/avatar.png). ./test/stubs/template-passthrough-duplicates/input/avatar.png and ./test/stubs/template-passthrough-duplicates/input/src/views/avatar.png`
   });
 
-  rimrafSync("test/stubs/template-passthrough-duplicates/_site/");
+  deleteDirectory("test/stubs/template-passthrough-duplicates/_site/");
 });
 
 test("Incremental passthrough, issue #3285", async (t) => {
