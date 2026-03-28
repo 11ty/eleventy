@@ -239,7 +239,7 @@ class TemplateData {
 	}
 
 	getGlobalDataExtensionPriorities() {
-		return this.getUserDataExtensions().concat(["json", "mjs", "cjs", "js"]);
+		return this.getUserDataExtensions().concat(["json", "mjs", "cjs", "js", "mts", "cts", "ts"]);
 	}
 
 	static calculateExtensionPriority(path, priorities) {
@@ -508,7 +508,14 @@ class TemplateData {
 	async getDataValue(path) {
 		let extension = TemplatePath.getExtension(path);
 
-		if (extension === "js" || extension === "cjs" || extension === "mjs") {
+		if (
+			extension === "js" ||
+			extension === "cjs" ||
+			extension === "mjs" ||
+			extension === "ts" ||
+			extension === "cts" ||
+			extension === "mts"
+		) {
 			// JS data file or require’d JSON (no preprocessing needed)
 			if (!this.exists(path)) {
 				return {};
@@ -520,7 +527,12 @@ class TemplateData {
 			dataBench.before();
 
 			let type = "cjs";
-			if (extension === "mjs" || (extension === "js" && this.isEsm)) {
+			if (
+				extension === "mjs" ||
+				(extension === "js" && this.isEsm) ||
+				extension === "mts" ||
+				(extension === "ts" && this.isEsm)
+			) {
 				type = "esm";
 			}
 
@@ -576,6 +588,9 @@ class TemplateData {
 				paths.push(base + suffix + ".js");
 				paths.push(base + suffix + ".cjs");
 				paths.push(base + suffix + ".mjs");
+				paths.push(base + suffix + ".ts");
+				paths.push(base + suffix + ".cts");
+				paths.push(base + suffix + ".mts");
 			}
 			paths.push(base + suffix + ".json"); // default: .11tydata.json
 
