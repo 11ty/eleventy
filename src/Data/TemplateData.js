@@ -508,14 +508,7 @@ class TemplateData {
 	async getDataValue(path) {
 		let extension = TemplatePath.getExtension(path);
 
-		if (
-			extension === "js" ||
-			extension === "cjs" ||
-			extension === "mjs" ||
-			extension === "ts" ||
-			extension === "cts" ||
-			extension === "mts"
-		) {
+		if (["js", "cjs", "mjs", "ts", "cts", "mts"].includes(extension)) {
 			// JS data file or require’d JSON (no preprocessing needed)
 			if (!this.exists(path)) {
 				return {};
@@ -585,12 +578,9 @@ class TemplateData {
 
 			// data suffix
 			if (suffix) {
-				paths.push(base + suffix + ".js");
-				paths.push(base + suffix + ".cjs");
-				paths.push(base + suffix + ".mjs");
-				paths.push(base + suffix + ".ts");
-				paths.push(base + suffix + ".cts");
-				paths.push(base + suffix + ".mts");
+				for (let extension of [".js", ".cjs", ".mjs", ".ts", ".cts", ".mts"]) {
+					paths.push(base + suffix + extension);
+				}
 			}
 			paths.push(base + suffix + ".json"); // default: .11tydata.json
 
