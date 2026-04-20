@@ -174,11 +174,11 @@ class EleventyServe {
 				onClientMessage: async (type, data) => {
 					let paths = [];
 					if (type === "eleventy.editReset") {
-						// Reset previous modified files
-						paths.push(...this.eleventyConfig.resetDataOverrides());
-
 						// Reset configuration file
 						paths.push(this.eleventyConfig.getActiveConfigPath());
+
+						// Reset previous modified files
+						paths.push(...this.eleventyConfig.resetDataOverrides());
 					} else if (type === "eleventy.edit") {
 						for (let dataFileSelector of Object.keys(data)) {
 							let [filePath, selector] = dataFileSelector.split("#");
@@ -188,8 +188,10 @@ class EleventyServe {
 					}
 
 					for (let filePath of new Set(paths)) {
-						for (let fn of this.#editCallbacks) {
-							await fn(filePath);
+						if (filePath) {
+							for (let fn of this.#editCallbacks) {
+								await fn(filePath);
+							}
 						}
 					}
 				},

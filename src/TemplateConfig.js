@@ -612,6 +612,7 @@ class TemplateConfig {
 		if (!this.#dataEditOverrides[filePath]) {
 			this.#dataEditOverrides[filePath] = {};
 		}
+
 		lodashSet(this.#dataEditOverrides[filePath], dataSelector, value);
 	}
 
@@ -621,14 +622,14 @@ class TemplateConfig {
 		return this.#dataEditOverrides[filePath];
 	}
 
-	deleteDataOverrideForPath(filePath) {
-		filePath = TemplatePath.stripLeadingDotSlash(filePath);
-		delete this.#dataEditOverrides[filePath];
-	}
+	// deleteDataOverrideForPath(filePath) {
+	// 	filePath = TemplatePath.stripLeadingDotSlash(filePath);
+	// 	delete this.#dataEditOverrides[filePath];
+	// }
 
-	getAllDataOverrides() {
-		return this.#dataEditOverrides;
-	}
+	// getAllDataOverrides() {
+	// 	return this.#dataEditOverrides;
+	// }
 
 	resetDataOverrides() {
 		let filePaths = Object.keys(this.#dataEditOverrides);
@@ -638,7 +639,13 @@ class TemplateConfig {
 
 	// only a count of files changed, not edits
 	getPendingDataOverrides() {
-		return Object.keys(this.#dataEditOverrides).length;
+		let s = new Set();
+		for (let [filePath, overrides] of Object.entries(this.#dataEditOverrides)) {
+			for (let dataProp of Object.keys(overrides)) {
+				s.add(`${filePath}#${dataProp}`);
+			}
+		}
+		return Array.from(s);
 	}
 }
 

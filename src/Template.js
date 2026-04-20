@@ -706,13 +706,13 @@ class Template extends TemplateContent {
 			let { href, path } = await this.getOutputLocations(data);
 			data.page.url = href;
 			data.page.outputPath = path;
+		}
 
-			if (this.dataCascade) {
-				data.page.mapUrl =
-					this.eleventyConfig.directories.getOutputPathRelativeToOutputDirectory(
-						data.page.outputPath,
-					) + ".map";
-			}
+		if (this.dataCascade) {
+			data.page.mapUrl =
+				this.eleventyConfig.directories.getOutputPathRelativeToOutputDirectory(
+					data.page.outputPath,
+				) + ".map";
 		}
 	}
 

@@ -389,7 +389,7 @@ class TemplateData {
 		if (this.dirs) {
 			eleventy.directories = Object.assign({}, this.dirs.getUserspaceInstance());
 		}
-		eleventy.pendingEditCount = this.templateConfig.getPendingDataOverrides();
+		eleventy.pendingEdits = this.templateConfig.getPendingDataOverrides();
 
 		// `eleventy` is Reserved
 		if (this.config.freezeReservedData) {
@@ -426,7 +426,10 @@ class TemplateData {
 		}
 
 		let globalJson = await this.getAllGlobalData();
-		let mergedGlobalData = Merge(globalJson, configApiGlobalData);
+
+		let noFilePathEditOverrides = this.templateConfig.getDataOverrideForPath();
+
+		let mergedGlobalData = Merge(globalJson, configApiGlobalData, noFilePathEditOverrides);
 
 		// OK: Shallow merge when combining rawImports (pkg) with global data files
 		return Object.assign({}, mergedGlobalData, rawImports);
