@@ -19,15 +19,15 @@ test("#4182 addCollection consuming a tagged collection should not run before ta
         },
       );
 
-      eleventyConfig.addTemplate("news.liquid", "News", {
+      eleventyConfig.addTemplate("blog.liquid", "Blog", {
         tags: ["primary"],
-        permalink: "/news/",
+        permalink: "/blog/",
         layout: "base.liquid",
       });
 
-      eleventyConfig.addTemplate("venue.liquid", "Venue", {
+      eleventyConfig.addTemplate("about.liquid", "About", {
         tags: ["primary"],
-        permalink: "/venue/",
+        permalink: "/about/",
         layout: "base.liquid",
       });
 
@@ -41,6 +41,6 @@ test("#4182 addCollection consuming a tagged collection should not run before ta
   let homepage = results.find((entry) => entry.url === "/");
 
   t.truthy(homepage);
-  t.true(homepage.content.includes("/news/"));
-  t.true(homepage.content.includes("/venue/"));
+  t.true(homepage.content.includes("/blog/"));
+  t.true(homepage.content.includes("/about/"));
 });
