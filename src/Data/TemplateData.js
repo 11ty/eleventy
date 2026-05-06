@@ -389,7 +389,7 @@ class TemplateData {
 		if (this.dirs) {
 			eleventy.directories = Object.assign({}, this.dirs.getUserspaceInstance());
 		}
-		eleventy.pendingEdits = this.templateConfig.getPendingDataOverrides();
+		eleventy.pendingEditsCount = (this.templateConfig.getPendingDataOverrides() || []).length;
 
 		// `eleventy` is Reserved
 		if (this.config.freezeReservedData) {

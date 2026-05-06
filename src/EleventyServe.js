@@ -171,7 +171,7 @@ class EleventyServe {
 			{
 				pathPrefix: PathPrefixer.normalizePathPrefix(this.config.pathPrefix),
 				logger: this.logger,
-				onClientMessage: async (type, data) => {
+				onClientMessage: async ({ id, type, data, timestamp }) => {
 					let paths = [];
 					if (type === "eleventy.editReset") {
 						// Reset configuration file
@@ -182,7 +182,12 @@ class EleventyServe {
 					} else if (type === "eleventy.edit") {
 						for (let dataFileSelector of Object.keys(data)) {
 							let [filePath, selector] = dataFileSelector.split("#");
-							this.eleventyConfig.addDataEditOverride(filePath, selector, data[dataFileSelector]);
+							this.eleventyConfig.addDataEditOverride(
+								filePath,
+								selector,
+								data[dataFileSelector],
+								timestamp,
+							);
 							paths.push(filePath);
 						}
 					}

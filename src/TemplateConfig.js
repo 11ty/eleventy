@@ -13,7 +13,7 @@ import eventBus from "./EventBus.js";
 import ProjectTemplateFormats from "./Util/ProjectTemplateFormats.js";
 import { isTypeScriptSupported } from "./Util/FeatureTests.cjs";
 
-const { set: lodashSet } = lodash;
+const { set: lodashSet, get: lodashGet } = lodash;
 const debug = debugUtil("Eleventy:TemplateConfig");
 const debugDev = debugUtil("Dev:Eleventy:TemplateConfig");
 
@@ -55,7 +55,7 @@ class TemplateConfig {
 	#usesGraph;
 	#previousBuildModifiedFile;
 	#activeConfigPath;
-	#dataEditOverrides = {};
+	#dataEdits = [];
 
 	constructor(customRootConfig, projectConfigPath) {
 		/** @type {object} */
@@ -608,42 +608,55 @@ class TemplateConfig {
 		return this.#existsCache;
 	}
 
-	addDataEditOverride(filePath, dataSelector, value) {
-		if (!this.#dataEditOverrides[filePath]) {
-			this.#dataEditOverrides[filePath] = {};
-		}
-
-		lodashSet(this.#dataEditOverrides[filePath], dataSelector, value);
+	addDataEditOverride(filePath, dataSelector, value, timestamp) {
+		this.#dataEdits.push({
+			filePath,
+			dataSelector,
+			value,
+			timestamp,
+		});
 	}
 
 	getDataOverrideForPath(filePath) {
 		filePath = TemplatePath.stripLeadingDotSlash(filePath);
 
-		return this.#dataEditOverrides[filePath];
+		let edits = this.#dataEdits
+			.filter((entry) => entry.filePath === filePath)
+			.sort((a, b) => {
+				// crdt algorithm: newest timestamp wins
+				return a.timestamp - b.timestamp;
+			});
+
+		if (edits.length === 0) {
+			return;
+		}
+
+		// TODO add a cache for this
+		let obj = {};
+		for (let edit of edits) {
+			let { filePath, dataSelector, value, timestamp } = edit;
+
+			if (lodashGet(obj, dataSelector)) {
+				// console.log( "Warning: override conflict", {filePath, dataSelector, value, timestamp}, "with", lodashGet(obj, dataSelector) );
+			}
+
+			lodashSet(obj, dataSelector, value);
+		}
+
+		return obj;
 	}
 
-	// deleteDataOverrideForPath(filePath) {
-	// 	filePath = TemplatePath.stripLeadingDotSlash(filePath);
-	// 	delete this.#dataEditOverrides[filePath];
-	// }
-
-	// getAllDataOverrides() {
-	// 	return this.#dataEditOverrides;
-	// }
-
 	resetDataOverrides() {
-		let filePaths = Object.keys(this.#dataEditOverrides);
-		this.#dataEditOverrides = {};
+		let filePaths = this.#dataEdits.map((entry) => entry.filePath);
+		this.#dataEdits = [];
 		return filePaths;
 	}
 
-	// only a count of files changed, not edits
+	// only a count of files+keys changed, not individual edits
 	getPendingDataOverrides() {
 		let s = new Set();
-		for (let [filePath, overrides] of Object.entries(this.#dataEditOverrides)) {
-			for (let dataProp of Object.keys(overrides)) {
-				s.add(`${filePath}#${dataProp}`);
-			}
+		for (let { filePath, dataSelector } of this.#dataEdits) {
+			s.add(`${filePath}#${dataSelector}`);
 		}
 		return Array.from(s);
 	}
