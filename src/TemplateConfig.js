@@ -647,7 +647,8 @@ class TemplateConfig {
 	}
 
 	resetDataOverrides() {
-		let filePaths = this.#dataEdits.map((entry) => entry.filePath);
+		// de-duped
+		let filePaths = Array.from(new Set(this.#dataEdits.map((entry) => entry.filePath)));
 		this.#dataEdits = [];
 		return filePaths;
 	}
