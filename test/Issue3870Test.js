@@ -43,10 +43,10 @@ test("#3870 templateRender has not yet initialized (not incremental)", async (t)
   elev.disableLogger();
   await elev.init();
 
-  let asyncTriggerFn = await elev.watch();
+  await elev.watch();
 
   for(let run of runs) {
-    await asyncTriggerFn("test/stubs-virtual/eleventy.config.js");
+    await elev.triggerWatchRunForPath("test/stubs-virtual/eleventy.config.js");
     index++;
   }
 

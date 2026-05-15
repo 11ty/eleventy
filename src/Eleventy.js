@@ -27,6 +27,9 @@ export default class Eleventy extends Core {
 	/** @type {WatchQueue} */
 	#watchQueue;
 
+	#watchDelay;
+	#interrupted = false;
+
 	// constructor(input, output, options = {}, eleventyConfig = null) {
 	// 	super(input, output, options, eleventyConfig);
 	// }
@@ -277,7 +280,7 @@ export default class Eleventy extends Core {
 			let queue = this.watchQueue.getPendingQueue();
 			if (this.isIncremental) {
 				this.logger.forceLog(
-					`Build queued for ${queue.slice(0, 1)}${queue.length > 1 ? ` (1 of ${queue.length} change${queue.length !== 1 ? "s" : ""})` : ""}`,
+					`Build queued for: ${TemplatePath.stripLeadingDotSlash(queue.slice(0, 1).pop())}${queue.length > 1 ? ` (1/${queue.length} changes` : ""}`,
 				);
 			} else {
 				this.logger.forceLog(
@@ -285,9 +288,19 @@ export default class Eleventy extends Core {
 				);
 			}
 			await this.#rewatch();
-		} else {
+		} else if (!this.#interrupted) {
 			this.logger.forceLog(`Waiting…`);
 		}
+	}
+
+	/*
+	 * SIGINT
+	 */
+	interrupt() {
+		this.#interrupted = true;
+
+		// Clear the queue to prevent additional builds
+		this.watchQueue.reset();
 	}
 
 	/**
@@ -295,6 +308,40 @@ export default class Eleventy extends Core {
 	 */
 	get watcherBench() {
 		return this.bench.get("Watcher");
+	}
+
+	async triggerWatchRunForPath(path) {
+		path = TemplatePath.normalize(path);
+		try {
+			let isResetConfig = this.#shouldResetConfig([path]);
+			this.#addFileToWatchQueue(path, isResetConfig);
+
+			if (this.#watchDelay) {
+				clearTimeout(this.#watchDelay);
+			}
+
+			if (this.config.watchThrottleWaitTime) {
+				let { promise, resolve, reject } = withResolvers();
+
+				this.#watchDelay = setTimeout(resolve, this.config.watchThrottleWaitTime);
+
+				await promise;
+			}
+
+			await this.#rewatch(isResetConfig);
+		} catch (e) {
+			if (e instanceof EleventyBaseError) {
+				this.errorHandler.error(e, "Eleventy watch error");
+				this.watchQueue.finishBuild();
+			} else {
+				this.errorHandler.fatal(e, "Eleventy fatal watch error");
+				await this.close();
+			}
+		}
+
+		// Internal event for testing
+		// v4.0.0-alpha.8 swapped to async-friendly
+		await this.config.events.emit("eleventy.afterwatch");
 	}
 
 	/**
@@ -340,41 +387,6 @@ export default class Eleventy extends Core {
 
 		this.logger.forceLog("Watching…");
 
-		let watchDelay;
-		let watchRun = async (path) => {
-			path = TemplatePath.normalize(path);
-			try {
-				let isResetConfig = this.#shouldResetConfig([path]);
-				this.#addFileToWatchQueue(path, isResetConfig);
-
-				if (watchDelay) {
-					clearTimeout(watchDelay);
-				}
-
-				if (this.config.watchThrottleWaitTime) {
-					let { promise, resolve, reject } = withResolvers();
-
-					watchDelay = setTimeout(resolve, this.config.watchThrottleWaitTime);
-
-					await promise;
-				}
-
-				await this.#rewatch(isResetConfig);
-			} catch (e) {
-				if (e instanceof EleventyBaseError) {
-					this.errorHandler.error(e, "Eleventy watch error");
-					this.watchQueue.finishBuild();
-				} else {
-					this.errorHandler.fatal(e, "Eleventy fatal watch error");
-					await this.close();
-				}
-			}
-
-			// Internal event for testing
-			// v4.0.0-alpha.8 swapped to async-friendly
-			await this.config.events.emit("eleventy.afterwatch");
-		};
-
 		this.watcher.on("change", async (path) => {
 			// Emulated passthrough copy logs from the server
 			if (!this.eleventyServe.isEmulatedPassthroughCopyMatch(path)) {
@@ -383,7 +395,7 @@ export default class Eleventy extends Core {
 				);
 			}
 
-			await watchRun(path);
+			await this.triggerWatchRunForPath(path);
 		});
 
 		this.watcher.on("add", async (path) => {
@@ -395,7 +407,7 @@ export default class Eleventy extends Core {
 			}
 
 			this.fileSystemSearch.add(path);
-			await watchRun(path);
+			await this.triggerWatchRunForPath(path);
 		});
 
 		this.watcher.on("unlink", async (path) => {
@@ -406,11 +418,8 @@ export default class Eleventy extends Core {
 				);
 			}
 			this.fileSystemSearch.delete(path);
-			await watchRun(path);
+			await this.triggerWatchRunForPath(path);
 		});
-
-		// For testability
-		return watchRun;
 	}
 
 	/**
@@ -480,14 +489,11 @@ export default class Eleventy extends Core {
 		let initWatchBench = this.watcherBench.get("Start up --watch");
 		initWatchBench.before();
 
-		let watchRun = await this.startWatch();
+		await this.startWatch();
 
 		initWatchBench.after();
 
 		this.watcherBench.finish("Watch");
-
-		// Returns for testability
-		return watchRun;
 	}
 
 	// Renamed to close()

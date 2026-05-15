@@ -13,6 +13,11 @@ class WatchQueue {
 		this.activeQueue = [];
 	}
 
+	reset() {
+		this.pendingQueue = [];
+		this.activeQueue = [];
+	}
+
 	isBuildRunning() {
 		return this.activeQueue.length > 0;
 	}

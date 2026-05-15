@@ -133,6 +133,8 @@ async function exec() {
 			}
 
 			process.on("SIGINT", async () => {
+				elev.interrupt();
+
 				await elev.stopWatch();
 				process.exitCode = 0;
 			});
