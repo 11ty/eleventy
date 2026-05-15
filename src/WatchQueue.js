@@ -8,9 +8,23 @@ import PathNormalizer from "./Util/PathNormalizer.js";
  */
 
 class WatchQueue {
+	#incremental = false;
+	#incrementalOverride = false;
+
 	constructor() {
-		this.incremental = false;
 		this.activeQueue = [];
+	}
+
+	setIncrementalOverride(override) {
+		this.#incrementalOverride = Boolean(override);
+	}
+
+	set incremental(value) {
+		this.#incremental = Boolean(value);
+	}
+
+	get incremental() {
+		return this.#incrementalOverride || this.#incremental;
 	}
 
 	reset() {
@@ -28,12 +42,15 @@ class WatchQueue {
 	}
 
 	finishBuild() {
+		this.#incrementalOverride = false;
 		this.activeQueue = [];
 	}
 
 	getIncrementalFile() {
 		if (this.incremental) {
-			return this.activeQueue.length ? this.activeQueue[0] : false;
+			if (this.activeQueue.length) {
+				return this.activeQueue[0];
+			}
 		}
 
 		return false;
@@ -121,6 +138,10 @@ class WatchQueue {
 
 	getActiveQueueSize() {
 		return this.activeQueue.length;
+	}
+
+	clearPendingQueue() {
+		this.pendingQueue = [];
 	}
 
 	// returns array

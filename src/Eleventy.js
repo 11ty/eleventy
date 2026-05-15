@@ -176,10 +176,20 @@ export default class Eleventy extends Core {
 		);
 	}
 
-	async #rewatch() {
+	async #rewatch(opts = {}) {
+		let { skipIncremental } = opts;
+
 		if (this.watchQueue.isBuildRunning()) {
 			// this.logger.forceLog("Waiting for previous build to finish…");
 			return;
+		}
+
+		if (skipIncremental) {
+			// skip incremental when pending queue size > 2 and has non-template files
+			this.unsetIncrementalFile();
+			this.writer?.resetIncrementalFile();
+			this.watchQueue.setIncrementalOverride(true);
+			this.watchQueue.clearPendingQueue();
 		}
 
 		this.watchQueue.startBuild();
@@ -275,22 +285,29 @@ export default class Eleventy extends Core {
 
 		this.watchQueue.finishBuild();
 
-		let queueSize = this.watchQueue.getPendingQueueSize();
-		if (queueSize > 0) {
-			let queue = this.watchQueue.getPendingQueue();
-			if (this.isIncremental) {
+		// Re-fetch
+		let pendingQueue = this.watchQueue.getPendingQueue();
+		if (pendingQueue.length > 0) {
+			let hasNonTemplateFiles = Boolean(
+				pendingQueue.find((path) => !this.directories.isTemplateFile(path)),
+			);
+			let skipIncremental = pendingQueue.length > 1 && hasNonTemplateFiles;
+
+			if (!skipIncremental && this.isIncremental) {
 				this.logger.forceLog(
-					`Build queued for: ${TemplatePath.stripLeadingDotSlash(queue.slice(0, 1).pop())}${queue.length > 1 ? ` (1/${queue.length} changes` : ""}`,
+					`Build queued for: ${TemplatePath.stripLeadingDotSlash(pendingQueue.slice(0, 1).pop())}${pendingQueue.length > 1 ? ` (1/${pendingQueue.length} changes)` : ""}`,
 				);
 			} else {
 				this.logger.forceLog(
-					`Build queued… (${queue.length} change${queue.length !== 1 ? "s" : ""})`,
+					`Build queued… (${pendingQueue.length} change${pendingQueue.length !== 1 ? "s" : ""})`,
 				);
 			}
 
-			await this.#rewatch();
-		} else if (!this.#interrupted && !isResetConfig) {
-			// When config is reset, waiting is logged already
+			await this.#rewatch({
+				skipIncremental,
+			});
+		} else if (!this.#interrupted) {
+			// also logs in startWatch for initial build
 			this.logger.forceLog(`Waiting…`);
 		}
 	}
@@ -394,7 +411,8 @@ export default class Eleventy extends Core {
 
 		await this.watcher.start();
 
-		if (this.watchQueue.getPendingQueueSize() === 0) {
+		// This logs in #rewatch for rebuilds
+		if (this.buildCount <= 1) {
 			this.logger.forceLog("Waiting…");
 		}
 
