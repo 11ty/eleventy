@@ -1,4 +1,4 @@
-import { existsSync, statSync, readFileSync } from "node:fs";
+import { statSync, readFileSync } from "node:fs";
 
 import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
@@ -188,7 +188,8 @@ class EleventyFiles {
 		return Array.from(uniqueIgnores);
 	}
 
-	static getFileIgnores(ignoreFiles) {
+	// v4.0.0-alpha.8 swapped from static to use existsCache
+	getFileIgnores(ignoreFiles) {
 		if (!Array.isArray(ignoreFiles)) {
 			ignoreFiles = [ignoreFiles];
 		}
@@ -197,12 +198,11 @@ class EleventyFiles {
 		for (let ignorePath of ignoreFiles) {
 			ignorePath = TemplatePath.normalize(ignorePath);
 
-			let dir = TemplatePath.getDirFromFilePath(ignorePath);
-
-			if (existsSync(ignorePath)) {
+			if (this.templateConfig.existsCache.exists(ignorePath)) {
 				let ignoreContent = readFileSync(ignorePath, "utf8");
 				if (ignoreContent) {
-					ignores = ignores.concat(EleventyFiles.normalizeIgnoreContent(dir, ignoreContent));
+					let dir = TemplatePath.getDirFromFilePath(ignorePath);
+					ignores = ignores.concat(this.normalizeIgnoreContent(dir, ignoreContent));
 				}
 			}
 		}
@@ -212,7 +212,8 @@ class EleventyFiles {
 		return ignores;
 	}
 
-	static normalizeIgnoreContent(dir, ignoreContent) {
+	// v4.0.0-alpha.8 swapped from static to use existsCache
+	normalizeIgnoreContent(dir, ignoreContent) {
 		let ignores = [];
 
 		if (ignoreContent) {
@@ -237,16 +238,10 @@ class EleventyFiles {
 					let path = TemplateGlob.normalizePath(dir, "/", line);
 					path = TemplatePath.addLeadingDotSlash(TemplatePath.relativePath(path));
 
-					try {
-						// Note these folders must exist to get /** suffix
-						let stat = statSync(path);
-						if (stat.isDirectory()) {
-							return path + "/**";
-						}
-						return path;
-					} catch (e) {
-						return path;
+					if (this.templateConfig.existsCache.isDirectory(path)) {
+						return path + "/**";
 					}
+					return path;
 				});
 		}
 
@@ -261,7 +256,7 @@ class EleventyFiles {
 	getIgnores() {
 		let files = new Set();
 
-		for (let ignore of EleventyFiles.getFileIgnores(this.getIgnoreFiles())) {
+		for (let ignore of this.getFileIgnores(this.getIgnoreFiles())) {
 			files.add(ignore);
 		}
 
