@@ -98,6 +98,11 @@ export default class Eleventy extends Core {
 	 * @param {boolean} [isResetConfig] - are we doing a config reset
 	 */
 	async #addFileToWatchQueue(changedFilePath, isResetConfig) {
+		let isAdded = this.watchQueue.addToPendingQueue(changedFilePath);
+		if (!isAdded) {
+			return;
+		}
+
 		// Currently this is only for 11ty.js deps but should be extended with usesGraph
 		let usedByDependants = [];
 		if (this.watchTargets) {
@@ -121,8 +126,6 @@ export default class Eleventy extends Core {
 		});
 
 		this.config.events.emit("eleventy#templateModified", changedFilePath);
-
-		this.watchQueue.addToPendingQueue(changedFilePath);
 	}
 
 	shouldTriggerConfigReset(changedFiles) {
@@ -172,10 +175,13 @@ export default class Eleventy extends Core {
 
 	async #rewatch(isResetConfig = false) {
 		if (this.watchQueue.isBuildRunning()) {
+			// this.logger.forceLog("Waiting for previous build to finish…");
 			return;
 		}
 
-		this.watchQueue.setBuildRunning();
+		this.logger.forceLog("Build starting…");
+
+		this.watchQueue.startBuild();
 
 		let queue = this.watchQueue.getActiveQueue();
 
@@ -264,16 +270,17 @@ export default class Eleventy extends Core {
 			});
 		}
 
-		this.watchQueue.setBuildFinished();
+		this.watchQueue.finishBuild();
 
 		let queueSize = this.watchQueue.getPendingQueueSize();
 		if (queueSize > 0) {
-			this.logger.log(
-				`You saved while Eleventy was running, let’s run again. (${queueSize} change${
-					queueSize !== 1 ? "s" : ""
-				})`,
+			let queue = this.watchQueue.getPendingQueue();
+			this.logger.forceLog(
+				`Running again for ${queue.slice(0, 1)}${queue.length > 1 ? ` (${queue.length - 1} more pending)` : ""}`,
 			);
 			await this.#rewatch();
+		} else {
+			this.logger.forceLog(`Waiting…`);
 		}
 	}
 
@@ -334,26 +341,32 @@ export default class Eleventy extends Core {
 				let isResetConfig = this.#shouldResetConfig([path]);
 				this.#addFileToWatchQueue(path, isResetConfig);
 
-				clearTimeout(watchDelay);
+				if (watchDelay) {
+					clearTimeout(watchDelay);
+				}
 
-				let { promise, resolve, reject } = withResolvers();
+				if (this.config.watchThrottleWaitTime) {
+					let { promise, resolve, reject } = withResolvers();
 
-				watchDelay = setTimeout(async () => {
-					this.#rewatch(isResetConfig).then(resolve, reject);
-				}, this.config.watchThrottleWaitTime);
+					watchDelay = setTimeout(resolve, this.config.watchThrottleWaitTime);
 
-				await promise;
+					await promise;
+				}
+
+				await this.#rewatch(isResetConfig);
 			} catch (e) {
 				if (e instanceof EleventyBaseError) {
 					this.errorHandler.error(e, "Eleventy watch error");
-					this.watchQueue.setBuildFinished();
+					this.watchQueue.finishBuild();
 				} else {
 					this.errorHandler.fatal(e, "Eleventy fatal watch error");
 					await this.close();
 				}
 			}
 
-			this.config.events.emit("eleventy.afterwatch");
+			// Internal event for testing
+			// v4.0.0-alpha.8 swapped to async-friendly
+			await this.config.events.emit("eleventy.afterwatch");
 		};
 
 		this.watcher.on("change", async (path) => {

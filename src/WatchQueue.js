@@ -10,23 +10,19 @@ import PathNormalizer from "./Util/PathNormalizer.js";
 class WatchQueue {
 	constructor() {
 		this.incremental = false;
-		this.isActive = false;
 		this.activeQueue = [];
 	}
 
 	isBuildRunning() {
-		return this.isActive;
+		return this.activeQueue.length > 0;
 	}
 
-	setBuildRunning() {
-		this.isActive = true;
-
+	startBuild() {
 		// pop waiting queue into the active queue
 		this.activeQueue = this.popNextActiveQueue();
 	}
 
-	setBuildFinished() {
-		this.isActive = false;
+	finishBuild() {
 		this.activeQueue = [];
 	}
 
@@ -42,7 +38,7 @@ class WatchQueue {
 	 * Works with or without incremental (though in incremental only one file per time will be processed)
 	 */
 	getActiveQueue() {
-		if (!this.isActive) {
+		if (!this.isBuildRunning()) {
 			return [];
 		} else if (this.incremental && this.activeQueue.length === 0) {
 			return [];
@@ -100,8 +96,14 @@ class WatchQueue {
 	addToPendingQueue(path) {
 		if (path) {
 			path = PathNormalizer.normalizeSeperator(TemplatePath.addLeadingDotSlash(path));
-			this.pendingQueue.push(path);
+			if (!this.pendingQueue.includes(path)) {
+				this.pendingQueue.push(path);
+				// added
+				return true;
+			}
 		}
+		// skipped
+		return false;
 	}
 
 	getPendingQueueSize() {
