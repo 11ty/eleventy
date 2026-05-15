@@ -163,7 +163,7 @@
 		"posthtml": "^0.16.7",
 		"posthtml-match-helper": "^2.0.3",
 		"semver": "^7.7.4",
-		"tinyglobby": "0.2.15"
+		"tinyglobby": "0.2.16"
 	},
 	"overrides": {
 		"fdir": "6.4.6"
