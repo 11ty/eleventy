@@ -176,17 +176,17 @@ export default class Eleventy extends Core {
 		);
 	}
 
-	async #rewatch(isResetConfig = false) {
+	async #rewatch() {
 		if (this.watchQueue.isBuildRunning()) {
 			// this.logger.forceLog("Waiting for previous build to finish…");
 			return;
 		}
 
-		this.logger.forceLog("Build starting…");
-
 		this.watchQueue.startBuild();
 
 		let queue = this.watchQueue.getActiveQueue();
+		let isResetConfig = this.#shouldResetConfig(queue);
+		this.logger.forceLog("Build starting…" + (isResetConfig ? " (configuration reset)" : ""));
 
 		await this.config.events.emit("beforeWatch", queue);
 		await this.config.events.emit("eleventy.beforeWatch", queue);
@@ -287,8 +287,10 @@ export default class Eleventy extends Core {
 					`Build queued… (${queue.length} change${queue.length !== 1 ? "s" : ""})`,
 				);
 			}
+
 			await this.#rewatch();
-		} else if (!this.#interrupted) {
+		} else if (!this.#interrupted && !isResetConfig) {
+			// When config is reset, waiting is logged already
 			this.logger.forceLog(`Waiting…`);
 		}
 	}
@@ -310,8 +312,19 @@ export default class Eleventy extends Core {
 		return this.bench.get("Watcher");
 	}
 
+	static async wait(timeMs) {
+		let { promise, resolve, reject } = withResolvers();
+
+		let id = setTimeout(resolve, timeMs);
+
+		await promise;
+
+		return id;
+	}
+
 	async triggerWatchRunForPath(path) {
 		path = TemplatePath.normalize(path);
+
 		try {
 			let isResetConfig = this.#shouldResetConfig([path]);
 			this.#addFileToWatchQueue(path, isResetConfig);
@@ -321,14 +334,10 @@ export default class Eleventy extends Core {
 			}
 
 			if (this.config.watchThrottleWaitTime) {
-				let { promise, resolve, reject } = withResolvers();
-
-				this.#watchDelay = setTimeout(resolve, this.config.watchThrottleWaitTime);
-
-				await promise;
+				this.#watchDelay = Eleventy.wait(this.config.watchThrottleWaitTime);
 			}
 
-			await this.#rewatch(isResetConfig);
+			await this.#rewatch();
 		} catch (e) {
 			if (e instanceof EleventyBaseError) {
 				this.errorHandler.error(e, "Eleventy watch error");
@@ -385,7 +394,9 @@ export default class Eleventy extends Core {
 
 		await this.watcher.start();
 
-		this.logger.forceLog("Watching…");
+		if (this.watchQueue.getPendingQueueSize() === 0) {
+			this.logger.forceLog("Waiting…");
+		}
 
 		this.watcher.on("change", async (path) => {
 			// Emulated passthrough copy logs from the server
