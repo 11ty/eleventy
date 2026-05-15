@@ -275,9 +275,13 @@ export default class Eleventy extends Core {
 		let queueSize = this.watchQueue.getPendingQueueSize();
 		if (queueSize > 0) {
 			let queue = this.watchQueue.getPendingQueue();
-			this.logger.forceLog(
-				`Running again for ${queue.slice(0, 1)}${queue.length > 1 ? ` (${queue.length - 1} more pending)` : ""}`,
-			);
+			if (this.isIncremental) {
+				this.logger.forceLog(
+					`Building again for ${queue.slice(0, 1)}${queue.length > 1 ? ` (${queue.length - 1} more pending)` : ""}`,
+				);
+			} else {
+				this.logger.forceLog(`Building again… (${queue.length} pending)`);
+			}
 			await this.#rewatch();
 		} else {
 			this.logger.forceLog(`Waiting…`);
