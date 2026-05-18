@@ -27,6 +27,9 @@ export default class Eleventy extends Core {
 	/** @type {WatchQueue} */
 	#watchQueue;
 
+	#watchDelay;
+	#interrupted = false;
+
 	// constructor(input, output, options = {}, eleventyConfig = null) {
 	// 	super(input, output, options, eleventyConfig);
 	// }
@@ -98,6 +101,11 @@ export default class Eleventy extends Core {
 	 * @param {boolean} [isResetConfig] - are we doing a config reset
 	 */
 	async #addFileToWatchQueue(changedFilePath, isResetConfig) {
+		let isAdded = this.watchQueue.addToPendingQueue(changedFilePath);
+		if (!isAdded) {
+			return;
+		}
+
 		// Currently this is only for 11ty.js deps but should be extended with usesGraph
 		let usedByDependants = [];
 		if (this.watchTargets) {
@@ -121,8 +129,6 @@ export default class Eleventy extends Core {
 		});
 
 		this.config.events.emit("eleventy#templateModified", changedFilePath);
-
-		this.watchQueue.addToPendingQueue(changedFilePath);
 	}
 
 	shouldTriggerConfigReset(changedFiles) {
@@ -170,14 +176,27 @@ export default class Eleventy extends Core {
 		);
 	}
 
-	async #rewatch(isResetConfig = false) {
+	async #rewatch(opts = {}) {
+		let { skipIncremental } = opts;
+
 		if (this.watchQueue.isBuildRunning()) {
+			// this.logger.forceLog("Waiting for previous build to finish…");
 			return;
 		}
 
-		this.watchQueue.setBuildRunning();
+		if (skipIncremental) {
+			// skip incremental when pending queue size > 2 and has non-template files
+			this.unsetIncrementalFile();
+			this.writer?.resetIncrementalFile();
+			this.watchQueue.setIncrementalOverride(true);
+			this.watchQueue.clearPendingQueue();
+		}
+
+		this.watchQueue.startBuild();
 
 		let queue = this.watchQueue.getActiveQueue();
+		let isResetConfig = this.#shouldResetConfig(queue);
+		this.logger.forceLog("Build starting…" + (isResetConfig ? " (configuration reset)" : ""));
 
 		await this.config.events.emit("beforeWatch", queue);
 		await this.config.events.emit("eleventy.beforeWatch", queue);
@@ -264,17 +283,43 @@ export default class Eleventy extends Core {
 			});
 		}
 
-		this.watchQueue.setBuildFinished();
+		this.watchQueue.finishBuild();
 
-		let queueSize = this.watchQueue.getPendingQueueSize();
-		if (queueSize > 0) {
-			this.logger.log(
-				`You saved while Eleventy was running, let’s run again. (${queueSize} change${
-					queueSize !== 1 ? "s" : ""
-				})`,
+		// Re-fetch
+		let pendingQueue = this.watchQueue.getPendingQueue();
+		if (pendingQueue.length > 0) {
+			let hasNonTemplateFiles = Boolean(
+				pendingQueue.find((path) => !this.directories.isTemplateFile(path)),
 			);
-			await this.#rewatch();
+			let skipIncremental = pendingQueue.length > 1 && hasNonTemplateFiles;
+
+			if (!skipIncremental && this.isIncremental) {
+				this.logger.forceLog(
+					`Build queued for: ${TemplatePath.stripLeadingDotSlash(pendingQueue.slice(0, 1).pop())}${pendingQueue.length > 1 ? ` (1/${pendingQueue.length} changes)` : ""}`,
+				);
+			} else {
+				this.logger.forceLog(
+					`Build queued… (${pendingQueue.length} change${pendingQueue.length !== 1 ? "s" : ""})`,
+				);
+			}
+
+			await this.#rewatch({
+				skipIncremental,
+			});
+		} else if (!this.#interrupted) {
+			// also logs in startWatch for initial build
+			this.logger.forceLog(`Waiting…`);
 		}
+	}
+
+	/*
+	 * SIGINT
+	 */
+	interrupt() {
+		this.#interrupted = true;
+
+		// Clear the queue to prevent additional builds
+		this.watchQueue.reset();
 	}
 
 	/**
@@ -282,6 +327,47 @@ export default class Eleventy extends Core {
 	 */
 	get watcherBench() {
 		return this.bench.get("Watcher");
+	}
+
+	static async wait(timeMs) {
+		let { promise, resolve, reject } = withResolvers();
+
+		let id = setTimeout(resolve, timeMs);
+
+		await promise;
+
+		return id;
+	}
+
+	async triggerWatchRunForPath(path) {
+		path = TemplatePath.normalize(path);
+
+		try {
+			let isResetConfig = this.#shouldResetConfig([path]);
+			this.#addFileToWatchQueue(path, isResetConfig);
+
+			if (this.#watchDelay) {
+				clearTimeout(this.#watchDelay);
+			}
+
+			if (this.config.watchThrottleWaitTime) {
+				this.#watchDelay = Eleventy.wait(this.config.watchThrottleWaitTime);
+			}
+
+			await this.#rewatch();
+		} catch (e) {
+			if (e instanceof EleventyBaseError) {
+				this.errorHandler.error(e, "Eleventy watch error");
+				this.watchQueue.finishBuild();
+			} else {
+				this.errorHandler.fatal(e, "Eleventy fatal watch error");
+				await this.close();
+			}
+		}
+
+		// Internal event for testing
+		// v4.0.0-alpha.8 swapped to async-friendly
+		await this.config.events.emit("eleventy.afterwatch");
 	}
 
 	/**
@@ -325,36 +411,10 @@ export default class Eleventy extends Core {
 
 		await this.watcher.start();
 
-		this.logger.forceLog("Watching…");
-
-		let watchDelay;
-		let watchRun = async (path) => {
-			path = TemplatePath.normalize(path);
-			try {
-				let isResetConfig = this.#shouldResetConfig([path]);
-				this.#addFileToWatchQueue(path, isResetConfig);
-
-				clearTimeout(watchDelay);
-
-				let { promise, resolve, reject } = withResolvers();
-
-				watchDelay = setTimeout(async () => {
-					this.#rewatch(isResetConfig).then(resolve, reject);
-				}, this.config.watchThrottleWaitTime);
-
-				await promise;
-			} catch (e) {
-				if (e instanceof EleventyBaseError) {
-					this.errorHandler.error(e, "Eleventy watch error");
-					this.watchQueue.setBuildFinished();
-				} else {
-					this.errorHandler.fatal(e, "Eleventy fatal watch error");
-					await this.close();
-				}
-			}
-
-			this.config.events.emit("eleventy.afterwatch");
-		};
+		// This logs in #rewatch for rebuilds
+		if (this.buildCount <= 1) {
+			this.logger.forceLog("Waiting…");
+		}
 
 		this.watcher.on("change", async (path) => {
 			// Emulated passthrough copy logs from the server
@@ -364,7 +424,7 @@ export default class Eleventy extends Core {
 				);
 			}
 
-			await watchRun(path);
+			await this.triggerWatchRunForPath(path);
 		});
 
 		this.watcher.on("add", async (path) => {
@@ -376,7 +436,7 @@ export default class Eleventy extends Core {
 			}
 
 			this.fileSystemSearch.add(path);
-			await watchRun(path);
+			await this.triggerWatchRunForPath(path);
 		});
 
 		this.watcher.on("unlink", async (path) => {
@@ -387,11 +447,8 @@ export default class Eleventy extends Core {
 				);
 			}
 			this.fileSystemSearch.delete(path);
-			await watchRun(path);
+			await this.triggerWatchRunForPath(path);
 		});
-
-		// For testability
-		return watchRun;
 	}
 
 	/**
@@ -461,14 +518,11 @@ export default class Eleventy extends Core {
 		let initWatchBench = this.watcherBench.get("Start up --watch");
 		initWatchBench.before();
 
-		let watchRun = await this.startWatch();
+		await this.startWatch();
 
 		initWatchBench.after();
 
 		this.watcherBench.finish("Watch");
-
-		// Returns for testability
-		return watchRun;
 	}
 
 	// Renamed to close()

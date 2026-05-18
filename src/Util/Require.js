@@ -4,7 +4,7 @@ import { TemplatePath } from "@11ty/eleventy-utils";
 
 import importer from "./importer.js";
 import { clearRequireCache, requireCommonJsTypeScript } from "../Util/RequireUtils.js";
-import { port1 } from "./EsmResolverPortAdapter.js";
+import { addModifiedPath } from "./EsmResolverPortAdapter.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import eventBus from "../EventBus.js";
 
@@ -63,9 +63,7 @@ eventBus.on("eleventy.importCacheReset", (fileQueue) => {
 		lastModifiedPaths.set(absolutePath, newDate);
 
 		// post to EsmResolver worker thread
-		if (port1) {
-			port1.postMessage({ path: absolutePath, newDate });
-		}
+		addModifiedPath(absolutePath, newDate);
 
 		clearRequireCache(absolutePath);
 	}

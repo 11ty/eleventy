@@ -187,15 +187,29 @@ test("Glob Input", async (t) => {
   t.is(files[1], "test/stubs/glob-pages/home.md");
 });
 
-test(".eleventyignore parsing", (t) => {
-  let ignores = EleventyFiles.getFileIgnores("./test/stubs/.eleventyignore");
+test(".eleventyignore parsing", async (t) => {
+  let eleventyConfig = await getTemplateConfigInstance({
+    dir: {
+      input: "./test/stubs/",
+    }
+  });
+  let { eleventyFiles: evf } = getEleventyFilesInstance(["md"], eleventyConfig);
+
+  let ignores = evf.getFileIgnores("./test/stubs/.eleventyignore");
   t.is(ignores.length, 2);
   t.is(ignores[0], "./test/stubs/ignoredFolder/**");
   t.is(ignores[1], "./test/stubs/ignoredFolder/ignored.md");
 });
 
-test("Parse multiple .eleventyignores", (t) => {
-  let ignores = EleventyFiles.getFileIgnores([
+test("Parse multiple .eleventyignores", async (t) => {
+  let eleventyConfig = await getTemplateConfigInstance({
+    dir: {
+      input: "./test/stubs/multiple-ignores/",
+    }
+  });
+  let { eleventyFiles: evf } = getEleventyFilesInstance(["md"], eleventyConfig);
+
+  let ignores = evf.getFileIgnores([
     "./test/stubs/multiple-ignores/.eleventyignore",
     "./test/stubs/multiple-ignores/subfolder/.eleventyignore",
   ]);
@@ -207,8 +221,15 @@ test("Parse multiple .eleventyignores", (t) => {
   t.is(ignores[3], "./test/stubs/multiple-ignores/subfolder/ignoredFolder2/ignored2.md");
 });
 
-test("Passed file name does not exist", (t) => {
-  let ignores = EleventyFiles.getFileIgnores(".thisfiledoesnotexist");
+test("Passed file name does not exist", async (t) => {
+  let eleventyConfig = await getTemplateConfigInstance({
+    dir: {
+      input: "./",
+    }
+  });
+  let { eleventyFiles: evf } = getEleventyFilesInstance(["md"], eleventyConfig);
+
+  let ignores = evf.getFileIgnores(".thisfiledoesnotexist");
   t.deepEqual(ignores, []);
 });
 
@@ -437,8 +458,16 @@ test("Glob Watcher Files with Config Passthroughs (no template formats)", async 
 });
 
 test("Test that negations are ignored (for now) PR#709, will change when #693 is implemented", async (t) => {
+  let templateConfig = new TemplateConfig();
+  let projectDirs = new ProjectDirectories();
+  projectDirs.setViaConfigObject({
+    input: "test/stubs"
+  });
+  let eleventyConfig = await getTemplateConfigInstance(templateConfig, projectDirs);
+  let { eleventyFiles: evf } = getEleventyFilesInstance([], eleventyConfig);
+
   t.deepEqual(
-    EleventyFiles.normalizeIgnoreContent(
+    evf.normalizeIgnoreContent(
       "./",
       `hello
 !testing`

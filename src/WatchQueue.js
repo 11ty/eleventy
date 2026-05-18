@@ -8,31 +8,49 @@ import PathNormalizer from "./Util/PathNormalizer.js";
  */
 
 class WatchQueue {
+	#incremental = false;
+	#incrementalOverride = false;
+
 	constructor() {
-		this.incremental = false;
-		this.isActive = false;
+		this.activeQueue = [];
+	}
+
+	setIncrementalOverride(override) {
+		this.#incrementalOverride = Boolean(override);
+	}
+
+	set incremental(value) {
+		this.#incremental = Boolean(value);
+	}
+
+	get incremental() {
+		return this.#incrementalOverride || this.#incremental;
+	}
+
+	reset() {
+		this.pendingQueue = [];
 		this.activeQueue = [];
 	}
 
 	isBuildRunning() {
-		return this.isActive;
+		return this.activeQueue.length > 0;
 	}
 
-	setBuildRunning() {
-		this.isActive = true;
-
+	startBuild() {
 		// pop waiting queue into the active queue
 		this.activeQueue = this.popNextActiveQueue();
 	}
 
-	setBuildFinished() {
-		this.isActive = false;
+	finishBuild() {
+		this.#incrementalOverride = false;
 		this.activeQueue = [];
 	}
 
 	getIncrementalFile() {
 		if (this.incremental) {
-			return this.activeQueue.length ? this.activeQueue[0] : false;
+			if (this.activeQueue.length) {
+				return this.activeQueue[0];
+			}
 		}
 
 		return false;
@@ -42,7 +60,7 @@ class WatchQueue {
 	 * Works with or without incremental (though in incremental only one file per time will be processed)
 	 */
 	getActiveQueue() {
-		if (!this.isActive) {
+		if (!this.isBuildRunning()) {
 			return [];
 		} else if (this.incremental && this.activeQueue.length === 0) {
 			return [];
@@ -100,8 +118,14 @@ class WatchQueue {
 	addToPendingQueue(path) {
 		if (path) {
 			path = PathNormalizer.normalizeSeperator(TemplatePath.addLeadingDotSlash(path));
-			this.pendingQueue.push(path);
+			if (!this.pendingQueue.includes(path)) {
+				this.pendingQueue.push(path);
+				// added
+				return true;
+			}
 		}
+		// skipped
+		return false;
 	}
 
 	getPendingQueueSize() {
@@ -114,6 +138,10 @@ class WatchQueue {
 
 	getActiveQueueSize() {
 		return this.activeQueue.length;
+	}
+
+	clearPendingQueue() {
+		this.pendingQueue = [];
 	}
 
 	// returns array

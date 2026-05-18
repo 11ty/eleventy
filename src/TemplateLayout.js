@@ -253,6 +253,8 @@ class TemplateLayout extends TemplateContent {
 		let compiledFunctions = await this.getCompiledLayoutFunctions();
 
 		for (let { render, template } of compiledFunctions) {
+			await template.asyncTemplateInitialization();
+
 			let layoutTemplateSyntax = template.getEngineNames(); // templateEngineOverride not supported in layouts
 			let cdata = new CdataWrapper(pageTemplateSyntax, layoutTemplateSyntax);
 
