@@ -23,7 +23,7 @@
 	},
 	"license": "MIT",
 	"engines": {
-		"node": ">=20.19"
+		"node": ">=22.15"
 	},
 	"workspaces": [
 		"packages/client"

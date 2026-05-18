@@ -6,14 +6,6 @@ const debug = debugUtil("Eleventy:EsmResolver");
 
 let lastModifiedPaths = new Map();
 
-// module.register method (old, deprecated)
-export async function initialize({ port }) {
-	// From `eleventy.importCacheReset` event in Require.js
-	port.on("message", ({ path, newDate }) => {
-		addToModifiedPaths(path, newDate);
-	});
-}
-
 export function addToModifiedPaths(path, date) {
 	lastModifiedPaths.set(path, date);
 }
