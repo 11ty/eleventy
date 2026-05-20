@@ -116,7 +116,7 @@ async function exec() {
 
 		// v4.0.0-alpha.8 multiple now supported via:
 		// --incremental=one.md --incremental=two.md => ["one.md", "two.md"]
-		// --incremental="one.md,two.md"
+		// --incremental=one.md,two.md => ["one.md", "two.md"]
 		if(argv.incremental) {
 			elev.setIncrementalFiles(argv.incremental);
 		} else if(argv.incremental !== undefined) {
