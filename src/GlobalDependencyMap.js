@@ -411,10 +411,12 @@ class GlobalDependencyMap {
 		return false;
 	}
 
-	isFileUsedBy(parent, child, includeLayouts) {
-		if (this.hasDependency(parent, child, includeLayouts)) {
-			// child is used by parent
-			return true;
+	areFilesUsedBy(parents, child, includeLayouts) {
+		for (let p of parents) {
+			if (this.hasDependency(p, child, includeLayouts)) {
+				// child is used by parent
+				return true;
+			}
 		}
 		return false;
 	}

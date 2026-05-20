@@ -34,23 +34,9 @@ export default class Eleventy extends Core {
 	// 	super(input, output, options, eleventyConfig);
 	// }
 
-	/**
-	 * Sets the incremental build mode.
-	 *
-	 * @param {boolean} isIncremental - Shall Eleventy run in incremental build mode and only write the files that trigger watch updates
-	 */
-	setIncrementalBuild(isIncremental) {
-		super.setIncrementalBuild(isIncremental);
-
-		if (this.#watchQueue) {
-			this.watchQueue.incremental = !!isIncremental;
-		}
-	}
-
 	get watchQueue() {
 		if (!this.#watchQueue) {
 			this.#watchQueue = new WatchQueue();
-			this.#watchQueue.incremental = this.isIncremental;
 		}
 		return this.#watchQueue;
 	}
@@ -100,33 +86,12 @@ export default class Eleventy extends Core {
 	 * @param {string} changedFilePath - File that triggered a re-run (added or modified)
 	 * @param {boolean} [isResetConfig] - are we doing a config reset
 	 */
-	async #addFileToWatchQueue(changedFilePath, isResetConfig) {
-		let isAdded = this.watchQueue.addToPendingQueue(changedFilePath);
-		if (!isAdded) {
-			return;
-		}
+	#resetFileInWatchQueue(changedFilePath, isResetConfig) {
+		// v3.1.0: `eleventy.templateModified` is no longer used internally
+		// v4.0.0-alpha.8 `eleventy.templateModified` event removed
 
-		// Currently this is only for 11ty.js deps but should be extended with usesGraph
-		let usedByDependants = [];
-		if (this.watchTargets) {
-			usedByDependants = this.watchTargets.getDependantsOf(
-				TemplatePath.addLeadingDotSlash(changedFilePath),
-			);
-		}
-
-		let relevantLayouts = this.eleventyConfig.usesGraph.getLayoutsUsedBy(changedFilePath);
-
-		// `eleventy.templateModified` is no longer used internally, remove in a future major version.
-		eventBus.emit("eleventy.templateModified", changedFilePath, {
-			usedByDependants,
-			relevantLayouts,
-		});
-
-		// These listeners are *global*, not cleared even on config reset
-		eventBus.emit("eleventy.resourceModified", changedFilePath, usedByDependants, {
-			viaConfigReset: isResetConfig,
-			relevantLayouts,
-		});
+		// These listeners are *global*, not cleared even on config reset (v4.0.0-alpha.8 removed some arguments here)
+		eventBus.emit("eleventy.resourceModified", changedFilePath);
 
 		this.config.events.emit("eleventy#templateModified", changedFilePath);
 	}
@@ -176,27 +141,25 @@ export default class Eleventy extends Core {
 		);
 	}
 
-	async #rewatch(opts = {}) {
-		let { skipIncremental } = opts;
-
+	async #rewatch() {
 		if (this.watchQueue.isBuildRunning()) {
 			// this.logger.forceLog("Waiting for previous build to finish…");
 			return;
-		}
-
-		if (skipIncremental) {
-			// skip incremental when pending queue size > 2 and has non-template files
-			this.unsetIncrementalFile();
-			this.writer?.resetIncrementalFile();
-			this.watchQueue.setIncrementalOverride(true);
-			this.watchQueue.clearPendingQueue();
 		}
 
 		this.watchQueue.startBuild();
 
 		let queue = this.watchQueue.getActiveQueue();
 		let isResetConfig = this.#shouldResetConfig(queue);
-		this.logger.forceLog("Build starting…" + (isResetConfig ? " (configuration reset)" : ""));
+
+		for (let p of queue) {
+			this.#resetFileInWatchQueue(p, isResetConfig);
+		}
+
+		this.logger.forceLog(
+			`Build starting${queue.length > 1 ? ` (${queue.length} queued changes)` : ""}…` +
+				(isResetConfig ? " (configuration reset)" : ""),
+		);
 
 		await this.config.events.emit("beforeWatch", queue);
 		await this.config.events.emit("eleventy.beforeWatch", queue);
@@ -241,15 +204,13 @@ export default class Eleventy extends Core {
 				);
 			});
 
-			let files = this.watchQueue.getActiveQueue();
-
 			// Maps passthrough copy files to output URLs for CSS live reload
 			let stylesheetUrls = new Set();
 			for (let entry of passthroughCopyResults) {
 				for (let filepath in entry.map) {
 					if (
 						filepath.endsWith(".css") &&
-						files.includes(TemplatePath.addLeadingDotSlash(filepath))
+						queue.includes(TemplatePath.addLeadingDotSlash(filepath))
 					) {
 						stylesheetUrls.add(
 							"/" + TemplatePath.stripLeadingSubPath(entry.map[filepath], this.outputDir),
@@ -270,7 +231,7 @@ export default class Eleventy extends Core {
 				});
 
 			await this.eleventyServe.reload({
-				files,
+				files: queue,
 				subtype: onlyCssChanges ? "css" : undefined,
 				build: {
 					stylesheets: Array.from(stylesheetUrls),
@@ -288,24 +249,7 @@ export default class Eleventy extends Core {
 		// Re-fetch
 		let pendingQueue = this.watchQueue.getPendingQueue();
 		if (pendingQueue.length > 0) {
-			let hasNonTemplateFiles = Boolean(
-				pendingQueue.find((path) => !this.directories.isTemplateFile(path)),
-			);
-			let skipIncremental = pendingQueue.length > 1 && hasNonTemplateFiles;
-
-			if (!skipIncremental && this.isIncremental) {
-				this.logger.forceLog(
-					`Build queued for: ${TemplatePath.stripLeadingDotSlash(pendingQueue.slice(0, 1).pop())}${pendingQueue.length > 1 ? ` (1/${pendingQueue.length} changes)` : ""}`,
-				);
-			} else {
-				this.logger.forceLog(
-					`Build queued… (${pendingQueue.length} change${pendingQueue.length !== 1 ? "s" : ""})`,
-				);
-			}
-
-			await this.#rewatch({
-				skipIncremental,
-			});
+			await this.#rewatch();
 		} else if (!this.#interrupted) {
 			// also logs in startWatch for initial build
 			this.logger.forceLog(`Waiting…`);
@@ -329,36 +273,33 @@ export default class Eleventy extends Core {
 		return this.bench.get("Watcher");
 	}
 
-	static async wait(timeMs) {
-		let { promise, resolve, reject } = withResolvers();
+	async waitThrottle() {
+		if (this.#watchDelay) {
+			clearTimeout(this.#watchDelay);
+		}
 
-		let id = setTimeout(resolve, timeMs);
+		if (this.config.watchThrottleWaitTime > 0) {
+			let { promise, resolve } = withResolvers();
 
-		await promise;
+			this.#watchDelay = setTimeout(resolve, this.config.watchThrottleWaitTime);
 
-		return id;
+			return promise;
+		}
 	}
 
+	// Triggers when files are modified on file system
 	async triggerWatchRunForPath(path) {
-		path = TemplatePath.normalize(path);
+		this.watchQueue.addToPendingQueue(path);
+
+		await this.waitThrottle();
 
 		try {
-			let isResetConfig = this.#shouldResetConfig([path]);
-			this.#addFileToWatchQueue(path, isResetConfig);
-
-			if (this.#watchDelay) {
-				clearTimeout(this.#watchDelay);
-			}
-
-			if (this.config.watchThrottleWaitTime) {
-				this.#watchDelay = Eleventy.wait(this.config.watchThrottleWaitTime);
-			}
-
 			await this.#rewatch();
 		} catch (e) {
+			this.watchQueue.finishBuild();
+
 			if (e instanceof EleventyBaseError) {
 				this.errorHandler.error(e, "Eleventy watch error");
-				this.watchQueue.finishBuild();
 			} else {
 				this.errorHandler.fatal(e, "Eleventy fatal watch error");
 				await this.close();
@@ -420,34 +361,38 @@ export default class Eleventy extends Core {
 			// Emulated passthrough copy logs from the server
 			if (!this.eleventyServe.isEmulatedPassthroughCopyMatch(path)) {
 				this.logger.forceLog(
-					`File changed: ${TemplatePath.stripLeadingDotSlash(TemplatePath.standardizeFilePath(path))}`,
+					`File changed: ${TemplatePath.stripLeadingDotSlash(TemplatePath.standardizeFilePath(path))}${this.watchQueue.isBuildRunning() ? " (queued for next build)" : ""}`,
 				);
 			}
 
-			await this.triggerWatchRunForPath(path);
+			// don’t await
+			this.triggerWatchRunForPath(path);
 		});
 
 		this.watcher.on("add", async (path) => {
 			// Emulated passthrough copy logs from the server
 			if (!this.eleventyServe.isEmulatedPassthroughCopyMatch(path)) {
 				this.logger.forceLog(
-					`File added: ${TemplatePath.stripLeadingDotSlash(TemplatePath.standardizeFilePath(path))}`,
+					`File added: ${TemplatePath.stripLeadingDotSlash(TemplatePath.standardizeFilePath(path))}${this.watchQueue.isBuildRunning() ? " (queued for next build)" : ""}`,
 				);
 			}
 
 			this.fileSystemSearch.add(path);
-			await this.triggerWatchRunForPath(path);
+			// don’t await
+			this.triggerWatchRunForPath(path);
 		});
 
 		this.watcher.on("unlink", async (path) => {
 			// Emulated passthrough copy logs from the server
 			if (!this.eleventyServe.isEmulatedPassthroughCopyMatch(path)) {
 				this.logger.forceLog(
-					`File deleted: ${TemplatePath.stripLeadingDotSlash(TemplatePath.standardizeFilePath(path))}`,
+					`File deleted: ${TemplatePath.stripLeadingDotSlash(TemplatePath.standardizeFilePath(path))}${this.watchQueue.isBuildRunning() ? " (queued for next build)" : ""}`,
 				);
 			}
+
 			this.fileSystemSearch.delete(path);
-			await this.triggerWatchRunForPath(path);
+			// don’t await
+			this.triggerWatchRunForPath(path);
 		});
 	}
 
@@ -588,8 +533,9 @@ Arguments:
      --incremental
        Only build the files that have changed. Best with watch/serve.
 
-     --incremental=filename.md
-       Does not require watch/serve. Run an incremental build targeting a single file.
+     --incremental=first.md,second.md
+     --incremental=first.md --incremental=second.md
+       Does not require watch/serve. Run an incremental build targeting one or more files.
 
      --ignore-initial
        Start without a build; build when files change. Works best with watch/serve/incremental.

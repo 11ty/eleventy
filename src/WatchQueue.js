@@ -2,31 +2,25 @@ import { TemplatePath } from "@11ty/eleventy-utils";
 
 import PathNormalizer from "./Util/PathNormalizer.js";
 
-/* Decides when to watch and in what mode to watch
- * Incremental builds don’t batch changes, they queue.
- * Nonincremental builds batch.
+/*
+ * Decides when to watch and in what mode to watch
  */
 
 class WatchQueue {
-	#incremental = false;
-	#incrementalOverride = false;
+	static normalizePath(path) {
+		if (!path) {
+			return;
+		}
+		return PathNormalizer.normalizeSeperator(
+			TemplatePath.addLeadingDotSlash(TemplatePath.normalize(path)),
+		);
+	}
 
 	constructor() {
 		this.activeQueue = [];
 	}
 
-	setIncrementalOverride(override) {
-		this.#incrementalOverride = Boolean(override);
-	}
-
-	set incremental(value) {
-		this.#incremental = Boolean(value);
-	}
-
-	get incremental() {
-		return this.#incrementalOverride || this.#incremental;
-	}
-
+	// on SIGINT
 	reset() {
 		this.pendingQueue = [];
 		this.activeQueue = [];
@@ -37,41 +31,41 @@ class WatchQueue {
 	}
 
 	startBuild() {
+		if (this.isBuildRunning()) {
+			throw new Error(
+				"Internal error: build already running. Use finishBuild() before calling startBuild() again.",
+			);
+		}
+
 		// pop waiting queue into the active queue
 		this.activeQueue = this.popNextActiveQueue();
 	}
 
 	finishBuild() {
-		this.#incrementalOverride = false;
 		this.activeQueue = [];
 	}
 
-	getIncrementalFile() {
-		if (this.incremental) {
-			if (this.activeQueue.length) {
-				return this.activeQueue[0];
+	setActiveQueue(queue) {
+		if (!queue || !Array.isArray(queue)) {
+			return;
+		}
+
+		for (let path of queue) {
+			let normalized = WatchQueue.normalizePath(path);
+			if (!this.activeQueue.includes(normalized)) {
+				this.activeQueue.push(normalized);
 			}
 		}
-
-		return false;
 	}
 
-	/* Returns the changed files currently being operated on in the current `watch` build
-	 * Works with or without incremental (though in incremental only one file per time will be processed)
+	/*
+	 * Returns the changed files currently being operated on in the current `watch` build
 	 */
 	getActiveQueue() {
-		if (!this.isBuildRunning()) {
-			return [];
-		} else if (this.incremental && this.activeQueue.length === 0) {
-			return [];
-		} else if (this.incremental) {
-			return [this.activeQueue[0]];
-		}
-
 		return this.activeQueue;
 	}
 
-	_queueMatches(file) {
+	#queueMatches(file) {
 		let filterCallback;
 		if (typeof file === "function") {
 			filterCallback = file;
@@ -84,13 +78,13 @@ class WatchQueue {
 
 	hasAllQueueFiles(file) {
 		return (
-			this.activeQueue.length > 0 && this.activeQueue.length === this._queueMatches(file).length
+			this.activeQueue.length > 0 && this.activeQueue.length === this.#queueMatches(file).length
 		);
 	}
 
 	hasQueuedFile(file) {
 		if (file) {
-			return this._queueMatches(file).length > 0;
+			return this.#queueMatches(file).length > 0;
 		}
 		return false;
 	}
@@ -116,16 +110,14 @@ class WatchQueue {
 	}
 
 	addToPendingQueue(path) {
-		if (path) {
-			path = PathNormalizer.normalizeSeperator(TemplatePath.addLeadingDotSlash(path));
-			if (!this.pendingQueue.includes(path)) {
-				this.pendingQueue.push(path);
-				// added
-				return true;
-			}
+		if (!path) {
+			return;
 		}
-		// skipped
-		return false;
+
+		let normalized = WatchQueue.normalizePath(path);
+		if (!this.pendingQueue.includes(normalized)) {
+			this.pendingQueue.push(normalized);
+		}
 	}
 
 	getPendingQueueSize() {
@@ -146,10 +138,6 @@ class WatchQueue {
 
 	// returns array
 	popNextActiveQueue() {
-		if (this.incremental) {
-			return this.pendingQueue.length ? [this.pendingQueue.shift()] : [];
-		}
-
 		let ret = this.pendingQueue.slice();
 		this.pendingQueue = [];
 		return ret;

@@ -247,7 +247,7 @@ test("Incremental passthrough, issue #3285", async (t) => {
   await eleventyConfig.init();
 
   let mgr = new TemplatePassthroughManager(eleventyConfig);
-  mgr.setIncrementalFile("./test/stubs-3285/src/scripts/hello-world.js");
+  mgr.setIncrementalFiles(["./test/stubs-3285/src/scripts/hello-world.js"]);
   t.deepEqual(mgr.getAllNormalizedPaths([]), [
     { copyOptions: {}, inputPath: "./test/stubs-3285/src/scripts", outputPath: "scripts" },
   ]);
