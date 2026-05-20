@@ -1698,7 +1698,7 @@ test("Make sure layout cache takes new changes during watch (liquid)", async (t)
   fs.writeFileSync(filePath, `alert("bye");`, "utf8");
 
   // Trigger that the file has changed
-  tmpl.eleventyConfig.setPreviousBuildModifiedFile(filePath);
+  tmpl.internalTriggerTemplateModifiedPath(filePath);
 
   t.is((await renderTemplate(tmpl, data)).trim(), '<script>alert("bye");</script>');
 });

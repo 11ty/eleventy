@@ -479,6 +479,11 @@ class Template extends TemplateContent {
 		return super.render(str, data, bypassMarkdown);
 	}
 
+	// see also Eleventy->#resetFileInWatchQueue()
+	internalTriggerTemplateModifiedPath(changedFilePath) {
+		this.config.events.emit("eleventy#templateModified", changedFilePath);
+	}
+
 	// This is the primary render mechanism, called via TemplateMap->populateContentDataInMap
 	async renderPageEntryWithoutLayout(pageEntry) {
 		// @cachedproperty
