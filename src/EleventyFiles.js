@@ -358,31 +358,27 @@ class EleventyFiles {
 		return paths;
 	}
 
-	getFileShape(paths, filePath) {
-		if (!filePath) {
+	getFileShape(paths, incrementalFilePaths) {
+		if (!incrementalFilePaths || incrementalFilePaths.length === 0) {
 			return;
 		}
-		if (this.isPassthroughCopyFile(paths, filePath)) {
+		if (this.passthroughManager.isPassthroughCopyFile(paths, incrementalFilePaths)) {
 			return "copy";
 		}
-		if (this.isFullTemplateFile(paths, filePath)) {
+		if (this.isFullTemplateFile(paths, incrementalFilePaths)) {
 			return "template";
 		}
 		// include/layout/unknown
 	}
 
-	isPassthroughCopyFile(paths, filePath) {
-		return this.passthroughManager.isPassthroughCopyFile(paths, filePath);
-	}
-
 	// Assumption here that filePath is not a passthrough copy file
-	isFullTemplateFile(paths, filePath) {
-		if (!filePath) {
+	isFullTemplateFile(paths, filePaths) {
+		if (!filePaths || !Array.isArray(filePaths)) {
 			return false;
 		}
 
 		for (let path of paths) {
-			if (path === filePath) {
+			if (filePaths.includes(path)) {
 				return true;
 			}
 		}

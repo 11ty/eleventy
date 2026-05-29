@@ -46,7 +46,7 @@ class TemplatePassthroughManager {
 		this.count = 0;
 		this.size = 0;
 		this.conflictMap = {};
-		this.incrementalFile;
+		this.incrementalFiles = [];
 
 		this.#queue = new Map();
 	}
@@ -78,17 +78,18 @@ class TemplatePassthroughManager {
 		this.runMode = runMode;
 	}
 
-	setIncrementalFile(path) {
-		if (path) {
-			this.incrementalFile = path;
+	setIncrementalFiles(paths) {
+		if (!paths || !Array.isArray(paths)) {
+			return;
 		}
+		this.incrementalFiles = paths;
 	}
 
-	resetIncrementalFile() {
-		this.incrementalFile = undefined;
+	resetIncremental() {
+		this.incrementalFiles = undefined;
 	}
 
-	_normalizePaths(path, outputPath, copyOptions = {}) {
+	#normalizePath(path, outputPath, copyOptions = {}) {
 		return {
 			inputPath: TemplatePath.addLeadingDotSlash(path),
 			outputPath: outputPath ? TemplatePath.stripLeadingDotSlash(outputPath) : true,
@@ -101,7 +102,7 @@ class TemplatePassthroughManager {
 		let pathsRaw = this.config.passthroughCopies || {};
 		debug("`addPassthroughCopy` config API paths: %o", pathsRaw);
 		for (let [inputPath, { outputPath, copyOptions }] of Object.entries(pathsRaw)) {
-			paths.push(this._normalizePaths(inputPath, outputPath, copyOptions));
+			paths.push(this.#normalizePath(inputPath, outputPath, copyOptions));
 		}
 		debug("`addPassthroughCopy` config API normalized paths: %o", paths);
 		return paths;
@@ -226,26 +227,29 @@ class TemplatePassthroughManager {
 		);
 	}
 
-	isPassthroughCopyFile(paths, changedFile) {
-		if (!changedFile) {
+	isPassthroughCopyFile(paths, changedFiles) {
+		if (!changedFiles) {
 			return false;
+		}
+		if (!Array.isArray(changedFiles)) {
+			changedFiles = [changedFiles];
 		}
 
 		// passthrough copy by non-matching engine extension (via templateFormats)
 		for (let path of paths) {
-			if (path === changedFile && !this.extensionMap.hasEngine(path)) {
+			if (changedFiles.includes(path) && !this.extensionMap.hasEngine(path)) {
 				return true;
 			}
 		}
 
 		for (let path of this.getConfigPaths()) {
-			if (TemplatePath.startsWithSubPath(changedFile, path.inputPath)) {
+			if (changedFiles.find((p) => TemplatePath.startsWithSubPath(p, path.inputPath))) {
 				return path;
 			}
 			if (
-				changedFile &&
+				Array.isArray(changedFiles) &&
 				isDynamicPattern(path.inputPath) &&
-				isGlobMatch(changedFile, [path.inputPath])
+				changedFiles.find((p) => isGlobMatch(p, [path.inputPath]))
 			) {
 				return path;
 			}
@@ -255,15 +259,15 @@ class TemplatePassthroughManager {
 	}
 
 	getAllNormalizedPaths(paths = []) {
-		if (this.incrementalFile) {
-			let isPassthrough = this.isPassthroughCopyFile(paths, this.incrementalFile);
+		if (Array.isArray(this.incrementalFiles) && this.incrementalFiles.length > 0) {
+			let isPassthrough = this.isPassthroughCopyFile(paths, this.incrementalFiles);
 
 			if (isPassthrough) {
 				if (isPassthrough.outputPath) {
 					return [isPassthrough];
 				}
 
-				return [this._normalizePaths(this.incrementalFile)];
+				return this.incrementalFiles.map((file) => this.#normalizePath(file));
 			}
 
 			// Fixes https://github.com/11ty/eleventy/issues/2491
@@ -282,7 +286,7 @@ class TemplatePassthroughManager {
 		if (paths?.length) {
 			let passthroughPaths = this.getNonTemplatePaths(paths);
 			for (let path of passthroughPaths) {
-				let normalizedPath = this._normalizePaths(path);
+				let normalizedPath = this.#normalizePath(path);
 
 				debug(
 					`TemplatePassthrough copying from non-matching file extension: ${normalizedPath.inputPath}`,

@@ -177,7 +177,7 @@ class UserConfig {
 		this.globalData = {};
 		/** @type {object} */
 		this.chokidarConfig = {};
-		this.watchThrottleWaitTime = 0; //ms
+		this.watchThrottleWaitTime = 100; //ms
 
 		// using Map to preserve insertion order
 		this.dataExtensions = new Map();
