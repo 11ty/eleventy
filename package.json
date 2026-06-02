@@ -1,6 +1,6 @@
 {
 	"name": "@11ty/eleventy",
-	"version": "3.1.5",
+	"version": "3.1.6",
 	"description": "A simpler static site generator.",
 	"publishConfig": {
 		"access": "public",
@@ -130,7 +130,7 @@
 		"@11ty/eleventy-plugin-bundle": "^3.0.7",
 		"@11ty/eleventy-utils": "^2.0.7",
 		"@11ty/lodash-custom": "^4.17.21",
-		"@11ty/posthtml-urls": "^1.0.2",
+		"@11ty/posthtml-urls": "^1.0.3",
 		"@11ty/recursive-copy": "^4.0.4",
 		"@sindresorhus/slugify": "^2.2.1",
 		"bcp-47-normalize": "^2.3.0",
@@ -145,18 +145,18 @@
 		"kleur": "^4.1.5",
 		"liquidjs": "^10.27.0",
 		"luxon": "^3.7.2",
-		"markdown-it": "^14.1.1",
+		"markdown-it": "^14.2.0",
 		"minimist": "^1.2.8",
 		"moo": "0.5.2",
 		"node-retrieve-globals": "^6.0.1",
 		"nunjucks": "^3.2.4",
-		"picomatch": "^4.0.3",
+		"picomatch": "^4.0.4",
 		"please-upgrade-node": "^3.2.0",
 		"posthtml": "^0.16.7",
 		"posthtml-match-helper": "^2.0.3",
-		"semver": "^7.7.4",
-		"slugify": "^1.6.8",
-		"tinyglobby": "^0.2.15"
+		"semver": "^7.8.1",
+		"slugify": "^1.6.9",
+		"tinyglobby": "^0.2.16"
 	},
 	"overrides": {
 		"gray-matter": {
