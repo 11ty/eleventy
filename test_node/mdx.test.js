@@ -8,6 +8,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import Eleventy from "../src/Eleventy.js";
 
+// June 3, 2026 not yet a mechanism to do this in MDX.js
 if ("register" in module) {
 	module.register("@mdx-js/node-loader", import.meta.url);
 }
