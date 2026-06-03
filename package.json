@@ -125,8 +125,8 @@
 		"react-dom": "^19.2.7",
 		"sass": "^1.100.0",
 		"simple-git-hooks": "^2.13.1",
-		"typescript": "6.0.2",
 		"tsx": "^4.22.4",
+		"typescript": "6.0.2",
 		"vue": "^3.5.35",
 		"zod": "^4.4.3",
 		"zod-validation-error": "^5.0.0"
@@ -163,7 +163,7 @@
 		"posthtml": "^0.16.7",
 		"posthtml-match-helper": "^2.0.3",
 		"semver": "^7.8.1",
-		"tinyglobby": "0.2.15"
+		"tinyglobby": "^0.2.17"
 	},
 	"overrides": {
 		"fdir": "6.4.6"
