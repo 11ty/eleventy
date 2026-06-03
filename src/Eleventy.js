@@ -16,7 +16,6 @@ import PathPrefixer from "./Util/PathPrefixer.js";
 import PathNormalizer from "./Util/PathNormalizer.js";
 import { isGlobMatch } from "./Util/GlobMatcher.js";
 import eventBus from "./EventBus.js";
-import { withResolvers } from "./Util/PromiseUtil.js";
 
 const debug = debugUtil("Eleventy");
 
@@ -279,7 +278,7 @@ export default class Eleventy extends Core {
 		}
 
 		if (this.config.watchThrottleWaitTime > 0) {
-			let { promise, resolve } = withResolvers();
+			let { promise, resolve } = Promise.withResolvers();
 
 			this.#watchDelay = setTimeout(resolve, this.config.watchThrottleWaitTime);
 

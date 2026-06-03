@@ -5,7 +5,6 @@ import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import TemplatePassthrough from "./TemplatePassthrough.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 import { isGlobMatch, isDynamicPattern } from "./Util/GlobMatcher.js";
-import { withResolvers } from "./Util/PromiseUtil.js";
 
 const debug = debugUtil("Eleventy:TemplatePassthroughManager");
 
@@ -31,7 +30,7 @@ class TemplatePassthroughManager {
 		});
 
 		this.config.events.on("eleventy#beforerender", () => {
-			this.#afterBuild = withResolvers();
+			this.#afterBuild = Promise.withResolvers();
 		});
 
 		this.config.events.on("eleventy#render", () => {

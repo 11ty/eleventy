@@ -6,7 +6,6 @@ import fs from "node:fs";
 import assert from "node:assert";
 
 import Eleventy from "../../src/Eleventy.js";
-import { withResolvers } from "../../src/Util/PromiseUtil.js";
 
 // This tests Eleventy Watch and the file system!
 
@@ -38,7 +37,7 @@ test(
 
 		let runs = comparisonStrings.map((str) => {
 			return {
-				...withResolvers(),
+				...Promise.withResolvers(),
 				input: getInputContent(str),
 				expected: getOutputContent(str),
 			};
