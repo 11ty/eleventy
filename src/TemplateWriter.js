@@ -209,7 +209,7 @@ class TemplateWriter {
 	}
 
 	// incrementalFileShape is `template` or `copy` (for passthrough file copy)
-	async _addToTemplateMapIncrementalBuild(incrementalFileShape, paths, to = "fs") {
+	async _addToTemplateMapIncrementalBuild(incrementalFileShapes, paths, to = "fs") {
 		// Render overrides are only used when `--ignore-initial` is in play and an initial build is not run
 		let ignoreInitialBuild = !this.isRunInitialBuild;
 		let secondOrderRelevantLookup = {};
@@ -229,13 +229,16 @@ class TemplateWriter {
 			await tmpl.asyncTemplateInitialization();
 
 			// This must happen before data is generated for the incremental file only
-			if (incrementalFileShape === "template" && this.#incrementalFiles.includes(tmpl.inputPath)) {
+			if (
+				incrementalFileShapes[path] === "template" &&
+				this.#incrementalFiles.includes(tmpl.inputPath)
+			) {
 				tmpl.resetCaches();
 			} else if (
 				// Issue #3824 #3870
 				this.#incrementalFiles.find((p) =>
 					tmpl.isFileRelevantToThisTemplate(p, {
-						isFullTemplate: incrementalFileShape === "template",
+						isFullTemplate: incrementalFileShapes[p] === "template",
 					}),
 				)
 			) {
@@ -267,12 +270,15 @@ class TemplateWriter {
 		}
 
 		for (let tmpl of templates) {
-			if (incrementalFileShape === "template" && this.#incrementalFiles.includes(tmpl.inputPath)) {
+			if (
+				incrementalFileShapes[tmpl.inputPath] === "template" &&
+				this.#incrementalFiles.includes(tmpl.inputPath)
+			) {
 				tmpl.setRenderableOverride(undefined); // unset, probably render
 			} else if (
 				this.#incrementalFiles.find((p) =>
 					tmpl.isFileRelevantToThisTemplate(p, {
-						isFullTemplate: incrementalFileShape === "template",
+						isFullTemplate: incrementalFileShapes[p] === "template",
 					}),
 				)
 			) {
@@ -307,7 +313,10 @@ class TemplateWriter {
 
 		// Order of templates does not matter here, they’re reordered later based on dependencies in TemplateMap.js
 		for (let tmpl of templates) {
-			if (incrementalFileShape === "template" && this.#incrementalFiles.includes(tmpl.inputPath)) {
+			if (
+				incrementalFileShapes[tmpl.inputPath] === "template" &&
+				this.#incrementalFiles.includes(tmpl.inputPath)
+			) {
 				// Cache is reset above (to invalidate data cache at the right time)
 				tmpl.setDryRunViaIncremental(false);
 			} else if (!tmpl.isRenderableDisabled() && !tmpl.isRenderableOptional()) {
@@ -359,33 +368,41 @@ class TemplateWriter {
 		return Promise.all(promises);
 	}
 
-	getFileShape(paths) {
-		// WARNING: This is leaky—if Core is being used instead of Eleventy we are assuming everything is a template (not passthrough copy)
+	getIncrementalFileShapes(paths) {
+		// browser-based fork
 		if (!this.#eleventyFiles) {
-			return "template";
+			let shapes = {};
+			for (let incFile of this.#incrementalFiles) {
+				// this is an assumption for browser-based Eleventy only
+				shapes[incFile] = "template";
+			}
+			return shapes;
 		}
 
-		return this.#eleventyFiles.getFileShape(paths, this.#incrementalFiles);
+		return this.#eleventyFiles?.getIncrementalFileShapes(paths, this.#incrementalFiles);
 	}
 
 	async _addToTemplateMap(paths, to = "fs") {
-		let incrementalFileShape = this.getFileShape(paths);
+		let incrementalFileShapes = this.getIncrementalFileShapes(paths);
+
 		// Filter out passthrough copy files
 		paths = paths.filter((path) => {
 			if (!this.extensionMap.hasEngine(path)) {
 				return false;
 			}
-			if (incrementalFileShape === "copy") {
+
+			if (incrementalFileShapes[path] === "copy") {
 				this.skippedCount++;
 				// Filters out templates if the incremental file is a passthrough copy file
 				return false;
 			}
+
 			return true;
 		});
 
 		if (this.#incrementalFiles?.length > 0) {
 			// Top level async to get at the promises returned.
-			return await this._addToTemplateMapIncrementalBuild(incrementalFileShape, paths, to);
+			return await this._addToTemplateMapIncrementalBuild(incrementalFileShapes, paths, to);
 		}
 
 		// Full Build

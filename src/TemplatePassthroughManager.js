@@ -90,10 +90,14 @@ class TemplatePassthroughManager {
 	}
 
 	#normalizePath(path, outputPath, copyOptions = {}) {
+		let inputPath = TemplatePath.addLeadingDotSlash(path);
+
 		return {
-			inputPath: TemplatePath.addLeadingDotSlash(path),
+			inputPath,
 			outputPath: outputPath ? TemplatePath.stripLeadingDotSlash(outputPath) : true,
 			copyOptions,
+			// eligible if args.length > 1
+			isDynamicPattern: outputPath && isDynamicPattern(inputPath),
 		};
 	}
 
@@ -227,47 +231,62 @@ class TemplatePassthroughManager {
 		);
 	}
 
-	isPassthroughCopyFile(paths, changedFiles) {
+	filterToPassthroughCopyFilesOnly(eligiblePaths, changedFiles) {
 		if (!changedFiles) {
-			return false;
+			return [];
 		}
+
 		if (!Array.isArray(changedFiles)) {
 			changedFiles = [changedFiles];
 		}
 
-		// passthrough copy by non-matching engine extension (via templateFormats)
-		for (let path of paths) {
-			if (changedFiles.includes(path) && !this.extensionMap.hasEngine(path)) {
-				return true;
-			}
-		}
+		let configPaths = this.getConfigPaths();
+		let matchedConfigPaths = new Set();
 
-		for (let path of this.getConfigPaths()) {
-			if (changedFiles.find((p) => TemplatePath.startsWithSubPath(p, path.inputPath))) {
-				return path;
-			}
-			if (
-				Array.isArray(changedFiles) &&
-				isDynamicPattern(path.inputPath) &&
-				changedFiles.find((p) => isGlobMatch(p, [path.inputPath]))
-			) {
-				return path;
-			}
-		}
+		return changedFiles
+			.map((changedFilePath) => {
+				// passthrough copy by non-matching engine extension (via templateFormats)
+				if (
+					eligiblePaths.includes(changedFilePath) &&
+					!this.extensionMap.hasEngine(changedFilePath)
+				) {
+					return changedFilePath;
+				}
 
-		return false;
+				let eligibleConfigPath = configPaths.find((configPath) => {
+					if (TemplatePath.startsWithSubPath(changedFilePath, configPath.inputPath)) {
+						return true;
+					}
+					if (configPath.isDynamicPattern && isGlobMatch(changedFilePath, [configPath.inputPath])) {
+						return true;
+					}
+				});
+
+				// importantly: returns config path, not changed file path
+				if (eligibleConfigPath && !matchedConfigPaths.has(eligibleConfigPath.inputPath)) {
+					matchedConfigPaths.add(eligibleConfigPath.inputPath);
+					return eligibleConfigPath;
+				}
+
+				return false;
+			})
+			.filter(Boolean);
 	}
 
 	getAllNormalizedPaths(paths = []) {
 		if (Array.isArray(this.incrementalFiles) && this.incrementalFiles.length > 0) {
-			let isPassthrough = this.isPassthroughCopyFile(paths, this.incrementalFiles);
+			let passthroughIncrementalFiles = this.filterToPassthroughCopyFilesOnly(
+				paths,
+				this.incrementalFiles,
+			);
+			if (passthroughIncrementalFiles.length > 0) {
+				return passthroughIncrementalFiles.map((file) => {
+					if (file.outputPath) {
+						return file;
+					}
 
-			if (isPassthrough) {
-				if (isPassthrough.outputPath) {
-					return [isPassthrough];
-				}
-
-				return this.incrementalFiles.map((file) => this.#normalizePath(file));
+					return this.#normalizePath(file);
+				});
 			}
 
 			// Fixes https://github.com/11ty/eleventy/issues/2491
