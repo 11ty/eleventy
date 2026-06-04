@@ -1,20 +1,30 @@
 import module from "node:module";
-import { MessageChannel } from "node:worker_threads";
+import { fileURLToPath } from "../Adapters/Packages/url.js";
+import PathNormalizer from "./PathNormalizer.js";
+import { resolve, addToModifiedPaths } from "./EsmResolver.js";
 
-const { port1, port2 } = new MessageChannel();
+// ESM Cache Buster
+// - registerHooks requires Node 22.15+ (and is sync only, shipped with v4.0.0-alpha.8)
+// - Previous approach was a progressive enhancement using deprecated module.register, Node 18.19+ https://nodejs.org/docs/latest/api/module.html#moduleregisterspecifier-parenturl-options
 
-// ESM Cache Buster is an enhancement that works in Node 18.19+
-// https://nodejs.org/docs/latest/api/module.html#moduleregisterspecifier-parenturl-options
 // Fixes https://github.com/11ty/eleventy/issues/3270
+
 // ENV variable for https://github.com/11ty/eleventy/issues/3371
-if ("register" in module && !process?.env?.ELEVENTY_SKIP_ESM_RESOLVER) {
-	module.register("./EsmResolver.js", import.meta.url, {
-		parentURL: import.meta.url,
-		data: {
-			port: port2,
-		},
-		transferList: [port2],
-	});
+if (!process?.env?.ELEVENTY_SKIP_ESM_RESOLVER) {
+	if ("registerHooks" in module) {
+		module.registerHooks({
+			// sync-only
+			resolve,
+		});
+	}
 }
 
-export { port1 };
+export function addModifiedPath(path, date) {
+	if (process?.env?.ELEVENTY_SKIP_ESM_RESOLVER) {
+		return;
+	}
+
+	if ("registerHooks" in module) {
+		addToModifiedPaths(path, date);
+	}
+}

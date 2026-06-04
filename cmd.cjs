@@ -114,8 +114,11 @@ async function exec() {
 		// Only relevant for watch/serve
 		elev.setIgnoreInitial(argv["ignore-initial"]);
 
+		// v4.0.0-alpha.8 multiple now supported via:
+		// --incremental=one.md --incremental=two.md => ["one.md", "two.md"]
+		// --incremental=one.md,two.md => ["one.md", "two.md"]
 		if(argv.incremental) {
-			elev.setIncrementalFile(argv.incremental);
+			elev.setIncrementalFiles(argv.incremental);
 		} else if(argv.incremental !== undefined) {
 			elev.setIncrementalBuild(argv.incremental === "" || argv.incremental);
 		}
@@ -133,6 +136,8 @@ async function exec() {
 			}
 
 			process.on("SIGINT", async () => {
+				elev.interrupt();
+
 				await elev.stopWatch();
 				process.exitCode = 0;
 			});

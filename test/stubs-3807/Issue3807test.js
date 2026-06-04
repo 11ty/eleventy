@@ -1,24 +1,23 @@
 import test from "ava";
 import fs from "node:fs";
 import Eleventy from "../../src/Eleventy.js";
-import { withResolvers } from "../../src/Util/PromiseUtil.js";
 
 // This tests Eleventy Watch and the file system!
 
 test("#3807 Nunjucks cacheable should be reused when Nunjucks is the preprocessor language", async (t) => {
   let runs = [
     {
-      ...withResolvers(),
+      ...Promise.withResolvers(),
       input: `<html>first{% block main %}{{ content | safe }}{% endblock %}</html>`,
       expected: `<html>firstHome<p>Index</p></html>`,
     },
     {
-      ...withResolvers(),
+      ...Promise.withResolvers(),
       input: `<html>second{% block main %}{{ content | safe }}{% endblock %}</html>`,
       expected: `<html>secondHome<p>Index</p></html>`,
     },
     {
-      ...withResolvers(),
+      ...Promise.withResolvers(),
       input: `<html>third{% block main %}{{ content | safe }}{% endblock %}</html>`,
       expected: `<html>thirdHome<p>Index</p></html>`,
     }

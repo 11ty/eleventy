@@ -606,7 +606,7 @@ ${previousContents}
   fs.writeFileSync(includeFilePath, newContents, "utf8");
 
   // This also triggers that the file has changed in the event bus via setPreviousBuildModifiedFile
-  elev.setIncrementalFile(includeFilePath);
+  elev.setIncrementalFiles(includeFilePath);
 
   let results3 = await elev.toJSON();
   t.is(

@@ -17,6 +17,8 @@ jobs:
         with:
           node-version: "22"
           registry-url: 'https://registry.npmjs.org'
+          # Explicit opt out of cache (tanstack cache poison vuln)
+          package-manager-cache: false
       - run: npm install -g npm@latest
       - if: ${{ github.event.release.tag_name != '' && env.NPM_PUBLISH_TAG != '' }}
         # Also runs npm ci and npm test

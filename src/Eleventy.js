@@ -16,7 +16,6 @@ import PathPrefixer from "./Util/PathPrefixer.js";
 import PathNormalizer from "./Util/PathNormalizer.js";
 import { isGlobMatch } from "./Util/GlobMatcher.js";
 import eventBus from "./EventBus.js";
-import { withResolvers } from "./Util/PromiseUtil.js";
 
 const debug = debugUtil("Eleventy");
 
@@ -27,27 +26,16 @@ export default class Eleventy extends Core {
 	/** @type {WatchQueue} */
 	#watchQueue;
 
+	#watchDelay;
+	#interrupted = false;
+
 	// constructor(input, output, options = {}, eleventyConfig = null) {
 	// 	super(input, output, options, eleventyConfig);
 	// }
 
-	/**
-	 * Sets the incremental build mode.
-	 *
-	 * @param {boolean} isIncremental - Shall Eleventy run in incremental build mode and only write the files that trigger watch updates
-	 */
-	setIncrementalBuild(isIncremental) {
-		super.setIncrementalBuild(isIncremental);
-
-		if (this.#watchQueue) {
-			this.watchQueue.incremental = !!isIncremental;
-		}
-	}
-
 	get watchQueue() {
 		if (!this.#watchQueue) {
 			this.#watchQueue = new WatchQueue();
-			this.#watchQueue.incremental = this.isIncremental;
 		}
 		return this.#watchQueue;
 	}
@@ -97,32 +85,14 @@ export default class Eleventy extends Core {
 	 * @param {string} changedFilePath - File that triggered a re-run (added or modified)
 	 * @param {boolean} [isResetConfig] - are we doing a config reset
 	 */
-	async #addFileToWatchQueue(changedFilePath, isResetConfig) {
-		// Currently this is only for 11ty.js deps but should be extended with usesGraph
-		let usedByDependants = [];
-		if (this.watchTargets) {
-			usedByDependants = this.watchTargets.getDependantsOf(
-				TemplatePath.addLeadingDotSlash(changedFilePath),
-			);
-		}
+	#resetFileInWatchQueue(changedFilePath, isResetConfig) {
+		// v3.1.0: `eleventy.templateModified` is no longer used internally
+		// v4.0.0-alpha.8 `eleventy.templateModified` event removed
 
-		let relevantLayouts = this.eleventyConfig.usesGraph.getLayoutsUsedBy(changedFilePath);
-
-		// `eleventy.templateModified` is no longer used internally, remove in a future major version.
-		eventBus.emit("eleventy.templateModified", changedFilePath, {
-			usedByDependants,
-			relevantLayouts,
-		});
-
-		// These listeners are *global*, not cleared even on config reset
-		eventBus.emit("eleventy.resourceModified", changedFilePath, usedByDependants, {
-			viaConfigReset: isResetConfig,
-			relevantLayouts,
-		});
+		// These listeners are *global*, not cleared even on config reset (v4.0.0-alpha.8 removed some arguments here)
+		eventBus.emit("eleventy.resourceModified", changedFilePath);
 
 		this.config.events.emit("eleventy#templateModified", changedFilePath);
-
-		this.watchQueue.addToPendingQueue(changedFilePath);
 	}
 
 	shouldTriggerConfigReset(changedFiles) {
@@ -170,14 +140,25 @@ export default class Eleventy extends Core {
 		);
 	}
 
-	async #rewatch(isResetConfig = false) {
+	async #rewatch() {
 		if (this.watchQueue.isBuildRunning()) {
+			// this.logger.forceLog("Waiting for previous build to finish…");
 			return;
 		}
 
-		this.watchQueue.setBuildRunning();
+		this.watchQueue.startBuild();
 
 		let queue = this.watchQueue.getActiveQueue();
+		let isResetConfig = this.#shouldResetConfig(queue);
+
+		for (let p of queue) {
+			this.#resetFileInWatchQueue(p, isResetConfig);
+		}
+
+		this.logger.forceLog(
+			`Build starting${queue.length > 1 ? ` (${queue.length} queued changes)` : ""}…` +
+				(isResetConfig ? " (configuration reset)" : ""),
+		);
 
 		await this.config.events.emit("beforeWatch", queue);
 		await this.config.events.emit("eleventy.beforeWatch", queue);
@@ -222,15 +203,13 @@ export default class Eleventy extends Core {
 				);
 			});
 
-			let files = this.watchQueue.getActiveQueue();
-
 			// Maps passthrough copy files to output URLs for CSS live reload
 			let stylesheetUrls = new Set();
 			for (let entry of passthroughCopyResults) {
 				for (let filepath in entry.map) {
 					if (
 						filepath.endsWith(".css") &&
-						files.includes(TemplatePath.addLeadingDotSlash(filepath))
+						queue.includes(TemplatePath.addLeadingDotSlash(filepath))
 					) {
 						stylesheetUrls.add(
 							"/" + TemplatePath.stripLeadingSubPath(entry.map[filepath], this.outputDir),
@@ -251,7 +230,7 @@ export default class Eleventy extends Core {
 				});
 
 			await this.eleventyServe.reload({
-				files,
+				files: queue,
 				subtype: onlyCssChanges ? "css" : undefined,
 				build: {
 					stylesheets: Array.from(stylesheetUrls),
@@ -264,17 +243,26 @@ export default class Eleventy extends Core {
 			});
 		}
 
-		this.watchQueue.setBuildFinished();
+		this.watchQueue.finishBuild();
 
-		let queueSize = this.watchQueue.getPendingQueueSize();
-		if (queueSize > 0) {
-			this.logger.log(
-				`You saved while Eleventy was running, let’s run again. (${queueSize} change${
-					queueSize !== 1 ? "s" : ""
-				})`,
-			);
+		// Re-fetch
+		let pendingQueue = this.watchQueue.getPendingQueue();
+		if (pendingQueue.length > 0) {
 			await this.#rewatch();
+		} else if (!this.#interrupted) {
+			// also logs in startWatch for initial build
+			this.logger.forceLog(`Waiting…`);
 		}
+	}
+
+	/*
+	 * SIGINT
+	 */
+	interrupt() {
+		this.#interrupted = true;
+
+		// Clear the queue to prevent additional builds
+		this.watchQueue.reset();
 	}
 
 	/**
@@ -282,6 +270,44 @@ export default class Eleventy extends Core {
 	 */
 	get watcherBench() {
 		return this.bench.get("Watcher");
+	}
+
+	async waitThrottle() {
+		if (this.#watchDelay) {
+			clearTimeout(this.#watchDelay);
+		}
+
+		if (this.config.watchThrottleWaitTime > 0) {
+			let { promise, resolve } = Promise.withResolvers();
+
+			this.#watchDelay = setTimeout(resolve, this.config.watchThrottleWaitTime);
+
+			return promise;
+		}
+	}
+
+	// Triggers when files are modified on file system
+	async triggerWatchRunForPath(path) {
+		this.watchQueue.addToPendingQueue(path);
+
+		await this.waitThrottle();
+
+		try {
+			await this.#rewatch();
+		} catch (e) {
+			this.watchQueue.finishBuild();
+
+			if (e instanceof EleventyBaseError) {
+				this.errorHandler.error(e, "Eleventy watch error");
+			} else {
+				this.errorHandler.fatal(e, "Eleventy fatal watch error");
+				await this.close();
+			}
+		}
+
+		// Internal event for testing
+		// v4.0.0-alpha.8 swapped to async-friendly
+		await this.config.events.emit("eleventy.afterwatch");
 	}
 
 	/**
@@ -325,73 +351,48 @@ export default class Eleventy extends Core {
 
 		await this.watcher.start();
 
-		this.logger.forceLog("Watching…");
-
-		let watchDelay;
-		let watchRun = async (path) => {
-			path = TemplatePath.normalize(path);
-			try {
-				let isResetConfig = this.#shouldResetConfig([path]);
-				this.#addFileToWatchQueue(path, isResetConfig);
-
-				clearTimeout(watchDelay);
-
-				let { promise, resolve, reject } = withResolvers();
-
-				watchDelay = setTimeout(async () => {
-					this.#rewatch(isResetConfig).then(resolve, reject);
-				}, this.config.watchThrottleWaitTime);
-
-				await promise;
-			} catch (e) {
-				if (e instanceof EleventyBaseError) {
-					this.errorHandler.error(e, "Eleventy watch error");
-					this.watchQueue.setBuildFinished();
-				} else {
-					this.errorHandler.fatal(e, "Eleventy fatal watch error");
-					await this.close();
-				}
-			}
-
-			this.config.events.emit("eleventy.afterwatch");
-		};
+		// This logs in #rewatch for rebuilds
+		if (this.buildCount <= 1) {
+			this.logger.forceLog("Waiting…");
+		}
 
 		this.watcher.on("change", async (path) => {
 			// Emulated passthrough copy logs from the server
 			if (!this.eleventyServe.isEmulatedPassthroughCopyMatch(path)) {
 				this.logger.forceLog(
-					`File changed: ${TemplatePath.stripLeadingDotSlash(TemplatePath.standardizeFilePath(path))}`,
+					`File changed: ${TemplatePath.stripLeadingDotSlash(TemplatePath.standardizeFilePath(path))}${this.watchQueue.isBuildRunning() ? " (queued for next build)" : ""}`,
 				);
 			}
 
-			await watchRun(path);
+			// don’t await
+			this.triggerWatchRunForPath(path);
 		});
 
 		this.watcher.on("add", async (path) => {
 			// Emulated passthrough copy logs from the server
 			if (!this.eleventyServe.isEmulatedPassthroughCopyMatch(path)) {
 				this.logger.forceLog(
-					`File added: ${TemplatePath.stripLeadingDotSlash(TemplatePath.standardizeFilePath(path))}`,
+					`File added: ${TemplatePath.stripLeadingDotSlash(TemplatePath.standardizeFilePath(path))}${this.watchQueue.isBuildRunning() ? " (queued for next build)" : ""}`,
 				);
 			}
 
 			this.fileSystemSearch.add(path);
-			await watchRun(path);
+			// don’t await
+			this.triggerWatchRunForPath(path);
 		});
 
 		this.watcher.on("unlink", async (path) => {
 			// Emulated passthrough copy logs from the server
 			if (!this.eleventyServe.isEmulatedPassthroughCopyMatch(path)) {
 				this.logger.forceLog(
-					`File deleted: ${TemplatePath.stripLeadingDotSlash(TemplatePath.standardizeFilePath(path))}`,
+					`File deleted: ${TemplatePath.stripLeadingDotSlash(TemplatePath.standardizeFilePath(path))}${this.watchQueue.isBuildRunning() ? " (queued for next build)" : ""}`,
 				);
 			}
-			this.fileSystemSearch.delete(path);
-			await watchRun(path);
-		});
 
-		// For testability
-		return watchRun;
+			this.fileSystemSearch.delete(path);
+			// don’t await
+			this.triggerWatchRunForPath(path);
+		});
 	}
 
 	/**
@@ -461,14 +462,11 @@ export default class Eleventy extends Core {
 		let initWatchBench = this.watcherBench.get("Start up --watch");
 		initWatchBench.before();
 
-		let watchRun = await this.startWatch();
+		await this.startWatch();
 
 		initWatchBench.after();
 
 		this.watcherBench.finish("Watch");
-
-		// Returns for testability
-		return watchRun;
 	}
 
 	// Renamed to close()
@@ -534,8 +532,9 @@ Arguments:
      --incremental
        Only build the files that have changed. Best with watch/serve.
 
-     --incremental=filename.md
-       Does not require watch/serve. Run an incremental build targeting a single file.
+     --incremental=first.md,second.md
+     --incremental=first.md --incremental=second.md
+       Does not require watch/serve. Run an incremental build targeting one or more files.
 
      --ignore-initial
        Start without a build; build when files change. Works best with watch/serve/incremental.

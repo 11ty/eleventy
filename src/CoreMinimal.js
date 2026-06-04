@@ -377,11 +377,7 @@ export class MinimalCore {
 	 * @param {boolean} isIncremental - Shall Eleventy run in incremental build mode and only write the files that trigger watch updates
 	 */
 	setIncrementalBuild(isIncremental) {
-		this.isIncremental = !!isIncremental;
-
-		if (this.writer) {
-			this.writer.setIncrementalBuild(this.isIncremental);
-		}
+		this.isIncremental = Boolean(isIncremental);
 	}
 
 	/**
@@ -488,7 +484,6 @@ export class MinimalCore {
 		this.writer.logger = this.logger;
 		this.writer.extensionMap = this.extensionMap;
 		this.writer.setRunInitialBuild(this.isRunInitialBuild);
-		this.writer.setIncrementalBuild(this.isIncremental);
 
 		let debugStr = `Directories:
   Input:
@@ -662,29 +657,37 @@ Verbose Output: ${this.verboseMode}`;
 	 * This method is also wired up to the CLI --incremental=incrementalFile
 	 *
 	 * @method
-	 * @param {string} incrementalFile - File path (added or modified in a project)
+	 * @param {Array|string} incrementalFiles - File path (added or modified in a project)
 	 */
-	setIncrementalFile(incrementalFile) {
-		if (incrementalFile) {
-			// This used to also setIgnoreInitial(true) but was changed in 3.0.0-alpha.14
-			this.setIncrementalBuild(true);
-
-			this.programmaticApiIncrementalFile = TemplatePath.addLeadingDotSlash(incrementalFile);
-
-			// Used to determind template relevance for compile cache keys
-			this.eleventyConfig.setPreviousBuildModifiedFile(incrementalFile);
+	setIncrementalFiles(incrementalFiles) {
+		if (!incrementalFiles) {
+			return;
 		}
+
+		// This used to also setIgnoreInitial(true) but was changed in 3.0.0-alpha.14
+		this.setIncrementalBuild(true);
+
+		let files;
+		if (typeof incrementalFiles === "string") {
+			files = incrementalFiles.split(",");
+		} else if (Array.isArray(incrementalFiles)) {
+			files = incrementalFiles;
+		} else {
+			throw new Error("Invalid argument for setIncrementalFiles, needs string or Array");
+		}
+
+		let normalized = files.map((p) => TemplatePath.addLeadingDotSlash(p));
+
+		// Saved from --incremental
+		this.programmaticApiIncrementalFile = normalized;
+
+		// Also used to determind template relevance for compile cache keys
+		this.watchQueue?.setActiveQueue(normalized);
 	}
 
-	unsetIncrementalFile() {
-		// only applies to initial build, no re-runs (--watch/--serve)
-		if (this.programmaticApiIncrementalFile) {
-			// this.setIgnoreInitial(false);
-			this.programmaticApiIncrementalFile = undefined;
-		}
-
-		// reset back to false
-		this.setIgnoreInitial(false);
+	// Backwards compatibility (rename in v4.0.0-alpha.8)
+	setIncrementalFile(incrementalFile) {
+		this.setIncrementalFiles(incrementalFile);
 	}
 
 	/**
@@ -772,6 +775,20 @@ Verbose Output: ${this.verboseMode}`;
 		throw new Error("Feature removed in Eleventy v4: https://github.com/11ty/eleventy/issues/3382");
 	}
 
+	/*
+	 * If the active queue has a mix of template/non-template files (includes, etc), swap to run a full build
+	 */
+	isIncrementalBuildPossible(queuedFiles = []) {
+		let hasNonTemplateFiles = Boolean(
+			queuedFiles.find((path) => !this.directories.isTemplateFile(path)),
+		);
+		if (hasNonTemplateFiles) {
+			return false;
+		}
+
+		return true;
+	}
+
 	/**
 	 * tbd.
 	 *
@@ -797,10 +814,10 @@ Verbose Output: ${this.verboseMode}`;
 			);
 		}
 
-		let incrementalFile =
-			this.programmaticApiIncrementalFile || this.watchQueue?.getIncrementalFile();
-		if (incrementalFile) {
-			this.writer.setIncrementalFile(incrementalFile);
+		let incrementalFiles = this.watchQueue?.getActiveQueue() || [];
+		if (this.isIncremental && this.isIncrementalBuildPossible(incrementalFiles)) {
+			// This really controls whether a build is incremental or not (internally)
+			this.writer.setIncrementalFiles(incrementalFiles);
 		}
 
 		let returnObj;
@@ -856,8 +873,10 @@ Verbose Output: ${this.verboseMode}`;
 				returnObj = [resolved.passthroughCopy, resolved.templates];
 			}
 
-			this.unsetIncrementalFile();
-			this.writer.resetIncrementalFile();
+			// always reset after first build
+			this.setIgnoreInitial(false);
+			this.writer.resetIncremental();
+			this.config.events.emit("eleventy#previousqueue", incrementalFiles);
 
 			eventsArg.uses = this.eleventyConfig.usesGraph.map;
 			await this.config.events.emit("afterBuild", eventsArg);

@@ -11,7 +11,6 @@ import {
 import TemplateEngine from "./TemplateEngine.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import { augmentObject } from "./Util/ContextAugmenter.js";
-import { withResolvers } from "../Util/PromiseUtil.js";
 
 const debug = debugUtil("Eleventy:Nunjucks");
 
@@ -500,7 +499,7 @@ export default class Nunjucks extends TemplateEngine {
 		}
 
 		return function (data) {
-			let { promise, resolve, reject } = withResolvers();
+			let { promise, resolve, reject } = Promise.withResolvers();
 
 			tmpl.render(data, (error, result) => {
 				if (error) {

@@ -1,4 +1,4 @@
-import { existsSync, statSync, readFileSync } from "node:fs";
+import { statSync, readFileSync } from "node:fs";
 
 import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
@@ -188,7 +188,8 @@ class EleventyFiles {
 		return Array.from(uniqueIgnores);
 	}
 
-	static getFileIgnores(ignoreFiles) {
+	// v4.0.0-alpha.8 swapped from static to use existsCache
+	getFileIgnores(ignoreFiles) {
 		if (!Array.isArray(ignoreFiles)) {
 			ignoreFiles = [ignoreFiles];
 		}
@@ -197,12 +198,11 @@ class EleventyFiles {
 		for (let ignorePath of ignoreFiles) {
 			ignorePath = TemplatePath.normalize(ignorePath);
 
-			let dir = TemplatePath.getDirFromFilePath(ignorePath);
-
-			if (existsSync(ignorePath)) {
+			if (this.templateConfig.existsCache.exists(ignorePath)) {
 				let ignoreContent = readFileSync(ignorePath, "utf8");
 				if (ignoreContent) {
-					ignores = ignores.concat(EleventyFiles.normalizeIgnoreContent(dir, ignoreContent));
+					let dir = TemplatePath.getDirFromFilePath(ignorePath);
+					ignores = ignores.concat(this.normalizeIgnoreContent(dir, ignoreContent));
 				}
 			}
 		}
@@ -212,7 +212,8 @@ class EleventyFiles {
 		return ignores;
 	}
 
-	static normalizeIgnoreContent(dir, ignoreContent) {
+	// v4.0.0-alpha.8 swapped from static to use existsCache
+	normalizeIgnoreContent(dir, ignoreContent) {
 		let ignores = [];
 
 		if (ignoreContent) {
@@ -237,16 +238,10 @@ class EleventyFiles {
 					let path = TemplateGlob.normalizePath(dir, "/", line);
 					path = TemplatePath.addLeadingDotSlash(TemplatePath.relativePath(path));
 
-					try {
-						// Note these folders must exist to get /** suffix
-						let stat = statSync(path);
-						if (stat.isDirectory()) {
-							return path + "/**";
-						}
-						return path;
-					} catch (e) {
-						return path;
+					if (this.templateConfig.existsCache.isDirectory(path)) {
+						return path + "/**";
 					}
+					return path;
 				});
 		}
 
@@ -261,7 +256,7 @@ class EleventyFiles {
 	getIgnores() {
 		let files = new Set();
 
-		for (let ignore of EleventyFiles.getFileIgnores(this.getIgnoreFiles())) {
+		for (let ignore of this.getFileIgnores(this.getIgnoreFiles())) {
 			files.add(ignore);
 		}
 
@@ -363,36 +358,27 @@ class EleventyFiles {
 		return paths;
 	}
 
-	getFileShape(paths, filePath) {
-		if (!filePath) {
-			return;
-		}
-		if (this.isPassthroughCopyFile(paths, filePath)) {
-			return "copy";
-		}
-		if (this.isFullTemplateFile(paths, filePath)) {
-			return "template";
-		}
-		// include/layout/unknown
-	}
-
-	isPassthroughCopyFile(paths, filePath) {
-		return this.passthroughManager.isPassthroughCopyFile(paths, filePath);
-	}
-
-	// Assumption here that filePath is not a passthrough copy file
-	isFullTemplateFile(paths, filePath) {
-		if (!filePath) {
-			return false;
+	getIncrementalFileShapes(paths, incrementalFilePaths) {
+		if (!incrementalFilePaths || incrementalFilePaths.length === 0) {
+			return {};
 		}
 
-		for (let path of paths) {
-			if (path === filePath) {
-				return true;
+		let passthroughIncrementalPaths = this.passthroughManager.filterToPassthroughCopyFilesOnly(
+			paths,
+			incrementalFilePaths,
+		);
+		let shapes = {};
+
+		for (let incrementalFilePath of incrementalFilePaths) {
+			if (passthroughIncrementalPaths.includes(incrementalFilePath)) {
+				shapes[incrementalFilePath] = "copy";
+			} else if (paths.includes(incrementalFilePath)) {
+				shapes[incrementalFilePath] = "template";
 			}
+			// otherwise: include/layout/unknown
 		}
 
-		return false;
+		return shapes;
 	}
 
 	/* For `eleventy --watch` */
