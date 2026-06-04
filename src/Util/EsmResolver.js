@@ -1,8 +1,8 @@
-import debugUtil from "debug";
+import { createDebug } from "obug";
 import { fileURLToPath } from "../Adapters/Packages/url.js";
 import PathNormalizer from "./PathNormalizer.js";
 
-const debug = debugUtil("Eleventy:EsmResolver");
+const debug = createDebug("Eleventy:EsmResolver");
 
 let lastModifiedPaths = new Map();
 

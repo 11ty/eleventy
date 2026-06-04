@@ -1,7 +1,7 @@
-import debugUtil from "debug";
+import { createDebug } from "obug";
 import chalk from "../Adapters/Packages/chalk.js";
 
-const debug = debugUtil("Eleventy:Logger");
+const debug = createDebug("Eleventy:Logger");
 
 /**
  * Logger implementation that logs to STDOUT.

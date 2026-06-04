@@ -1,10 +1,10 @@
 import { existsSync } from "node:fs";
-import debugUtil from "debug";
+import { createDebug } from "obug";
 import { TemplatePath } from "@11ty/eleventy-utils";
 
 import { importJsonSync, eleventyPackageJson } from "./RequireUtils.js";
 
-const debug = debugUtil("Eleventy:ImportJsonSync");
+const debug = createDebug("Eleventy:ImportJsonSync");
 
 function findFilePathInParentDirs(dir, filename) {
 	// `package.json` searches look in parent dirs:

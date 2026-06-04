@@ -1,5 +1,5 @@
 import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
-import debugUtil from "debug";
+import { createDebug } from "obug";
 
 import chalk from "./Adapters/Packages/chalk.js";
 import getDefaultConfig from "./Adapters/getDefaultConfig.js";
@@ -12,8 +12,8 @@ import eventBus from "./EventBus.js";
 import ProjectTemplateFormats from "./Util/ProjectTemplateFormats.js";
 import { isTypeScriptSupported } from "./Util/FeatureTests.cjs";
 
-const debug = debugUtil("Eleventy:TemplateConfig");
-const debugDev = debugUtil("Dev:Eleventy:TemplateConfig");
+const debug = createDebug("Eleventy:TemplateConfig");
+const debugDev = createDebug("Dev:Eleventy:TemplateConfig");
 
 /**
  * @module 11ty/eleventy/TemplateConfig

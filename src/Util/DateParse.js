@@ -1,7 +1,7 @@
-import debugUtil from "debug";
+import { createDebug } from "obug";
 import { IsoDate } from "@11ty/parse-date-strings";
 
-const debug = debugUtil("Eleventy:DateTime");
+const debug = createDebug("Eleventy:DateTime");
 
 export function fromISOtoDateUTC(dateValue, inputPath) {
 	// This has had a UTC default since the beginnning:

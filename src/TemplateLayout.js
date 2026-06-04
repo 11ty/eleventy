@@ -1,12 +1,11 @@
 import { Merge, TemplatePath } from "@11ty/eleventy-utils";
-import debugUtil from "debug";
+import { createDebug } from "obug";
 
 import TemplateLayoutPathResolver from "./TemplateLayoutPathResolver.js";
 import TemplateContent from "./TemplateContent.js";
 import layoutCache from "./LayoutCache.js";
 
-// const debug = debugUtil("Eleventy:TemplateLayout");
-const debugDev = debugUtil("Dev:Eleventy:TemplateLayout");
+const debugDev = createDebug("Dev:Eleventy:TemplateLayout");
 
 // https://github.com/11ty/eleventy/issues/3954
 class CdataWrapper {
@@ -41,6 +40,8 @@ class CdataWrapper {
 }
 
 class TemplateLayout extends TemplateContent {
+	#dataCache;
+
 	constructor(key, extensionMap, eleventyConfig) {
 		if (!eleventyConfig || eleventyConfig.constructor.name !== "TemplateConfig") {
 			throw new Error("Expected `eleventyConfig` in TemplateLayout constructor.");
@@ -181,11 +182,11 @@ class TemplateLayout extends TemplateContent {
 	}
 
 	async getData() {
-		if (!this.dataCache) {
-			this.dataCache = this.#getData();
+		if (!this.#dataCache) {
+			this.#dataCache = this.#getData();
 		}
 
-		return this.dataCache;
+		return this.#dataCache;
 	}
 
 	async #getCachedCompiledLayoutFunction() {
@@ -273,7 +274,7 @@ class TemplateLayout extends TemplateContent {
 
 	resetCaches(types) {
 		super.resetCaches(types);
-		delete this.dataCache;
+		this.#dataCache = undefined;
 		delete this.layoutChain;
 		delete this.cachedLayoutMap;
 		delete this.cachedCompiledLayoutFunction;

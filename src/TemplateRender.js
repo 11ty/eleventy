@@ -1,8 +1,8 @@
-import debugUtil from "debug";
+import { createDebug } from "obug";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import TemplateEngineManager from "./Engines/TemplateEngineManager.js";
 
-const debugConfiguration = debugUtil("Eleventy:UserConfig");
+const debugConfiguration = createDebug("Eleventy:UserConfig");
 
 class TemplateRenderUnknownEngineError extends EleventyBaseError {}
 

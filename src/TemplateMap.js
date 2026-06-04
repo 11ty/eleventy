@@ -1,5 +1,5 @@
 import { isPlainObject, TemplatePath } from "@11ty/eleventy-utils";
-import debugUtil from "debug";
+import { createDebug } from "obug";
 
 import TemplateCollection from "./TemplateCollection.js";
 import EleventyErrorUtil from "./Errors/EleventyErrorUtil.js";
@@ -8,7 +8,7 @@ import DuplicatePermalinkOutputError from "./Errors/DuplicatePermalinkOutputErro
 import TemplateData from "./Data/TemplateData.js";
 import GlobalDependencyMap from "./GlobalDependencyMap.js";
 
-const debug = debugUtil("Eleventy:TemplateMap");
+const debug = createDebug("Eleventy:TemplateMap");
 
 // These template URL filenames are allowed to exclude file extensions
 const EXTENSIONLESS_URL_ALLOWLIST = [
@@ -65,24 +65,22 @@ class TemplateMap {
 		}
 
 		let data = await template.getData();
-		let entries = await template.getTemplateMapEntries(data);
+		let map = await template.getTemplateMapEntry(data);
 		let { skippedVia } = await template.runPreprocessors(data);
 
-		if (skippedVia) {
+		if (!map || skippedVia) {
 			return;
 		}
 
-		for (let map of entries) {
-			this.map.push(map);
-			this._addToInputPathMap(map); // NEW: Add to lookup Map for O(1) access
-		}
+		this.map.push(map);
+		this.#addToInputPathMap(map); // NEW: Add to lookup Map for O(1) access
 	}
 
 	getMap() {
 		return this.map;
 	}
 
-	_addToInputPathMap(mapEntry) {
+	#addToInputPathMap(mapEntry) {
 		// Store under absolute path
 		let absoluteInputPath = TemplatePath.absolutePath(mapEntry.inputPath);
 		this.inputPathMap.set(absoluteInputPath, mapEntry);

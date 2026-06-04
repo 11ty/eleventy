@@ -8,8 +8,9 @@ import FileSystemSearch from "../src/FileSystemSearch.js";
 import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
 import EleventyErrorUtil from "../src/Errors/EleventyErrorUtil.js";
 import TemplateContentPrematureUseError from "../src/Errors/TemplateContentPrematureUseError.js";
-import { normalizeNewLines } from "./Util/normalizeNewLines.js";
+import { isTypeScriptSupported } from "../src/Util/FeatureTests.cjs";
 
+import { normalizeNewLines } from "./Util/normalizeNewLines.js";
 import getNewTemplate from "./_getNewTemplateForTests.js";
 import { getRenderedTemplates as getRenderedTmpls, renderLayout, renderTemplate } from "./_getRenderedTemplates.js";
 import { getTemplateConfigInstance, getTemplateConfigInstanceCustomCallback } from "./_testHelpers.js";
@@ -27,17 +28,13 @@ function cleanHtml(str) {
 
 async function _testCompleteRender(tmpl) {
   let data = await tmpl.getData();
-  let entries = await tmpl.getTemplateMapEntries(data);
+  let entry = await tmpl.getTemplateMapEntry(data);
 
+  entry._pages = await entry.template.getTemplates(entry.data);
   let nestedContent = await Promise.all(
-    entries.map(async (entry) => {
-      entry._pages = await entry.template.getTemplates(entry.data);
-      return Promise.all(
-        entry._pages.map(async (page) => {
-          page.templateContent = await page.template.renderPageEntryWithoutLayout(page);
-          return page.template.renderPageEntry(page);
-        })
-      );
+    entry._pages.map(async (page) => {
+      page.templateContent = await page.template.renderPageEntryWithoutLayout(page);
+      return page.template.renderPageEntry(page);
     })
   );
 
@@ -477,11 +474,21 @@ test("Local template data file import (without a global data json)", async (t) =
   t.deepEqual(await dataObj.getLocalDataPaths(tmpl.getInputPath()), [
     "./test/stubs/stubs.json",
     "./test/stubs/stubs.11tydata.json",
+    ...(isTypeScriptSupported() ? [
+      "./test/stubs/stubs.11tydata.mts",
+      "./test/stubs/stubs.11tydata.cts",
+      "./test/stubs/stubs.11tydata.ts",
+    ] : []),
     "./test/stubs/stubs.11tydata.mjs",
     "./test/stubs/stubs.11tydata.cjs",
     "./test/stubs/stubs.11tydata.js",
     "./test/stubs/component/component.json",
     "./test/stubs/component/component.11tydata.json",
+    ...(isTypeScriptSupported() ? [
+      "./test/stubs/component/component.11tydata.mts",
+      "./test/stubs/component/component.11tydata.cts",
+      "./test/stubs/component/component.11tydata.ts",
+    ] : []),
     "./test/stubs/component/component.11tydata.mjs",
     "./test/stubs/component/component.11tydata.cjs",
     "./test/stubs/component/component.11tydata.js",
@@ -514,21 +521,41 @@ test("Local template data file import (two subdirectories deep)", async (t) => {
   t.deepEqual(await dataObj.getLocalDataPaths(tmpl.getInputPath()), [
     "./test/stubs/stubs.json",
     "./test/stubs/stubs.11tydata.json",
+    ...(isTypeScriptSupported() ? [
+      "./test/stubs/stubs.11tydata.mts",
+      "./test/stubs/stubs.11tydata.cts",
+      "./test/stubs/stubs.11tydata.ts",
+    ] : []),
     "./test/stubs/stubs.11tydata.mjs",
     "./test/stubs/stubs.11tydata.cjs",
     "./test/stubs/stubs.11tydata.js",
     "./test/stubs/firstdir/firstdir.json",
     "./test/stubs/firstdir/firstdir.11tydata.json",
+    ...(isTypeScriptSupported() ? [
+      "./test/stubs/firstdir/firstdir.11tydata.mts",
+      "./test/stubs/firstdir/firstdir.11tydata.cts",
+      "./test/stubs/firstdir/firstdir.11tydata.ts",
+    ] : []),
     "./test/stubs/firstdir/firstdir.11tydata.mjs",
     "./test/stubs/firstdir/firstdir.11tydata.cjs",
     "./test/stubs/firstdir/firstdir.11tydata.js",
     "./test/stubs/firstdir/seconddir/seconddir.json",
     "./test/stubs/firstdir/seconddir/seconddir.11tydata.json",
+    ...(isTypeScriptSupported() ? [
+      "./test/stubs/firstdir/seconddir/seconddir.11tydata.mts",
+      "./test/stubs/firstdir/seconddir/seconddir.11tydata.cts",
+      "./test/stubs/firstdir/seconddir/seconddir.11tydata.ts",
+    ] : []),
     "./test/stubs/firstdir/seconddir/seconddir.11tydata.mjs",
     "./test/stubs/firstdir/seconddir/seconddir.11tydata.cjs",
     "./test/stubs/firstdir/seconddir/seconddir.11tydata.js",
     "./test/stubs/firstdir/seconddir/component.json",
     "./test/stubs/firstdir/seconddir/component.11tydata.json",
+    ...(isTypeScriptSupported() ? [
+      "./test/stubs/firstdir/seconddir/component.11tydata.mts",
+      "./test/stubs/firstdir/seconddir/component.11tydata.cts",
+      "./test/stubs/firstdir/seconddir/component.11tydata.ts",
+    ] : []),
     "./test/stubs/firstdir/seconddir/component.11tydata.mjs",
     "./test/stubs/firstdir/seconddir/component.11tydata.cjs",
     "./test/stubs/firstdir/seconddir/component.11tydata.js",
@@ -560,16 +587,31 @@ test("Posts inherits local JSON, layouts", async (t) => {
   t.deepEqual(localDataPaths, [
     "./test/stubs/stubs.json",
     "./test/stubs/stubs.11tydata.json",
+    ...(isTypeScriptSupported() ? [
+      "./test/stubs/stubs.11tydata.mts",
+      "./test/stubs/stubs.11tydata.cts",
+      "./test/stubs/stubs.11tydata.ts",
+    ] : []),
     "./test/stubs/stubs.11tydata.mjs",
     "./test/stubs/stubs.11tydata.cjs",
     "./test/stubs/stubs.11tydata.js",
     "./test/stubs/posts/posts.json",
     "./test/stubs/posts/posts.11tydata.json",
+    ...(isTypeScriptSupported() ? [
+      "./test/stubs/posts/posts.11tydata.mts",
+      "./test/stubs/posts/posts.11tydata.cts",
+      "./test/stubs/posts/posts.11tydata.ts",
+    ] : []),
     "./test/stubs/posts/posts.11tydata.mjs",
     "./test/stubs/posts/posts.11tydata.cjs",
     "./test/stubs/posts/posts.11tydata.js",
     "./test/stubs/posts/post1.json",
     "./test/stubs/posts/post1.11tydata.json",
+    ...(isTypeScriptSupported() ? [
+      "./test/stubs/posts/post1.11tydata.mts",
+      "./test/stubs/posts/post1.11tydata.cts",
+      "./test/stubs/posts/post1.11tydata.ts",
+    ] : []),
     "./test/stubs/posts/post1.11tydata.mjs",
     "./test/stubs/posts/post1.11tydata.cjs",
     "./test/stubs/posts/post1.11tydata.js",
@@ -616,11 +658,21 @@ test("Template and folder name are the same, make sure data imports work ok", as
   t.deepEqual(localDataPaths, [
     "./test/stubs/stubs.json",
     "./test/stubs/stubs.11tydata.json",
+    ...(isTypeScriptSupported() ? [
+      "./test/stubs/stubs.11tydata.mts",
+      "./test/stubs/stubs.11tydata.cts",
+      "./test/stubs/stubs.11tydata.ts",
+    ] : []),
     "./test/stubs/stubs.11tydata.mjs",
     "./test/stubs/stubs.11tydata.cjs",
     "./test/stubs/stubs.11tydata.js",
     "./test/stubs/posts/posts.json",
     "./test/stubs/posts/posts.11tydata.json",
+    ...(isTypeScriptSupported() ? [
+      "./test/stubs/posts/posts.11tydata.mts",
+      "./test/stubs/posts/posts.11tydata.cts",
+      "./test/stubs/posts/posts.11tydata.ts",
+    ] : []),
     "./test/stubs/posts/posts.11tydata.mjs",
     "./test/stubs/posts/posts.11tydata.cjs",
     "./test/stubs/posts/posts.11tydata.js",
@@ -1297,7 +1349,8 @@ test("Throws a Premature Template Content Error from rendering (njk)", async (t)
   );
 
   let data = await tmpl.getData();
-  let mapEntries = await tmpl.getTemplateMapEntries(data);
+  await tmpl.getTemplateMapEntry(data);
+
   let pageEntries = await tmpl.getTemplates({
     page: {},
     sample: {
@@ -1367,7 +1420,8 @@ test("Throws a Premature Template Content Error from rendering (md)", async (t) 
   );
 
   let data = await tmpl.getData();
-  let mapEntries = await tmpl.getTemplateMapEntries(data);
+  await tmpl.getTemplateMapEntry(data);
+
   let pageEntries = await tmpl.getTemplates({
     page: {},
     sample: {

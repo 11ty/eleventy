@@ -1,4 +1,4 @@
-import debugUtil from "debug";
+import { createDebug } from "obug";
 import { Merge, TemplatePath } from "@11ty/eleventy-utils";
 
 import { Watch } from "./Watch.js";
@@ -21,7 +21,7 @@ import { getModulePackageJson } from "./Util/ImportJsonSync.js";
 import { EleventyImport } from "./Util/Require.js";
 import { isGlobMatch } from "./Util/GlobMatcher.js";
 
-const debug = debugUtil("Eleventy:EleventyServe");
+const debug = createDebug("Eleventy:EleventyServe");
 
 class EleventyServeConfigError extends EleventyBaseError {}
 

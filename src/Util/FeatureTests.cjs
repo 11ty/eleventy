@@ -5,8 +5,8 @@ function canRequireTypeScript() {
 	} catch(e) {
 		// Not supported in node_modules, but we know it is supported!
 		if(e.code === "ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING") {
-      return true;
-    }
+			return true;
+		}
 		return false;
 	}
 }
@@ -14,5 +14,9 @@ function canRequireTypeScript() {
 const TYPESCRIPT_ENABLED = canRequireTypeScript();
 
 module.exports.isTypeScriptSupported = function() {
+	if (process?.env?.ELEVENTY_SKIP_TYPESCRIPT) {
+		return false;
+	}
+
 	return TYPESCRIPT_ENABLED;
 }
