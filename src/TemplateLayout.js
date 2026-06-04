@@ -40,6 +40,8 @@ class CdataWrapper {
 }
 
 class TemplateLayout extends TemplateContent {
+	#dataCache;
+
 	constructor(key, extensionMap, eleventyConfig) {
 		if (!eleventyConfig || eleventyConfig.constructor.name !== "TemplateConfig") {
 			throw new Error("Expected `eleventyConfig` in TemplateLayout constructor.");
@@ -180,11 +182,11 @@ class TemplateLayout extends TemplateContent {
 	}
 
 	async getData() {
-		if (!this.dataCache) {
-			this.dataCache = this.#getData();
+		if (!this.#dataCache) {
+			this.#dataCache = this.#getData();
 		}
 
-		return this.dataCache;
+		return this.#dataCache;
 	}
 
 	async #getCachedCompiledLayoutFunction() {
@@ -272,7 +274,7 @@ class TemplateLayout extends TemplateContent {
 
 	resetCaches(types) {
 		super.resetCaches(types);
-		delete this.dataCache;
+		this.#dataCache = undefined;
 		delete this.layoutChain;
 		delete this.cachedLayoutMap;
 		delete this.cachedCompiledLayoutFunction;

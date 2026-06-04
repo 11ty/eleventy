@@ -176,7 +176,7 @@ class TemplateWriter {
 		return paths;
 	}
 
-	_createTemplate(path, to = "fs") {
+	createTemplate(path, to = "fs") {
 		let tmpl = this._templatePathCache.get(path);
 		let wasCached = false;
 
@@ -197,6 +197,7 @@ class TemplateWriter {
 		}
 
 		tmpl.setTransforms(this.config.transforms);
+		tmpl.setPreprocessors(this.config.preprocessors);
 		tmpl.setLinters(this.config.linters);
 		tmpl.setDryRun(this.isDryRun);
 		tmpl.setIsVerbose(this.isVerbose);
@@ -218,7 +219,7 @@ class TemplateWriter {
 
 		let promises = [];
 		for (let path of paths) {
-			let { template: tmpl } = this._createTemplate(path, to);
+			let { template: tmpl } = this.createTemplate(path, to);
 
 			// Note: removed a fix here to fetch missing templateRender instances
 			// that was tested as no longer needed (Issue #3170)
@@ -322,21 +323,13 @@ class TemplateWriter {
 				if (!cacheResetTracker.has(tmpl.inputPath)) {
 					// Related to the template but not the template (reset the render cache, not the read cache)
 					tmpl.resetCaches({
-						data: true,
 						render: true,
 					});
 				}
 
 				tmpl.setDryRunViaIncremental(false);
 			} else {
-				// During incremental we only reset the data cache for non-matching templates, see https://github.com/11ty/eleventy/issues/2710
-				// Keep caches for read/render
-				if (!cacheResetTracker.has(tmpl.inputPath)) {
-					tmpl.resetCaches({
-						data: true,
-					});
-				}
-
+				// During incremental we don’t reset cache here, keep cache for read/reader (data cache is always reset elsewhere), see https://github.com/11ty/eleventy/issues/2710
 				tmpl.setDryRunViaIncremental(true);
 
 				this.skippedCount++;
@@ -352,7 +345,7 @@ class TemplateWriter {
 		let ignoreInitialBuild = !this.isRunInitialBuild;
 		let promises = [];
 		for (let path of paths) {
-			let { template: tmpl, wasCached } = this._createTemplate(path, to);
+			let { template: tmpl, wasCached } = this.createTemplate(path, to);
 			// Render overrides are only used when `--ignore-initial` is in play and an initial build is not run
 			if (ignoreInitialBuild) {
 				tmpl.setRenderableOverride(false); // disable render

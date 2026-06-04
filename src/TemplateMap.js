@@ -65,24 +65,22 @@ class TemplateMap {
 		}
 
 		let data = await template.getData();
-		let entries = await template.getTemplateMapEntries(data);
+		let map = await template.getTemplateMapEntry(data);
 		let { skippedVia } = await template.runPreprocessors(data);
 
-		if (skippedVia) {
+		if (!map || skippedVia) {
 			return;
 		}
 
-		for (let map of entries) {
-			this.map.push(map);
-			this._addToInputPathMap(map); // NEW: Add to lookup Map for O(1) access
-		}
+		this.map.push(map);
+		this.#addToInputPathMap(map); // NEW: Add to lookup Map for O(1) access
 	}
 
 	getMap() {
 		return this.map;
 	}
 
-	_addToInputPathMap(mapEntry) {
+	#addToInputPathMap(mapEntry) {
 		// Store under absolute path
 		let absoluteInputPath = TemplatePath.absolutePath(mapEntry.inputPath);
 		this.inputPathMap.set(absoluteInputPath, mapEntry);

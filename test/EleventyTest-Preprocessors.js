@@ -320,7 +320,7 @@ test("Tags in pages excluded with preprocessing should not populate collections 
   t.is(pages[0].content, "Hello yep");
 });
 
-test("#4292: Preprocessors run twice during incremental and config reset", async (t) => {
+test("#4292: Preprocessors should only run once per build (bug running twice during incremental and config reset)", async (t) => {
   t.plan(3);
 
   let preprocessorRuns = 0;
@@ -344,4 +344,34 @@ test("#4292: Preprocessors run twice during incremental and config reset", async
   t.is(results.length, 1);
   t.is(results[0].content, `Hello Before Suffix`);
   t.is(preprocessorRuns, 2);
+});
+
+test("#4292: Preprocessors mutable data", async (t) => {
+  t.plan(9);
+
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addPreprocessor("drafts", ".njk", (data, content) => {
+        t.is(data.title, "Title");
+        data.title += " (draft)";
+        t.is(data.title, "Title (draft)");
+        t.is(content, "Hello {{title}} Suffix");
+
+        return content;
+      });
+
+      eleventyConfig.addTemplate("index.njk", "Hello {{title}} Suffix", {
+        title: "Title"
+      });
+    }
+  });
+
+  elev.setIncrementalFiles(["./test/stubs-virtual/_includes/yo.njk"]);
+  let results1 = await elev.toJSON();
+  t.is(results1[0].content, `Hello Title (draft) Suffix`);
+
+  elev.setIncrementalFiles(["./test/stubs-virtual/index.njk"]);
+  let results2 = await elev.toJSON();
+  t.is(results2.length, 1);
+  t.is(results2[0].content, `Hello Title (draft) Suffix`);
 });

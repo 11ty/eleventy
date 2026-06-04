@@ -25,7 +25,7 @@ test("Output is a subdir of input", async (t) => {
   t.deepEqual(evf.getRawFiles(), ["./test/stubs/writeTest/**/*.{liquid,md}"]);
   t.true(files.length > 0);
 
-  let { template: tmpl } = tw._createTemplate(files[0]);
+  let { template: tmpl } = tw.createTemplate(files[0]);
   t.is(tmpl.inputDir, "./test/stubs/writeTest/");
 
   let data = await tmpl.getData();
@@ -273,7 +273,7 @@ test("Pagination with a Collection (apply all pages to collections)", async (t) 
   t.truthy(mapEntry);
   t.is(mapEntry.inputPath, "./test/stubs/paged/collection-apply-to-all/main.njk");
 
-  let { template: mainTmpl } = tw._createTemplate(
+  let { template: mainTmpl } = tw.createTemplate(
     "./test/stubs/paged/collection-apply-to-all/main.njk",
   );
   let data = await mainTmpl.getData();
@@ -320,7 +320,7 @@ test("Use a collection inside of a template", async (t) => {
   t.truthy(mapEntry);
   t.is(mapEntry.inputPath, "./test/stubs/collection-template/template.liquid");
 
-  let { template: mainTmpl } = tw._createTemplate(
+  let { template: mainTmpl } = tw.createTemplate(
     "./test/stubs/collection-template/template.liquid",
   );
   let data = await mainTmpl.getData();
@@ -363,7 +363,7 @@ test("Use a collection inside of a layout", async (t) => {
   t.truthy(mapEntry);
   t.is(mapEntry.inputPath, "./test/stubs/collection-layout/template.liquid");
 
-  let { template: mainTmpl } = tw._createTemplate("./test/stubs/collection-layout/template.liquid");
+  let { template: mainTmpl } = tw.createTemplate("./test/stubs/collection-layout/template.liquid");
   let data = await mainTmpl.getData();
   let outputPath = await mainTmpl.getOutputPath(data);
   t.is(outputPath, "./test/stubs/collection-layout/_site/template/index.html");
@@ -514,7 +514,7 @@ test("Write Test 11ty.js", async (t) => {
   t.deepEqual(evf.getRawFiles(), [`./test/stubs/writeTestJS/**/*.{11ty.js,11ty.cjs,11ty.mjs${isTypeScriptSupported() ? ",11ty.ts,11ty.cts,11ty.mts" : ""}}`]);
   t.deepEqual(files, ["test/stubs/writeTestJS/test.11ty.cjs"]);
 
-  let { template: tmpl } = tw._createTemplate(files[0]);
+  let { template: tmpl } = tw.createTemplate(files[0]);
   let data = await tmpl.getData();
   t.is(await tmpl.getOutputPath(data), "./test/stubs/_writeTestJSSite/test/index.html");
 });
@@ -547,11 +547,11 @@ test.skip("Markdown with alias", async (t) => {
   t.true(files.indexOf("./test/stubs/writeTestMarkdown/sample.md") > -1);
   t.true(files.indexOf("./test/stubs/writeTestMarkdown/sample2.markdown") > -1);
 
-  let { template: tmpl } = tw._createTemplate(files[0]);
+  let { template: tmpl } = tw.createTemplate(files[0]);
   tmpl._setExtensionMap(map);
   t.is(await tmpl.getOutputPath(), "./test/stubs/_writeTestMarkdownSite/sample/index.html");
 
-  let { template: tmpl2 } = tw._createTemplate(files[1]);
+  let { template: tmpl2 } = tw.createTemplate(files[1]);
   tmpl2._setExtensionMap(map);
   t.is(await tmpl2.getOutputPath(), "./test/stubs/_writeTestMarkdownSite/sample2/index.html");
 });
@@ -587,7 +587,7 @@ test.skip("JavaScript with alias", async (t) => {
     ["./test/stubs/writeTestJS/sample.js", "./test/stubs/writeTestJS/test.11ty.js"].sort(),
   );
 
-  let { template: tmpl } = tw._createTemplate(files[0]);
+  let { template: tmpl } = tw.createTemplate(files[0]);
   t.is(await tmpl.getOutputPath(), "./test/stubs/_writeTestJSSite/test/index.html");
 });
 
