@@ -3,7 +3,7 @@ import { statSync } from "node:fs";
 
 import lodash from "@11ty/lodash-custom";
 import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
-import debugUtil from "debug";
+import { createDebug } from "obug";
 
 import chalk from "./Adapters/Packages/chalk.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
@@ -28,8 +28,8 @@ import { getDirectoryFromUrl } from "./Util/UrlUtil.js";
 
 const { set: lodashSet, get: lodashGet } = lodash;
 
-const debug = debugUtil("Eleventy:Template");
-const debugDev = debugUtil("Dev:Eleventy:Template");
+const debug = createDebug("Eleventy:Template");
+const debugDev = createDebug("Dev:Eleventy:Template");
 
 class Template extends TemplateContent {
 	#logger;

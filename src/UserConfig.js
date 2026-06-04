@@ -1,4 +1,4 @@
-import debugUtil from "debug";
+import { createDebug } from "obug";
 
 import { DeepCopy, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 
@@ -12,7 +12,7 @@ import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import BenchmarkManager from "./Benchmark/BenchmarkManager.js";
 import { augmentFunction } from "./Engines/Util/ContextAugmenter.js";
 
-const debug = debugUtil("Eleventy:UserConfig");
+const debug = createDebug("Eleventy:UserConfig");
 
 class UserConfigError extends EleventyBaseError {}
 

@@ -1,7 +1,7 @@
-import debugUtil from "debug";
+import { createDebug } from "obug";
 import { isPlainObject } from "@11ty/eleventy-utils";
 
-const debug = debugUtil("Dev:Eleventy:Proxy");
+const debug = createDebug("Dev:Eleventy:Proxy");
 
 const ProxySymbol = Symbol.for("11ty.ProxySymbol");
 

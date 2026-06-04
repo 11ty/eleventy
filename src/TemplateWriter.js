@@ -1,5 +1,5 @@
 import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
-import debugUtil from "debug";
+import { createDebug } from "obug";
 
 import Template from "./Template.js";
 import TemplateMap from "./TemplateMap.js";
@@ -8,7 +8,7 @@ import { EleventyErrorHandler } from "./Errors/EleventyErrorHandler.js";
 import EleventyErrorUtil from "./Errors/EleventyErrorUtil.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
 
-const debug = debugUtil("Eleventy:TemplateWriter");
+const debug = createDebug("Eleventy:TemplateWriter");
 
 class TemplateWriterMissingConfigArgError extends EleventyBaseError {}
 class EleventyPassthroughCopyError extends EleventyBaseError {}

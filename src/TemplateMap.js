@@ -1,5 +1,5 @@
 import { isPlainObject, TemplatePath } from "@11ty/eleventy-utils";
-import debugUtil from "debug";
+import { createDebug } from "obug";
 
 import TemplateCollection from "./TemplateCollection.js";
 import EleventyErrorUtil from "./Errors/EleventyErrorUtil.js";
@@ -8,7 +8,7 @@ import DuplicatePermalinkOutputError from "./Errors/DuplicatePermalinkOutputErro
 import TemplateData from "./Data/TemplateData.js";
 import GlobalDependencyMap from "./GlobalDependencyMap.js";
 
-const debug = debugUtil("Eleventy:TemplateMap");
+const debug = createDebug("Eleventy:TemplateMap");
 
 // These template URL filenames are allowed to exclude file extensions
 const EXTENSIONLESS_URL_ALLOWLIST = [

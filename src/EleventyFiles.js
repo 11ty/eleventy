@@ -1,14 +1,14 @@
 import { statSync, readFileSync } from "node:fs";
 
 import { TemplatePath } from "@11ty/eleventy-utils";
-import debugUtil from "debug";
+import { createDebug } from "obug";
 
 import DirContains from "./Util/DirContains.js";
 import TemplateData from "./Data/TemplateData.js";
 import TemplateGlob from "./TemplateGlob.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 
-const debug = debugUtil("Eleventy:EleventyFiles");
+const debug = createDebug("Eleventy:EleventyFiles");
 
 class EleventyFiles {
 	#extensionMap;

@@ -1,12 +1,12 @@
 import lodash from "@11ty/lodash-custom";
-import debugUtil from "debug";
+import { createDebug } from "obug";
 
 import ComputedDataQueue from "./ComputedDataQueue.js";
 import ComputedDataTemplateString from "./ComputedDataTemplateString.js";
 import ComputedDataProxy from "./ComputedDataProxy.js";
 
 const { set: lodashSet, get: lodashGet } = lodash;
-const debug = debugUtil("Eleventy:ComputedData");
+const debug = createDebug("Eleventy:ComputedData");
 
 class ComputedData {
 	constructor(config) {

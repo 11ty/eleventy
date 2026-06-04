@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import matter from "@11ty/gray-matter";
 import lodash from "@11ty/lodash-custom";
 import { DeepCopy, TemplatePath } from "@11ty/eleventy-utils";
-import debugUtil from "debug";
+import { createDebug } from "obug";
 
 import JavaScriptFrontMatter from "./Engines/FrontMatter/JavaScript.js";
 import { EOL } from "./Util/NewLineAdapter.js";
@@ -13,8 +13,8 @@ import EleventyErrorUtil from "./Errors/EleventyErrorUtil.js";
 import eventBus from "./EventBus.js";
 
 const { set: lodashSet } = lodash;
-const debug = debugUtil("Eleventy:TemplateContent");
-const debugDev = debugUtil("Dev:Eleventy:TemplateContent");
+const debug = createDebug("Eleventy:TemplateContent");
+const debugDev = createDebug("Dev:Eleventy:TemplateContent");
 
 class TemplateContentFrontMatterError extends EleventyBaseError {}
 class TemplateContentCompileError extends EleventyBaseError {}

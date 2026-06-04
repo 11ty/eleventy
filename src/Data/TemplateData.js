@@ -1,7 +1,7 @@
 import path from "node:path";
 import lodash from "@11ty/lodash-custom";
 import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
-import debugUtil from "debug";
+import { createDebug } from "obug";
 
 import { inspect } from "../Adapters/Packages/inspect.js";
 import unique from "../Util/Objects/Unique.js";
@@ -17,9 +17,9 @@ import { isTypeScriptSupported } from "../Util/FeatureTests.cjs";
 
 const { set: lodashSet, get: lodashGet } = lodash;
 
-const debugWarn = debugUtil("Eleventy:Warnings");
-const debug = debugUtil("Eleventy:TemplateData");
-const debugDev = debugUtil("Dev:Eleventy:TemplateData");
+const debugWarn = createDebug("Eleventy:Warnings");
+const debug = createDebug("Eleventy:TemplateData");
+const debugDev = createDebug("Dev:Eleventy:TemplateData");
 
 class TemplateDataParseError extends EleventyBaseError {}
 

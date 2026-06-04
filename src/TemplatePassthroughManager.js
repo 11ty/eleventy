@@ -1,12 +1,12 @@
 import { TemplatePath } from "@11ty/eleventy-utils";
-import debugUtil from "debug";
+import { createDebug } from "obug";
 
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import TemplatePassthrough from "./TemplatePassthrough.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 import { isGlobMatch, isDynamicPattern } from "./Util/GlobMatcher.js";
 
-const debug = debugUtil("Eleventy:TemplatePassthroughManager");
+const debug = createDebug("Eleventy:TemplatePassthroughManager");
 
 class TemplatePassthroughManagerCopyError extends EleventyBaseError {}
 

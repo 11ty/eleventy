@@ -1,12 +1,11 @@
 import { Merge, TemplatePath } from "@11ty/eleventy-utils";
-import debugUtil from "debug";
+import { createDebug } from "obug";
 
 import TemplateLayoutPathResolver from "./TemplateLayoutPathResolver.js";
 import TemplateContent from "./TemplateContent.js";
 import layoutCache from "./LayoutCache.js";
 
-// const debug = debugUtil("Eleventy:TemplateLayout");
-const debugDev = debugUtil("Dev:Eleventy:TemplateLayout");
+const debugDev = createDebug("Dev:Eleventy:TemplateLayout");
 
 // https://github.com/11ty/eleventy/issues/3954
 class CdataWrapper {

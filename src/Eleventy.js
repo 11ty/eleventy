@@ -1,5 +1,5 @@
 import { relative } from "node:path";
-import debugUtil from "debug";
+import { createDebug } from "obug";
 
 import { TemplatePath } from "@11ty/eleventy-utils";
 
@@ -17,7 +17,7 @@ import PathNormalizer from "./Util/PathNormalizer.js";
 import { isGlobMatch } from "./Util/GlobMatcher.js";
 import eventBus from "./EventBus.js";
 
-const debug = debugUtil("Eleventy");
+const debug = createDebug("Eleventy");
 
 export default class Eleventy extends Core {
 	/** @type {boolean} */
