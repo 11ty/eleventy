@@ -1,12 +1,9 @@
 import moo from "moo";
 import { Tokenizer, TokenKind, evalToken, Liquid as LiquidJs } from "liquidjs";
 import { TemplatePath } from "@11ty/eleventy-utils";
-// import debugUtil from "debug";
 
 import TemplateEngine from "./TemplateEngine.js";
 import { augmentObject } from "./Util/ContextAugmenter.js";
-
-// const debug = debugUtil("Eleventy:Liquid");
 
 export default class Liquid extends TemplateEngine {
 	static argumentLexerOptions = {

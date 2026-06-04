@@ -1,10 +1,10 @@
-import debugUtil from "debug";
+import { createDebug } from "obug";
 
 import ConsoleLogger from "../Util/ConsoleLogger.js";
 import isAsyncFunction from "../Util/IsAsyncFunction.js";
 import Benchmark from "./Benchmark.js";
 
-const debugBenchmark = debugUtil("Eleventy:Benchmark");
+const debugBenchmark = createDebug("Eleventy:Benchmark");
 
 class BenchmarkGroup {
 	constructor() {

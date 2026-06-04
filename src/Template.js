@@ -3,7 +3,7 @@ import { statSync } from "node:fs";
 
 import lodash from "@11ty/lodash-custom";
 import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
-import debugUtil from "debug";
+import { createDebug } from "obug";
 
 import chalk from "./Adapters/Packages/chalk.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
@@ -28,13 +28,15 @@ import { getDirectoryFromUrl } from "./Util/UrlUtil.js";
 
 const { set: lodashSet, get: lodashGet } = lodash;
 
-const debug = debugUtil("Eleventy:Template");
-const debugDev = debugUtil("Dev:Eleventy:Template");
+const debug = createDebug("Eleventy:Template");
+const debugDev = createDebug("Dev:Eleventy:Template");
 
 class Template extends TemplateContent {
 	#logger;
 	#fsManager;
 	#stats;
+	#dataCache;
+	#preprocessors;
 	#preprocessorCache;
 
 	constructor(templatePath, templateData, extensionMap, config) {
@@ -65,8 +67,6 @@ class Template extends TemplateContent {
 
 		this.behavior = new TemplateBehavior(this.config);
 		this.behavior.setOutputFormat(this.outputFormat);
-
-		this.templatePreprocessor = new TemplatePreprocessors(this.config.preprocessors);
 	}
 
 	#initFileSlug() {
@@ -124,6 +124,12 @@ class Template extends TemplateContent {
 	}
 
 	reset() {
+		// *always* runs once per build (even though it’s called twice internally)
+		this.#preprocessorCache = undefined;
+
+		// *always* runs once per build
+		this.#dataCache = undefined;
+
 		this.renderCount = 0;
 		this.writeCount = 0;
 	}
@@ -132,16 +138,6 @@ class Template extends TemplateContent {
 		types = this.getResetTypes(types);
 
 		super.resetCaches(types);
-
-		if (types.data || types.read) {
-			this.#preprocessorCache = undefined;
-		}
-
-		if (types.data) {
-			delete this._dataCache;
-			// delete this._usePermalinkRoot;
-			// delete this.#stats;
-		}
 
 		if (types.render) {
 			delete this._cacheRenderedPromise;
@@ -431,12 +427,12 @@ class Template extends TemplateContent {
 	}
 
 	async getData() {
-		if (!this._dataCache) {
+		if (!this.#dataCache) {
 			// @cachedproperty
-			this._dataCache = this.#getData();
+			this.#dataCache = this.#getData();
 		}
 
-		return this._dataCache;
+		return this.#dataCache;
 	}
 
 	async addPage(data) {
@@ -720,10 +716,15 @@ class Template extends TemplateContent {
 		});
 	}
 
+	// via TemplateWriter->createTemplate #4292 #3933
+	setPreprocessors(preprocessors) {
+		this.#preprocessors = preprocessors;
+	}
+
 	async runPreprocessors(data) {
 		// @cachedproperty
 		if (!this.#preprocessorCache) {
-			this.#preprocessorCache = this.templatePreprocessor.runAll(this, data);
+			this.#preprocessorCache = TemplatePreprocessors.runAll(this.#preprocessors, this, data);
 		}
 
 		return this.#preprocessorCache;
@@ -1124,20 +1125,17 @@ class Template extends TemplateContent {
 	}
 
 	// Important reminder: Template data is first generated in TemplateMap
-	async getTemplateMapEntries(data) {
+	async getTemplateMapEntry(data) {
 		debugDev("%o getMapped()", this.inputPath);
 
 		this.behavior.setRenderViaDataCascade(data);
 
-		let entries = [];
 		// does not return outputPath or url, we don’t want to render permalinks yet
-		entries.push({
+		return {
 			template: this,
 			inputPath: this.inputPath,
 			data,
-		});
-
-		return entries;
+		};
 	}
 }
 

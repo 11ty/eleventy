@@ -1,4 +1,4 @@
-import debugUtil from "debug";
+import { createDebug } from "obug";
 import { TemplatePath } from "@11ty/eleventy-utils";
 
 // Direct reference to avoid use of `browser` Nunjucks variant in bundles
@@ -11,9 +11,8 @@ import {
 import TemplateEngine from "./TemplateEngine.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import { augmentObject } from "./Util/ContextAugmenter.js";
-import { withResolvers } from "../Util/PromiseUtil.js";
 
-const debug = debugUtil("Eleventy:Nunjucks");
+const debug = createDebug("Eleventy:Nunjucks");
 
 class EleventyNunjucksError extends EleventyBaseError {}
 
@@ -500,7 +499,7 @@ export default class Nunjucks extends TemplateEngine {
 		}
 
 		return function (data) {
-			let { promise, resolve, reject } = withResolvers();
+			let { promise, resolve, reject } = Promise.withResolvers();
 
 			tmpl.render(data, (error, result) => {
 				if (error) {

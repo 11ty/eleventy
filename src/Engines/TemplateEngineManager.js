@@ -1,7 +1,7 @@
-import debugUtil from "debug";
+import { createDebug } from "obug";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
 
-const debug = debugUtil("Eleventy:TemplateEngineManager");
+const debug = createDebug("Eleventy:TemplateEngineManager");
 
 class TemplateEngineManager {
 	#CustomEngine;

@@ -17,7 +17,6 @@ require("@11ty/node-version-check")(pkg, {
 });
 
 const minimist = require("minimist");
-const debug = require("debug")("Eleventy:cmd");
 
 class SimpleError extends Error {
 	constructor(...args) {
@@ -27,6 +26,9 @@ class SimpleError extends Error {
 }
 
 async function exec() {
+	const { createDebug } = await import("obug");
+	const debug = createDebug("Eleventy:cmd");
+
 	// Notes about friendly error messaging with outdated Node versions: https://github.com/11ty/eleventy/issues/3761
 	const { EleventyErrorHandler } = await import("./src/Errors/EleventyErrorHandler.js");
 

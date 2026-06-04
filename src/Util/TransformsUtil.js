@@ -1,8 +1,8 @@
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import { isPlainObject } from "@11ty/eleventy-utils";
-import debugUtil from "debug";
+import { createDebug } from "obug";
 
-const debug = debugUtil("Eleventy:Transforms");
+const debug = createDebug("Eleventy:Transforms");
 
 class EleventyTransformError extends EleventyBaseError {}
 

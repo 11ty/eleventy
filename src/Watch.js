@@ -1,11 +1,11 @@
-import debugUtil from "debug";
+import { createDebug } from "obug";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import chokidar from "chokidar";
 
 import { isGlobMatch } from "./Util/GlobMatcher.js";
 import { GlobStripper } from "./Util/GlobStripper.js";
 
-const debug = debugUtil("Eleventy:Watch");
+const debug = createDebug("Eleventy:Watch");
 
 export class Watch {
 	/** @type {module:chokidar} */

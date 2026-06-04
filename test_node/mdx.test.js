@@ -8,8 +8,9 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import Eleventy from "../src/Eleventy.js";
 
-if ("register" in module) {
-	module.register("@mdx-js/node-loader", import.meta.url);
+import { load } from "./mdx-hooks.js";
+if ("registerHooks" in module) {
+	module.registerHooks({ load });
 }
 
 test("Eleventy with MDX", async () => {

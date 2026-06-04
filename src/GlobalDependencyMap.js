@@ -1,11 +1,11 @@
-import debugUtil from "debug";
+import { createDebug } from "obug";
 import { TemplatePath } from "@11ty/eleventy-utils";
 
 import JavaScriptDependencies from "./Util/JavaScriptDependencies.js";
 import PathNormalizer from "./Util/PathNormalizer.js";
 import { TemplateDepGraph } from "./Util/TemplateDepGraph.js";
 
-const debug = debugUtil("Eleventy:Dependencies");
+const debug = createDebug("Eleventy:Dependencies");
 
 class GlobalDependencyMap {
 	// dependency-graph requires these keys to be alphabetic strings

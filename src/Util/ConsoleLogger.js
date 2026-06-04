@@ -1,7 +1,7 @@
-import debugUtil from "debug";
+import { createDebug } from "obug";
 import chalk from "../Adapters/Packages/chalk.js";
 
-const debug = debugUtil("Eleventy:Logger");
+const debug = createDebug("Eleventy:Logger");
 
 /**
  * Logger implementation that logs to STDOUT.
@@ -86,6 +86,14 @@ class ConsoleLogger {
 		this.message(msg, "error", "red");
 	}
 
+	/** @param {string} message */
+	#dim(message) {
+		if ("dim" in chalk) {
+			return chalk.dim(message);
+		}
+		return message;
+	}
+
 	/**
 	 * Formats the message to log.
 	 *
@@ -104,7 +112,7 @@ class ConsoleLogger {
 		if (!forceToConsole && (!this.isVerbose || process.env.DEBUG)) {
 			debug(message);
 		} else if (this.#logger !== false) {
-			message = `${chalk.dim(prefix)} ${message.split("\n").join(`\n${chalk.gray(prefix)} `)}`;
+			message = `${this.#dim(prefix)} ${message.split("\n").join(`\n${chalk.gray(prefix)} `)}`;
 
 			if (chalkColor && this.isChalkEnabled) {
 				this.logger[type](chalk[chalkColor](message));

@@ -1,14 +1,14 @@
 import { statSync, readFileSync } from "node:fs";
 
 import { TemplatePath } from "@11ty/eleventy-utils";
-import debugUtil from "debug";
+import { createDebug } from "obug";
 
 import DirContains from "./Util/DirContains.js";
 import TemplateData from "./Data/TemplateData.js";
 import TemplateGlob from "./TemplateGlob.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 
-const debug = debugUtil("Eleventy:EleventyFiles");
+const debug = createDebug("Eleventy:EleventyFiles");
 
 class EleventyFiles {
 	#extensionMap;
@@ -358,32 +358,27 @@ class EleventyFiles {
 		return paths;
 	}
 
-	getFileShape(paths, incrementalFilePaths) {
+	getIncrementalFileShapes(paths, incrementalFilePaths) {
 		if (!incrementalFilePaths || incrementalFilePaths.length === 0) {
-			return;
-		}
-		if (this.passthroughManager.isPassthroughCopyFile(paths, incrementalFilePaths)) {
-			return "copy";
-		}
-		if (this.isFullTemplateFile(paths, incrementalFilePaths)) {
-			return "template";
-		}
-		// include/layout/unknown
-	}
-
-	// Assumption here that filePath is not a passthrough copy file
-	isFullTemplateFile(paths, filePaths) {
-		if (!filePaths || !Array.isArray(filePaths)) {
-			return false;
+			return {};
 		}
 
-		for (let path of paths) {
-			if (filePaths.includes(path)) {
-				return true;
+		let passthroughIncrementalPaths = this.passthroughManager.filterToPassthroughCopyFilesOnly(
+			paths,
+			incrementalFilePaths,
+		);
+		let shapes = {};
+
+		for (let incrementalFilePath of incrementalFilePaths) {
+			if (passthroughIncrementalPaths.includes(incrementalFilePath)) {
+				shapes[incrementalFilePath] = "copy";
+			} else if (paths.includes(incrementalFilePath)) {
+				shapes[incrementalFilePath] = "template";
 			}
+			// otherwise: include/layout/unknown
 		}
 
-		return false;
+		return shapes;
 	}
 
 	/* For `eleventy --watch` */

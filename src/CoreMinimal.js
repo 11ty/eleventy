@@ -1,4 +1,4 @@
-import debugUtil from "debug";
+import { createDebug } from "obug";
 import { isPlainObject, TemplatePath } from "@11ty/eleventy-utils";
 
 import chalk from "./Adapters/Packages/chalk.js";
@@ -23,7 +23,7 @@ import {
 import ProjectTemplateFormats from "./Util/ProjectTemplateFormats.js";
 
 const pkg = getEleventyPackageJson();
-const debug = debugUtil("Eleventy");
+const debug = createDebug("Eleventy");
 
 /**
  * Eleventy’s programmatic API
