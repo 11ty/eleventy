@@ -5,6 +5,7 @@ import yaml from "js-yaml";
 import TemplateConfig from "../src/TemplateConfig.js";
 import FileSystemSearch from "../src/FileSystemSearch.js";
 import TemplateData from "../src/Data/TemplateData.js";
+import { isTypeScriptSupported } from "../src/Util/FeatureTests.cjs";
 
 import { getTemplateConfigInstanceCustomCallback } from "./_testHelpers.js";
 import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
@@ -70,6 +71,11 @@ test("Local files", async (t) => {
     "./test/stubs-630/stubs-630.11tydata.yaml",
     "./test/stubs-630/stubs-630.11tydata.nosj",
     "./test/stubs-630/stubs-630.11tydata.json",
+    ...(isTypeScriptSupported() ? [
+      "./test/stubs-630/stubs-630.11tydata.mts",
+      "./test/stubs-630/stubs-630.11tydata.cts",
+      "./test/stubs-630/stubs-630.11tydata.ts",
+    ] : []),
     "./test/stubs-630/stubs-630.11tydata.mjs",
     "./test/stubs-630/stubs-630.11tydata.cjs",
     "./test/stubs-630/stubs-630.11tydata.js",
@@ -79,6 +85,11 @@ test("Local files", async (t) => {
     "./test/stubs-630/component-yaml/component-yaml.11tydata.yaml",
     "./test/stubs-630/component-yaml/component-yaml.11tydata.nosj",
     "./test/stubs-630/component-yaml/component-yaml.11tydata.json",
+    ...(isTypeScriptSupported() ? [
+      "./test/stubs-630/component-yaml/component-yaml.11tydata.mts",
+      "./test/stubs-630/component-yaml/component-yaml.11tydata.cts",
+      "./test/stubs-630/component-yaml/component-yaml.11tydata.ts",
+    ] : []),
     "./test/stubs-630/component-yaml/component-yaml.11tydata.mjs",
     "./test/stubs-630/component-yaml/component-yaml.11tydata.cjs",
     "./test/stubs-630/component-yaml/component-yaml.11tydata.js",
@@ -88,6 +99,11 @@ test("Local files", async (t) => {
     "./test/stubs-630/component-yaml/component.11tydata.yaml",
     "./test/stubs-630/component-yaml/component.11tydata.nosj",
     "./test/stubs-630/component-yaml/component.11tydata.json",
+    ...(isTypeScriptSupported() ? [
+      "./test/stubs-630/component-yaml/component.11tydata.mts",
+      "./test/stubs-630/component-yaml/component.11tydata.cts",
+      "./test/stubs-630/component-yaml/component.11tydata.ts",
+    ] : []),
     "./test/stubs-630/component-yaml/component.11tydata.mjs",
     "./test/stubs-630/component-yaml/component.11tydata.cjs",
     "./test/stubs-630/component-yaml/component.11tydata.js",
@@ -111,7 +127,7 @@ test("Global data", async (t) => {
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
   t.deepEqual(dataObj.getGlobalDataGlob(), [
-    "./test/stubs-630/_data/**/*.{nosj,yaml,json,mjs,cjs,js}",
+    `./test/stubs-630/_data/**/*.{nosj,yaml,json,mjs,cjs,js${isTypeScriptSupported() ? ",mts,cts,ts" : ""}}`,
   ]);
 
   let data = await dataObj.getGlobalData();

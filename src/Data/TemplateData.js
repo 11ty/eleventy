@@ -24,6 +24,23 @@ const debugDev = createDebug("Dev:Eleventy:TemplateData");
 class TemplateDataParseError extends EleventyBaseError {}
 
 class TemplateData {
+	// order is important (json not included)
+	#eligiblePrioritizedExtensions = [
+		"js",
+		"cjs",
+		"mjs",
+		...(isTypeScriptSupported() ? ["ts", "cts", "mts"] : []),
+	];
+
+	// order is important
+	#globalDataOrderedExtensions = [
+		"json",
+		"mjs",
+		"cjs",
+		"js",
+		...(isTypeScriptSupported() ? ["mts", "cts", "ts"] : []),
+	];
+
 	constructor(templateConfig) {
 		if (!templateConfig || templateConfig.constructor.name !== "TemplateConfig") {
 			throw new Error(
@@ -239,7 +256,7 @@ class TemplateData {
 	}
 
 	getGlobalDataExtensionPriorities() {
-		return this.getUserDataExtensions().concat(["json", "mjs", "cjs", "js"]);
+		return this.getUserDataExtensions().concat(this.#globalDataOrderedExtensions);
 	}
 
 	static calculateExtensionPriority(path, priorities) {
@@ -508,7 +525,7 @@ class TemplateData {
 	async getDataValue(path) {
 		let extension = TemplatePath.getExtension(path);
 
-		if (extension === "js" || extension === "cjs" || extension === "mjs") {
+		if (this.#eligiblePrioritizedExtensions.includes(extension)) {
 			// JS data file or require’d JSON (no preprocessing needed)
 			if (!this.exists(path)) {
 				return {};
@@ -520,7 +537,12 @@ class TemplateData {
 			dataBench.before();
 
 			let type = "cjs";
-			if (extension === "mjs" || (extension === "js" && this.isEsm)) {
+			if (
+				extension === "mjs" ||
+				(extension === "js" && this.isEsm) ||
+				extension === "mts" ||
+				(extension === "ts" && this.isEsm)
+			) {
 				type = "esm";
 			}
 
@@ -573,9 +595,9 @@ class TemplateData {
 
 			// data suffix
 			if (suffix) {
-				paths.push(base + suffix + ".js");
-				paths.push(base + suffix + ".cjs");
-				paths.push(base + suffix + ".mjs");
+				for (let extension of this.#eligiblePrioritizedExtensions) {
+					paths.push(base + suffix + "." + extension);
+				}
 			}
 			paths.push(base + suffix + ".json"); // default: .11tydata.json
 
