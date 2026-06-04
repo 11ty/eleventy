@@ -209,11 +209,12 @@ class TemplateWriter {
 	}
 
 	// incrementalFileShape is `template` or `copy` (for passthrough file copy)
-	async _addToTemplateMapIncrementalBuild(incrementalFileShapes, paths, to = "fs") {
+	async #addToTemplateMapIncrementalBuild(incrementalFileShapes, paths, to = "fs") {
 		// Render overrides are only used when `--ignore-initial` is in play and an initial build is not run
 		let ignoreInitialBuild = !this.isRunInitialBuild;
 		let secondOrderRelevantLookup = {};
 		let templates = [];
+		let cacheResetTracker = new Set();
 
 		let promises = [];
 		for (let path of paths) {
@@ -230,11 +231,8 @@ class TemplateWriter {
 
 			// This must happen before data is generated for the incremental file only
 			if (
-				incrementalFileShapes[path] === "template" &&
-				this.#incrementalFiles.includes(tmpl.inputPath)
-			) {
-				tmpl.resetCaches();
-			} else if (
+				(incrementalFileShapes[path] === "template" &&
+					this.#incrementalFiles.includes(tmpl.inputPath)) ||
 				// Issue #3824 #3870
 				this.#incrementalFiles.find((p) =>
 					tmpl.isFileRelevantToThisTemplate(p, {
@@ -242,6 +240,7 @@ class TemplateWriter {
 					}),
 				)
 			) {
+				cacheResetTracker.add(tmpl.inputPath);
 				tmpl.resetCaches();
 			}
 
@@ -320,19 +319,23 @@ class TemplateWriter {
 				// Cache is reset above (to invalidate data cache at the right time)
 				tmpl.setDryRunViaIncremental(false);
 			} else if (!tmpl.isRenderableDisabled() && !tmpl.isRenderableOptional()) {
-				// Related to the template but not the template (reset the render cache, not the read cache)
-				tmpl.resetCaches({
-					data: true,
-					render: true,
-				});
+				if (!cacheResetTracker.has(tmpl.inputPath)) {
+					// Related to the template but not the template (reset the render cache, not the read cache)
+					tmpl.resetCaches({
+						data: true,
+						render: true,
+					});
+				}
 
 				tmpl.setDryRunViaIncremental(false);
 			} else {
 				// During incremental we only reset the data cache for non-matching templates, see https://github.com/11ty/eleventy/issues/2710
 				// Keep caches for read/render
-				tmpl.resetCaches({
-					data: true,
-				});
+				if (!cacheResetTracker.has(tmpl.inputPath)) {
+					tmpl.resetCaches({
+						data: true,
+					});
+				}
 
 				tmpl.setDryRunViaIncremental(true);
 
@@ -341,9 +344,9 @@ class TemplateWriter {
 		}
 	}
 
-	async _addToTemplateMapFullBuild(paths, to = "fs") {
+	async #addToTemplateMapFullBuild(paths, to = "fs") {
 		if (this.#incrementalFiles?.length > 0) {
-			return [];
+			throw new Error("Internal error: improper mixing of full build and incremental builds.");
 		}
 
 		let ignoreInitialBuild = !this.isRunInitialBuild;
@@ -365,7 +368,10 @@ class TemplateWriter {
 			promises.push(this.templateMap.add(tmpl));
 		}
 
-		return Promise.all(promises);
+		await Promise.all(promises);
+
+		// write new template relationships to the global dependency graph for next time
+		this.templateMap.addAllToGlobalDependencyGraph();
 	}
 
 	getIncrementalFileShapes(paths) {
@@ -382,7 +388,7 @@ class TemplateWriter {
 		return this.#eleventyFiles?.getIncrementalFileShapes(paths, this.#incrementalFiles);
 	}
 
-	async _addToTemplateMap(paths, to = "fs") {
+	async #addToTemplateMap(paths, to = "fs") {
 		let incrementalFileShapes = this.getIncrementalFileShapes(paths);
 
 		// Filter out passthrough copy files
@@ -401,30 +407,23 @@ class TemplateWriter {
 		});
 
 		if (this.#incrementalFiles?.length > 0) {
-			// Top level async to get at the promises returned.
-			return await this._addToTemplateMapIncrementalBuild(incrementalFileShapes, paths, to);
+			await this.#addToTemplateMapIncrementalBuild(incrementalFileShapes, paths, to);
+		} else {
+			await this.#addToTemplateMapFullBuild(paths, to);
 		}
-
-		// Full Build
-		let ret = await this._addToTemplateMapFullBuild(paths, to);
-
-		// write new template relationships to the global dependency graph for next time
-		this.templateMap.addAllToGlobalDependencyGraph();
-
-		return ret;
 	}
 
-	async _createTemplateMap(paths, to) {
+	async createTemplateMap(paths, to) {
 		this.templateMap = new TemplateMap(this.templateConfig);
 
-		await this._addToTemplateMap(paths, to);
+		await this.#addToTemplateMap(paths, to);
 		await this.templateMap.cache();
 
 		// Return is used by tests
 		return this.templateMap;
 	}
 
-	async _generateTemplate(mapEntry, to) {
+	async #generateTemplate(mapEntry, to) {
 		let tmpl = mapEntry.template;
 
 		return tmpl.generateMapEntry(mapEntry, to).then((pages) => {
@@ -448,13 +447,13 @@ class TemplateWriter {
 	async generateTemplates(paths, to = "fs") {
 		let promises = [];
 		// TODO optimize await here
-		await this._createTemplateMap(paths, to);
+		await this.createTemplateMap(paths, to);
 		debug("Template map created.");
 
 		let usedTemplateContentTooEarlyMap = [];
 		for (let mapEntry of this.templateMap.getMap()) {
 			promises.push(
-				this._generateTemplate(mapEntry, to).catch(function (e) {
+				this.#generateTemplate(mapEntry, to).catch(function (e) {
 					// Premature templateContent in layout render, this also happens in
 					// TemplateMap.populateContentDataInMap for non-layout content
 					if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
@@ -474,7 +473,7 @@ class TemplateWriter {
 
 		for (let mapEntry of usedTemplateContentTooEarlyMap) {
 			promises.push(
-				this._generateTemplate(mapEntry, to).catch(function (e) {
+				this.#generateTemplate(mapEntry, to).catch(function (e) {
 					return Promise.reject(
 						new EleventyTemplateError(
 							`Having trouble writing to (second pass) "${mapEntry.outputPath}" from "${mapEntry.inputPath}"`,

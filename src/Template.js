@@ -65,8 +65,6 @@ class Template extends TemplateContent {
 
 		this.behavior = new TemplateBehavior(this.config);
 		this.behavior.setOutputFormat(this.outputFormat);
-
-		this.templatePreprocessor = new TemplatePreprocessors(this.config.preprocessors);
 	}
 
 	#initFileSlug() {
@@ -723,7 +721,7 @@ class Template extends TemplateContent {
 	async runPreprocessors(data) {
 		// @cachedproperty
 		if (!this.#preprocessorCache) {
-			this.#preprocessorCache = this.templatePreprocessor.runAll(this, data);
+			this.#preprocessorCache = TemplatePreprocessors.runAll(this.config.preprocessors, this, data);
 		}
 
 		return this.#preprocessorCache;

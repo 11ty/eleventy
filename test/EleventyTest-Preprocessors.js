@@ -319,3 +319,29 @@ test("Tags in pages excluded with preprocessing should not populate collections 
   t.is(pages.length, 1);
   t.is(pages[0].content, "Hello yep");
 });
+
+test("#4292: Preprocessors run twice during incremental and config reset", async (t) => {
+  t.plan(3);
+
+  let preprocessorRuns = 0;
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addPreprocessor("drafts", ".njk", (data, content) => {
+        preprocessorRuns++;
+        return `Hello ${content} Suffix`;
+      });
+
+      eleventyConfig.addTemplate("index.njk", "Before");
+    }
+  });
+
+  await elev.toJSON();
+
+  elev.setIncrementalFiles("./test/stubs-virtual/eleventy.config.js");
+
+  let results = await elev.toJSON();
+
+  t.is(results.length, 1);
+  t.is(results[0].content, `Hello Before Suffix`);
+  t.is(preprocessorRuns, 2);
+});

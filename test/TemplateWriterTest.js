@@ -32,7 +32,7 @@ test("Output is a subdir of input", async (t) => {
   t.is(await tmpl.getOutputPath(data), "./test/stubs/writeTest/_writeTestSite/test/index.html");
 });
 
-test("_createTemplateMap", async (t) => {
+test("createTemplateMap", async (t) => {
   let eleventyConfig = await getTemplateConfigInstance({
     dir: {
       input: "test/stubs/writeTest",
@@ -46,14 +46,14 @@ test("_createTemplateMap", async (t) => {
   t.true(paths.length > 0);
   t.is(paths[0], "./test/stubs/writeTest/test.md");
 
-  let templateMap = await tw._createTemplateMap(paths);
+  let templateMap = await tw.createTemplateMap(paths);
   let map = templateMap.getMap();
   t.true(map.length > 0);
   t.truthy(map[0].template);
   t.truthy(map[0].data);
 });
 
-test("_createTemplateMap (no leading dot slash)", async (t) => {
+test("createTemplateMap (no leading dot slash)", async (t) => {
   let eleventyConfig = await getTemplateConfigInstance({
     dir: {
       input: "test/stubs/writeTest",
@@ -79,7 +79,7 @@ test("_testGetCollectionsData", async (t) => {
   let { templateWriter: tw } = getTemplateWriterInstance(["md"], eleventyConfig);
 
   let paths = await tw._getAllPaths();
-  let templateMap = await tw._createTemplateMap(paths);
+  let templateMap = await tw.createTemplateMap(paths);
   let collectionsData = await templateMap._testGetCollectionsData();
   t.is(collectionsData.post.length, 2);
   t.is(collectionsData.cat.length, 2);
@@ -98,7 +98,7 @@ test("_testGetAllTags", async (t) => {
   let { templateWriter: tw } = getTemplateWriterInstance(["md"], eleventyConfig);
 
   let paths = await tw._getAllPaths();
-  let templateMap = await tw._createTemplateMap(paths);
+  let templateMap = await tw.createTemplateMap(paths);
   let tags = templateMap._testGetAllTags();
 
   t.deepEqual(tags.sort(), ["cat", "dog", "post", "office"].sort());
@@ -118,7 +118,7 @@ test("Collection of files sorted by date", async (t) => {
   );
 
   let paths = await tw._getAllPaths();
-  let templateMap = await tw._createTemplateMap(paths);
+  let templateMap = await tw.createTemplateMap(paths);
   let collectionsData = await templateMap._testGetCollectionsData();
   t.is(collectionsData.dateTestTag.length, 6);
 });
@@ -137,7 +137,7 @@ test("__testGetCollectionsData with custom collection (ascending)", async (t) =>
 
   let { templateWriter: tw } = getTemplateWriterInstance(["md"], eleventyConfig);
   let paths = await tw._getAllPaths();
-  let templateMap = await tw._createTemplateMap(paths);
+  let templateMap = await tw.createTemplateMap(paths);
   let collectionsData = await templateMap._testGetCollectionsData();
   t.is(collectionsData.customPostsAsc.length, 2);
   t.is(path.parse(collectionsData.customPostsAsc[0].inputPath).base, "test1.md");
@@ -160,7 +160,7 @@ test("__testGetCollectionsData with custom collection (descending)", async (t) =
   let { templateWriter: tw } = getTemplateWriterInstance(["md"], eleventyConfig);
 
   let paths = await tw._getAllPaths();
-  let templateMap = await tw._createTemplateMap(paths);
+  let templateMap = await tw.createTemplateMap(paths);
   let collectionsData = await templateMap._testGetCollectionsData();
 
   t.is(collectionsData.customPosts.length, 2);
@@ -185,7 +185,7 @@ test("__testGetCollectionsData with custom collection (filter only to markdown i
 
 
   let paths = await tw._getAllPaths();
-  let templateMap = await tw._createTemplateMap(paths);
+  let templateMap = await tw.createTemplateMap(paths);
   let collectionsData = await templateMap._testGetCollectionsData();
   t.is(collectionsData.onlyMarkdown.length, 2);
   t.is(path.parse(collectionsData.onlyMarkdown[0].inputPath).base, "test1.md");
@@ -203,7 +203,7 @@ test("Pagination with a Collection", async (t) => {
   let { templateWriter: tw } = getTemplateWriterInstance(["njk"], eleventyConfig);
 
   let paths = await tw._getAllPaths();
-  let templateMap = await tw._createTemplateMap(paths);
+  let templateMap = await tw.createTemplateMap(paths);
 
   let collectionsData = await templateMap._testGetCollectionsData();
   t.is(collectionsData.tag1.length, 3);
@@ -231,7 +231,7 @@ test("Pagination with a Collection from another Paged Template", async (t) => {
   let { templateWriter: tw } = getTemplateWriterInstance(["njk"], eleventyConfig);
 
   let paths = await tw._getAllPaths();
-  let templateMap = await tw._createTemplateMap(paths);
+  let templateMap = await tw.createTemplateMap(paths);
 
   let collectionsData = await templateMap._testGetCollectionsData();
   t.is(collectionsData.tag1.length, 3);
@@ -261,7 +261,7 @@ test("Pagination with a Collection (apply all pages to collections)", async (t) 
   let { templateWriter: tw } = getTemplateWriterInstance(["njk"], eleventyConfig);
 
   let paths = await tw._getAllPaths();
-  let templateMap = await tw._createTemplateMap(paths);
+  let templateMap = await tw.createTemplateMap(paths);
 
   let collectionsData = await templateMap._testGetCollectionsData();
   t.is(collectionsData.tag1.length, 3);
@@ -309,7 +309,7 @@ test("Use a collection inside of a template", async (t) => {
   let { templateWriter: tw } = getTemplateWriterInstance(["liquid"], eleventyConfig);
 
   let paths = await tw._getAllPaths();
-  let templateMap = await tw._createTemplateMap(paths);
+  let templateMap = await tw.createTemplateMap(paths);
 
   let collectionsData = await templateMap._testGetCollectionsData();
   t.is(collectionsData.dog.length, 1);
@@ -352,7 +352,7 @@ test("Use a collection inside of a layout", async (t) => {
   let { templateWriter: tw } = getTemplateWriterInstance(["liquid"], eleventyConfig);
 
   let paths = await tw._getAllPaths();
-  let templateMap = await tw._createTemplateMap(paths);
+  let templateMap = await tw.createTemplateMap(paths);
 
   let collectionsData = await templateMap._testGetCollectionsData();
   t.is(collectionsData.dog.length, 1);
@@ -435,7 +435,7 @@ test("Custom collection returns array", async (t) => {
   let { templateWriter: tw } = getTemplateWriterInstance(["md"], eleventyConfig);
 
   let paths = await tw._getAllPaths();
-  let templateMap = await tw._createTemplateMap(paths);
+  let templateMap = await tw.createTemplateMap(paths);
   let collectionsData = await templateMap._testGetCollectionsData();
   t.is(collectionsData.returnAllInputPaths.length, 2);
   t.is(path.parse(collectionsData.returnAllInputPaths[0]).base, "test1.md");
@@ -454,7 +454,7 @@ test("Custom collection returns a string", async (t) => {
 
   let { templateWriter: tw } = getTemplateWriterInstance(["md"], eleventyConfig);
   let paths = await tw._getAllPaths();
-  let templateMap = await tw._createTemplateMap(paths);
+  let templateMap = await tw.createTemplateMap(paths);
   let collectionsData = await templateMap._testGetCollectionsData();
   t.is(collectionsData.returnATestString, "test");
 });
@@ -471,7 +471,7 @@ test("Custom collection returns an object", async (t) => {
 
   let { templateWriter: tw } = getTemplateWriterInstance(["md"], eleventyConfig);
   let paths = await tw._getAllPaths();
-  let templateMap = await tw._createTemplateMap(paths);
+  let templateMap = await tw.createTemplateMap(paths);
   let collectionsData = await templateMap._testGetCollectionsData();
   t.deepEqual(collectionsData.returnATestObject, { test: "value" });
 });
@@ -487,7 +487,7 @@ test("fileSlug should exist in a collection", async (t) => {
   let { templateWriter: tw } = getTemplateWriterInstance(["njk"], eleventyConfig);
 
   let paths = await tw._getAllPaths();
-  let templateMap = await tw._createTemplateMap(paths);
+  let templateMap = await tw.createTemplateMap(paths);
 
   let collectionsData = await templateMap._testGetCollectionsData();
   t.is(collectionsData.dog.length, 1);
