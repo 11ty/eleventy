@@ -204,7 +204,7 @@ test("Global Dir Directory", async (t) => {
   let dataObj = new TemplateData(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
 
-  t.deepEqual(dataObj.getGlobalDataGlob(), ["./_data/**/*.{json,mjs,cjs,js,mts,cts,ts}"]);
+  t.deepEqual(dataObj.getGlobalDataGlob(), [`./_data/**/*.{json,mjs,cjs,js${isTypeScriptSupported() ? ",mts,cts,ts" : ""}}`]);
 });
 
 test("Global Dir Directory with Constructor Path Arg", async (t) => {
@@ -217,7 +217,7 @@ test("Global Dir Directory with Constructor Path Arg", async (t) => {
   let dataObj = new TemplateData(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
 
-  t.deepEqual(dataObj.getGlobalDataGlob(), ["./test/stubs/_data/**/*.{json,mjs,cjs,js,mts,cts,ts}"]);
+  t.deepEqual(dataObj.getGlobalDataGlob(), [`./test/stubs/_data/**/*.{json,mjs,cjs,js${isTypeScriptSupported() ? ",mts,cts,ts" : ""}}`]);
 });
 
 test("getAllGlobalData() with other data files", async (t) => {

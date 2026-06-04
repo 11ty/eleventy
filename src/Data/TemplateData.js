@@ -24,12 +24,21 @@ const debugDev = createDebug("Dev:Eleventy:TemplateData");
 class TemplateDataParseError extends EleventyBaseError {}
 
 class TemplateData {
+	// order is important (json not included)
+	#eligiblePrioritizedExtensions = [
+		"js",
+		"cjs",
+		"mjs",
+		...(isTypeScriptSupported() ? ["ts", "cts", "mts"] : []),
+	];
+
 	// order is important
-	#eligibleExtensions = [
-		".js",
-		".cjs",
-		".mjs",
-		...(isTypeScriptSupported() ? [".ts", ".cts", ".mts"] : []),
+	#globalDataOrderedExtensions = [
+		"json",
+		"mjs",
+		"cjs",
+		"js",
+		...(isTypeScriptSupported() ? ["mts", "cts", "ts"] : []),
 	];
 
 	constructor(templateConfig) {
@@ -247,7 +256,7 @@ class TemplateData {
 	}
 
 	getGlobalDataExtensionPriorities() {
-		return this.getUserDataExtensions().concat(["json", "mjs", "cjs", "js", "mts", "cts", "ts"]);
+		return this.getUserDataExtensions().concat(this.#globalDataOrderedExtensions);
 	}
 
 	static calculateExtensionPriority(path, priorities) {
@@ -516,7 +525,7 @@ class TemplateData {
 	async getDataValue(path) {
 		let extension = TemplatePath.getExtension(path);
 
-		if (["js", "cjs", "mjs", "ts", "cts", "mts"].includes(extension)) {
+		if (this.#eligiblePrioritizedExtensions.includes(extension)) {
 			// JS data file or require’d JSON (no preprocessing needed)
 			if (!this.exists(path)) {
 				return {};
@@ -586,8 +595,8 @@ class TemplateData {
 
 			// data suffix
 			if (suffix) {
-				for (let extension of this.#eligibleExtensions) {
-					paths.push(base + suffix + extension);
+				for (let extension of this.#eligiblePrioritizedExtensions) {
+					paths.push(base + suffix + "." + extension);
 				}
 			}
 			paths.push(base + suffix + ".json"); // default: .11tydata.json
