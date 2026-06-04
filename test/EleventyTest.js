@@ -1622,6 +1622,26 @@ test("permalink on custom template lang, issue #3619", async (t) => {
 }`);
 });
 
+test("Mixed-case custom template extensions are discovered, issue #4224", async (t) => {
+  let elev = new Eleventy("./test/stubs-4224/", undefined, {
+    config: function(eleventyConfig) {
+      eleventyConfig.addTemplateFormats("vZome");
+      eleventyConfig.addExtension("vZome", {
+        compile: function(str) {
+          return function() {
+            return `Rendered ${str.trim()}`;
+          };
+        },
+      });
+    },
+  });
+  elev.disableLogger();
+
+  let results = await elev.toJSON();
+  t.is(results.length, 1);
+  t.is(results[0].content, "Rendered mixed-case custom extension");
+});
+
 test("Template data throws error when tags is not an Array or String #1791", async (t) => {
   let elev = new Eleventy("./test/noop/", "./test/noop/_site", {
     config: function (eleventyConfig) {

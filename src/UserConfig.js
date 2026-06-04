@@ -928,6 +928,8 @@ class UserConfig {
 		}
 
 		for (let extension of extensions) {
+			extension = extension.trim().toLowerCase();
+
 			if (this.extensionConflictMap[extension]) {
 				throw new Error(
 					`An attempt was made to override the "${extension}" template syntax twice (via the \`addExtension\` configuration API). A maximum of one override is currently supported.`,
@@ -944,6 +946,8 @@ class UserConfig {
 				},
 				options,
 			);
+			extensionOptions.key = extensionOptions.key.toLowerCase();
+			extensionOptions.extension = extensionOptions.extension.toLowerCase();
 
 			if (extensionOptions.key !== extensionOptions.extension) {
 				extensionOptions.aliasKey = extensionOptions.extension;
