@@ -24,6 +24,14 @@ const debugDev = createDebug("Dev:Eleventy:TemplateData");
 class TemplateDataParseError extends EleventyBaseError {}
 
 class TemplateData {
+	// order is important
+	#eligibleExtensions = [
+		".js",
+		".cjs",
+		".mjs",
+		...(isTypeScriptSupported() ? [".ts", ".cts", ".mts"] : []),
+	];
+
 	constructor(templateConfig) {
 		if (!templateConfig || templateConfig.constructor.name !== "TemplateConfig") {
 			throw new Error(
@@ -578,7 +586,7 @@ class TemplateData {
 
 			// data suffix
 			if (suffix) {
-				for (let extension of [".js", ".cjs", ".mjs", ".ts", ".cts", ".mts"]) {
+				for (let extension of this.#eligibleExtensions) {
 					paths.push(base + suffix + extension);
 				}
 			}
