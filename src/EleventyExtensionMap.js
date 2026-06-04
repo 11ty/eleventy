@@ -76,6 +76,8 @@ class EleventyExtensionMap {
 	// on paths found from the file system glob search.
 	// TODO: Method name might just need to be renamed to something more accurate.
 	isFullTemplateFilePath(path) {
+		path = (path || "").toLowerCase();
+
 		for (let extension of this.validTemplateLanguageKeys) {
 			if (path.endsWith(`.${extension}`)) {
 				return true;
@@ -97,6 +99,8 @@ class EleventyExtensionMap {
 	}
 
 	getValidExtensionsForPath(path) {
+		path = (path || "").toLowerCase();
+
 		let extensions = new Set();
 		for (let extension in this.extensionToKeyMap) {
 			if (path.endsWith(`.${extension}`)) {
@@ -242,8 +246,10 @@ class EleventyExtensionMap {
 	}
 
 	removeTemplateExtension(path) {
+		let normalizedPath = (path || "").toLowerCase();
+
 		for (let extension in this.extensionToKeyMap) {
-			if (path === extension || path.endsWith("." + extension)) {
+			if (normalizedPath === extension || normalizedPath.endsWith("." + extension)) {
 				return path.slice(
 					0,
 					path.length - 1 - extension.length < 0 ? 0 : path.length - 1 - extension.length,

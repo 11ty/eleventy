@@ -38,6 +38,38 @@ test("Keys are mapped to lower case", async (t) => {
   t.deepEqual(map.getGlobs("."), ["./**/*.{liquid,pug,njk}"]);
 });
 
+test("Custom addExtension keys are mapped to lower case", async (t) => {
+  let cfg = new TemplateConfig();
+  cfg.userConfig.addExtension("vZome", {
+    compile: function(content) {
+      return () => content;
+    }
+  });
+
+  let map = await getExtensionMap(["vZome"], cfg);
+
+  t.deepEqual(map.getValidGlobs("."), ["./**/*.vzome"]);
+  t.true(map.hasEngine("component.vZome"));
+  t.is(map.getKey("component.vZome"), "vzome");
+  t.true(map.isFullTemplateFilePath("component.vZome"));
+  t.deepEqual(map.getValidExtensionsForPath("component.vZome"), ["vzome"]);
+  t.is(map.removeTemplateExtension("component.vZome"), "component");
+});
+
+test("Custom addExtension keys detect mixed-case duplicates", (t) => {
+  let cfg = new TemplateConfig();
+  cfg.userConfig.addExtension("vZome", {});
+
+  let e = t.throws(() => {
+    cfg.userConfig.addExtension("VZOME", {});
+  });
+
+  t.is(
+    e.message,
+    'An attempt was made to override the "vzome" template syntax twice (via the `addExtension` configuration API). A maximum of one override is currently supported.',
+  );
+});
+
 test("Pruned globs", async (t) => {
   let map = await getExtensionMap(["liquid", "njk", "png"]);
   t.deepEqual(map.getPassthroughCopyGlobs("."), ["./**/*.png"]);
