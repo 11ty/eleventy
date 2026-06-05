@@ -107,7 +107,7 @@ class ConsoleLogger {
 		type = "log",
 		chalkColor = undefined,
 		forceToConsole = false,
-		prefix = "[awesome.me/build]",
+		prefix = "[11ty]",
 	) {
 		if (!forceToConsole && (!this.isVerbose || process.env.DEBUG)) {
 			debug(message);

@@ -30,15 +30,17 @@ const debugDev = createDebug("Dev:Eleventy:TemplateData");
 class TemplateDataParseError extends EleventyBaseError {}
 
 class TemplateData {
-	// order is important (json not included)
+	// Would be nice if the priorities here matched (see also FilePathUtil used by config file paths)
+
+	// (json not included) priority is reverse order
 	#eligiblePrioritizedExtensions = [
+		...(isTypeScriptSupported() ? ["ts", "cts", "mts"] : []),
 		"js",
 		"cjs",
 		"mjs",
-		...(isTypeScriptSupported() ? ["ts", "cts", "mts"] : []),
 	];
 
-	// order is important
+	// in order of priority
 	#globalDataOrderedExtensions = [
 		"json",
 		"mjs",

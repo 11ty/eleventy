@@ -1,5 +1,5 @@
 {
-	"name": "@awesome.me/build",
+	"name": "@11ty/eleventy",
 	"version": "4.0.0-alpha.8",
 	"description": "A simpler way to build awesome web sites.",
 	"publishConfig": {

@@ -11,7 +11,7 @@ import GlobalDependencyMap from "./GlobalDependencyMap.js";
 import ExistsCache from "./Util/ExistsCache.js";
 import eventBus from "./EventBus.js";
 import ProjectTemplateFormats from "./Util/ProjectTemplateFormats.js";
-import { isTypeScriptSupported } from "./Util/FeatureTests.cjs";
+import { expandEligibleJavaScriptFilePaths } from "./Util/FilePathUtil.js";
 
 const { set: lodashSet, get: lodashGet } = lodash;
 const debug = createDebug("Eleventy:TemplateConfig");
@@ -76,20 +76,10 @@ class TemplateConfig {
 			}
 		} else {
 			this.projectConfigPaths = [
-				"buildawesome.config.js",
-				"buildawesome.config.mjs",
-				"buildawesome.config.cjs",
+				...expandEligibleJavaScriptFilePaths("build-awesome.config"),
 				".eleventy.js",
-				"eleventy.config.js",
-				"eleventy.config.mjs",
-				"eleventy.config.cjs",
+				...expandEligibleJavaScriptFilePaths("eleventy.config"),
 			];
-
-			if (isTypeScriptSupported()) {
-				this.projectConfigPaths.push("eleventy.config.ts");
-				this.projectConfigPaths.push("eleventy.config.mts");
-				this.projectConfigPaths.push("eleventy.config.cts");
-			}
 		}
 
 		if (customRootConfig) {
