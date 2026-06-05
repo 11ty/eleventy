@@ -35,7 +35,7 @@ We have a few test suites, for various reasons:
 
 - [ava JavaScript test runner](https://github.com/avajs/ava) ([assertions docs](https://github.com/avajs/ava/blob/main/docs/03-assertions.md)) (primary test suite in `test/`)
 - [Node.js Test runner](https://nodejs.org/api/test.html) (secondary test suite in `test_node/`)
-- [Vitest (in Browser Mode)](https://vitest.dev/guide/browser/) (client tests in `packages/client/test/`)
+- [Vitest (in Browser Mode)](https://vitest.dev/guide/browser/) (client tests in `packages/browser/test/`)
 - [Benchmark for Performance Regressions](https://github.com/11ty/eleventy-benchmark)
 
 These run in various environments:

@@ -5,6 +5,6 @@ test_node
 coverage
 eslint.config.js
 .*
-packages/client/
+packages/browser/
 scripts
 tsconfig.json

@@ -1,10 +1,11 @@
 import fs from "node:fs";
+import chalk from "kleur";
 import { default as bundleClient } from "@11ty/package-bundler";
 
 import pkg from "../../package.json" with { type: "json" };
 import { readableFileSize } from "../../src/Util/FileSize.js";
 
-const PREFIX = `[11ty/bundle/client] `;
+const PREFIX = chalk.dim(`[11ty/bundle/client] `);
 
 function size(filepath) {
 	return readableFileSize(fs.statSync(filepath).size);
@@ -36,7 +37,7 @@ console.log(`${PREFIX}Wrote dist/eleventy.js: ${size("./dist/eleventy.js")}`);
 
 // fs.mkdirSync("./visualize/", { recursive: true });
 // fs.writeFileSync("./visualize/meta.json", JSON.stringify(result.metafile));
-// npx esbuild-visualizer --metadata ./packages/client/visualize/meta.json --filename packages/client/visualize/index.html
+// npx esbuild-visualizer --metadata ./packages/browser/visualize/meta.json --filename packages/browser/visualize/index.html
 
 await bundleClient(
 	import.meta.resolve("./src/BundleLiquid.js"),

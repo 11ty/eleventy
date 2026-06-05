@@ -12,10 +12,10 @@ delete clientPkg.private; // allow publish
 if (
 	corePkg.name !== "@11ty/eleventy" ||
 	clientPkg.name !== "@11ty/client" ||
-	!fs.existsSync("./packages/client/package.json")
+	!fs.existsSync("./packages/browser/package.json")
 ) {
 	throw new Error("Did you run this script from the wrong directory?");
 }
 
-fs.writeFileSync("./packages/client/package.json", JSON.stringify(clientPkg, null, 2), "utf8");
+fs.writeFileSync("./packages/browser/package.json", JSON.stringify(clientPkg, null, 2), "utf8");
 console.log(`[11ty/bundle/client] Updated @11ty/client package version to ${corePkg.version}`);

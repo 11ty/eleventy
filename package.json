@@ -26,7 +26,7 @@
 		"node": ">=22.15"
 	},
 	"workspaces": [
-		"packages/client"
+		"packages/browser"
 	],
 	"funding": {
 		"type": "opencollective",

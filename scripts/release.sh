@@ -19,7 +19,7 @@ if [ -z "$NPM_PUBLISH_TAG" ]; then
 	exit 1
 fi
 
-node packages/client/update-package-json.js
+node packages/browser/update-package-json.js
 
 # Will skip publishing root if publishing workspaces fails
 if npm publish --workspaces --provenance --access=public --tag=$NPM_PUBLISH_TAG $DRY_RUN; then
