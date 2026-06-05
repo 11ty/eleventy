@@ -6,3 +6,5 @@ coverage
 eslint.config.js
 .*
 packages/client/
+scripts
+tsconfig.json
