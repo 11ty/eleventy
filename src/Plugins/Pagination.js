@@ -349,7 +349,6 @@ class Pagination {
 			// page.url and page.outputPath are used to avoid another getOutputLocations call later, see Template->addComputedData
 			clonedData.page.url = href;
 			clonedData.page.outputPath = path;
-			clonedData.page.dir = dir;
 
 			entries.push({
 				pageNumber,

@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
+import { createDebug } from "obug";
 import matter from "@11ty/gray-matter";
 import lodash from "@11ty/lodash-custom";
-import { DeepCopy, TemplatePath } from "@11ty/eleventy-utils";
-import { createDebug } from "obug";
+import { Merge, DeepCopy, TemplatePath } from "@11ty/eleventy-utils";
 
 import JavaScriptFrontMatter from "./Engines/FrontMatter/JavaScript.js";
 import { EOL } from "./Util/NewLineAdapter.js";
@@ -28,6 +28,7 @@ class TemplateContent {
 	#extensionMap;
 	#configOptions;
 	#frontMatterOptions;
+	#dataMapContent;
 
 	constructor(inputPath, templateConfig) {
 		if (!templateConfig || templateConfig.constructor.name !== "TemplateConfig") {
@@ -392,29 +393,64 @@ class TemplateContent {
 		return fm.content;
 	}
 
+	get dataCascade() {
+		if (!this.templateData) {
+			return;
+		}
+		return this.templateData.getTemplateDirectoryDataCascade(this.inputPath);
+	}
+
 	async #getFrontMatterData() {
 		let fm = await this.read();
+
+		let virtualTemplateDefinition = this.getVirtualTemplateDefinition();
+		let virtualTemplateData;
+		if (virtualTemplateDefinition) {
+			virtualTemplateData = virtualTemplateDefinition.data;
+
+			TemplateData.cleanupData(virtualTemplateData, {
+				file: this.inputPath,
+				isVirtualTemplate: Boolean(virtualTemplateData),
+			});
+		}
 
 		// gray-matter isn’t async-friendly but can return a promise from custom front matter
 		if (fm.data instanceof Promise) {
 			fm.data = await fm.data;
 		}
 
-		let tr = await this.getTemplateRender();
-		let extraData = await tr.engine.getExtraDataFromFile(this.inputPath);
+		let frontMatterData = Object.assign({}, fm.data);
 
-		let virtualTemplateDefinition = this.getVirtualTemplateDefinition();
-		let virtualTemplateData;
-		if (virtualTemplateDefinition) {
-			virtualTemplateData = virtualTemplateDefinition.data;
-		}
-
-		let data = Object.assign({}, fm.data, extraData, virtualTemplateData);
-
-		TemplateData.cleanupData(data, {
+		TemplateData.cleanupData(frontMatterData, {
 			file: this.inputPath,
 			isVirtualTemplate: Boolean(virtualTemplateData),
 		});
+
+		let tr = await this.getTemplateRender();
+		let extraData = await tr.engine.getExtraDataFromFile(this.inputPath);
+
+		TemplateData.cleanupData(extraData, {
+			file: this.inputPath,
+			isVirtualTemplate: Boolean(virtualTemplateData),
+		});
+
+		if (this.dataCascade) {
+			this.dataCascade.mergeTopLevel(frontMatterData, this.inputPath);
+
+			if (extraData) {
+				this.dataCascade.mergeTopLevel(extraData);
+			}
+			if (virtualTemplateData) {
+				this.dataCascade.mergeTopLevel(virtualTemplateData);
+			}
+		}
+
+		let data = Object.assign(frontMatterData, extraData, virtualTemplateData);
+
+		let editOverrides = this.eleventyConfig.getDataOverrideForPath(this.inputPath);
+		if (editOverrides) {
+			data = Merge(data, editOverrides);
+		}
 
 		return {
 			data,
@@ -650,6 +686,10 @@ class TemplateContent {
 		return suffix.join("");
 	}
 
+	getDataMapContent() {
+		return this.#dataMapContent;
+	}
+
 	async _render(str, data, options = {}) {
 		let { bypassMarkdown, type } = options;
 
@@ -681,6 +721,28 @@ class TemplateContent {
 				inputPathBenchmark.before();
 			}
 
+			// Only HTML output files
+			if (
+				this.dataCascade &&
+				type === "Content" &&
+				(data.page?.outputPath || "").endsWith(".html")
+			) {
+				// Merge local data cascade with global
+				let globalDataCascade = this.templateData.getGlobalDataCascade();
+				let layoutDataCascade = this.getLayoutDataCascade();
+				this.dataCascade.mergeWithUpstreamDataCascade(layoutDataCascade, globalDataCascade);
+
+				let collectionsDataCascade = this.templateData.getCollectionsDataCascade();
+				this.dataCascade.assignFromUpstreamDataCascade(collectionsDataCascade);
+
+				let dataSourceLocations = this.dataCascade.getLocations();
+				let dataMapContent = await fn(dataSourceLocations);
+				// cache data map html content
+				this.#dataMapContent = dataMapContent;
+			} else {
+				this.#dataMapContent = undefined;
+			}
+
 			let rendered = await fn(data);
 
 			if (inputPathBenchmark) {
@@ -688,6 +750,7 @@ class TemplateContent {
 			}
 			templateBenchmark.after();
 			debugDev("%o getCompiledTemplate called, rendered content created", this.inputPath);
+
 			return rendered;
 		} catch (e) {
 			if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {

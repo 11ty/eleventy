@@ -1,5 +1,6 @@
-import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import { createDebug } from "obug";
+import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
+import lodash from "@11ty/lodash-custom";
 
 import chalk from "./Adapters/Packages/chalk.js";
 import getDefaultConfig from "./Adapters/getDefaultConfig.js";
@@ -12,6 +13,7 @@ import eventBus from "./EventBus.js";
 import ProjectTemplateFormats from "./Util/ProjectTemplateFormats.js";
 import { isTypeScriptSupported } from "./Util/FeatureTests.cjs";
 
+const { set: lodashSet, get: lodashGet } = lodash;
 const debug = createDebug("Eleventy:TemplateConfig");
 const debugDev = createDebug("Dev:Eleventy:TemplateConfig");
 
@@ -52,6 +54,7 @@ class TemplateConfig {
 	#existsCache = new ExistsCache();
 	#usesGraph;
 	#activeConfigPath;
+	#dataEdits = [];
 
 	constructor(customRootConfig, projectConfigPath) {
 		/** @type {object} */
@@ -73,6 +76,9 @@ class TemplateConfig {
 			}
 		} else {
 			this.projectConfigPaths = [
+				"buildawesome.config.js",
+				"buildawesome.config.mjs",
+				"buildawesome.config.cjs",
 				".eleventy.js",
 				"eleventy.config.js",
 				"eleventy.config.mjs",
@@ -588,6 +594,60 @@ class TemplateConfig {
 	 */
 	get existsCache() {
 		return this.#existsCache;
+	}
+
+	addDataEditOverride(filePath, dataSelector, value, timestamp) {
+		this.#dataEdits.push({
+			filePath,
+			dataSelector,
+			value,
+			timestamp,
+		});
+	}
+
+	getDataOverrideForPath(filePath) {
+		filePath = TemplatePath.stripLeadingDotSlash(filePath);
+
+		let edits = this.#dataEdits
+			.filter((entry) => entry.filePath === filePath)
+			.sort((a, b) => {
+				// crdt algorithm: newest timestamp wins
+				return a.timestamp - b.timestamp;
+			});
+
+		if (edits.length === 0) {
+			return;
+		}
+
+		// TODO add a cache for this
+		let obj = {};
+		for (let edit of edits) {
+			let { filePath, dataSelector, value, timestamp } = edit;
+
+			if (lodashGet(obj, dataSelector)) {
+				// console.log( "Warning: override conflict", {filePath, dataSelector, value, timestamp}, "with", lodashGet(obj, dataSelector) );
+			}
+
+			lodashSet(obj, dataSelector, value);
+		}
+
+		return obj;
+	}
+
+	resetDataOverrides() {
+		// de-duped
+		let filePaths = Array.from(new Set(this.#dataEdits.map((entry) => entry.filePath)));
+		this.#dataEdits = [];
+		return filePaths;
+	}
+
+	// only a count of files+keys changed, not individual edits
+	getPendingDataOverrides() {
+		let s = new Set();
+		for (let { filePath, dataSelector } of this.#dataEdits) {
+			s.add(`${filePath}#${dataSelector}`);
+		}
+		return Array.from(s);
 	}
 }
 

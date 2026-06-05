@@ -6,12 +6,18 @@ import { createDebug } from "obug";
 import { inspect } from "../Adapters/Packages/inspect.js";
 import unique from "../Util/Objects/Unique.js";
 import TemplateGlob from "../TemplateGlob.js";
+import { DataCascadeManager } from "./DataCascade.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
-import TemplateDataInitialGlobalData from "./TemplateDataInitialGlobalData.js";
-import { getEleventyPackageJson, getWorkingProjectPackageJson } from "../Util/ImportJsonSync.js";
+import ConfigurationGlobalData from "./ConfigurationGlobalData.js";
+import {
+	getEleventyPackageJson,
+	importJsonSync,
+	getWorkingProjectPackageJsonPath,
+} from "../Util/ImportJsonSync.js";
 import { EleventyImport, EleventyLoadContent } from "../Util/Require.js";
 import { DeepFreeze } from "../Util/Objects/DeepFreeze.js";
 import { coerce } from "../Util/SemverCoerce.js";
+import ProjectDirectories from "../Util/ProjectDirectories.js";
 import ReservedData from "../Util/ReservedData.js";
 import { isTypeScriptSupported } from "../Util/FeatureTests.cjs";
 
@@ -41,6 +47,13 @@ class TemplateData {
 		...(isTypeScriptSupported() ? ["mts", "cts", "ts"] : []),
 	];
 
+	#rawImports;
+	#globalData;
+	#templateDirectoryData = {};
+	#dataCascadeManager = new DataCascadeManager();
+	#globalDataCascade;
+	#collectionsDataCascade;
+
 	constructor(templateConfig) {
 		if (!templateConfig || templateConfig.constructor.name !== "TemplateConfig") {
 			throw new Error(
@@ -51,17 +64,19 @@ class TemplateData {
 		this.templateConfig = templateConfig;
 		this.config = this.templateConfig.getConfig();
 
+		if (this.config.experimentalFlags.includes(DataCascadeManager.FLAGS.DATA_LOCATION)) {
+			this.#dataCascadeManager.setEnabled(true);
+			this.#globalDataCascade = this.#dataCascadeManager.factory();
+			this.#collectionsDataCascade = this.#dataCascadeManager.factory();
+		}
+
 		this.benchmarks = {
 			data: this.config.benchmarkManager.get("Data"),
 			aggregate: this.config.benchmarkManager.get("Aggregate"),
 		};
 
-		this.rawImports = {};
-		this.globalData = null;
-		this.templateDirectoryData = {};
 		this.isEsm = false;
-
-		this.initialGlobalData = new TemplateDataInitialGlobalData(this.templateConfig);
+		this.initialGlobalData = new ConfigurationGlobalData(this.templateConfig);
 	}
 
 	get dirs() {
@@ -133,25 +148,44 @@ class TemplateData {
 			debug(
 				"Opted-out of package.json assignment for global data with falsy value for `keys.package` configuration.",
 			);
-			return this.rawImports;
-		} else if (Object.keys(this.rawImports).length > 0) {
-			return this.rawImports;
+			return;
 		}
 
-		let pkgJson = getWorkingProjectPackageJson();
-		this.rawImports[this.config.keys.package] = pkgJson;
+		if (this.#rawImports) {
+			return this.#rawImports;
+		}
+
+		let projectPackageJsonPath = getWorkingProjectPackageJsonPath();
+		let packageJson = {};
+		if (projectPackageJsonPath) {
+			packageJson = importJsonSync(projectPackageJsonPath);
+		}
+
+		this.#rawImports = {
+			[this.config.keys.package]: packageJson,
+		};
+
+		if (projectPackageJsonPath) {
+			let relativeProjectPackageJsonPath =
+				ProjectDirectories.relativeToProjectRoot(projectPackageJsonPath);
+
+			if (this.#globalDataCascade) {
+				this.#globalDataCascade.mergeTopLevel(this.#rawImports, relativeProjectPackageJsonPath);
+			}
+		}
 
 		if (this.config.freezeReservedData) {
-			DeepFreeze(this.rawImports);
+			DeepFreeze(this.#rawImports);
 		}
 
-		return this.rawImports;
+		return this.#rawImports;
 	}
 
 	clearData() {
-		this.globalData = null;
+		this.#globalData = null;
 		this.configApiGlobalData = null;
-		this.templateDirectoryData = {};
+		this.#templateDirectoryData = {};
+		this.#dataCascadeManager.reset();
 	}
 
 	_getGlobalDataGlobByExtension(extension) {
@@ -312,15 +346,16 @@ class TemplateData {
 
 	async getAllGlobalData() {
 		let globalData = {};
+
 		let files = TemplatePath.addLeadingDotSlashArray(await this.getGlobalDataFiles());
 
 		this.config.events.emit("eleventy.globalDataFiles", files);
 
 		let dataFileConflicts = {};
 
-		for (let j = 0, k = files.length; j < k; j++) {
-			let data = await this.getDataValue(files[j]);
-			let objectPathTarget = this.getObjectPathForDataFile(files[j]);
+		for (let file of Object.values(files)) {
+			let data = await this.getDataValue(file);
+			let objectPathTarget = this.getObjectPathForDataFile(file);
 
 			// Since we're joining directory paths and an array is not usable as an objectkey since two identical arrays are not double equal,
 			// we can just join the array by a forbidden character ("/"" is chosen here, since it works on Linux, Mac and Windows).
@@ -332,57 +367,59 @@ class TemplateData {
 			// and conflict, let’s merge them.
 			if (dataFileConflicts[objectPathTargetString]) {
 				debugWarn(
-					`merging global data from ${files[j]} with an already existing global data file (${dataFileConflicts[objectPathTargetString]}). Overriding existing keys.`,
+					`merging global data from ${file} with an already existing global data file (${dataFileConflicts[objectPathTargetString]}). Overriding existing keys.`,
 				);
 
 				let oldData = lodashGet(globalData, objectPathTarget);
 				data = Merge(oldData, data);
 			}
 
-			dataFileConflicts[objectPathTargetString] = files[j];
-			debug(`Found global data file ${files[j]} and adding as: ${objectPathTarget}`);
+			dataFileConflicts[objectPathTargetString] = file;
+			debug(`Found global data file ${file} and adding as: ${objectPathTarget}`);
+
+			if (this.#globalDataCascade) {
+				this.#globalDataCascade.mergeToLocation(data, objectPathTargetString, file);
+			}
+
 			lodashSet(globalData, objectPathTarget, data);
 
 			if (this.config.freezeReservedData) {
-				ReservedData.check(globalData, files[j]);
+				ReservedData.check(globalData, file);
 			}
 		}
 
 		return globalData;
 	}
 
+	getEleventyGlobal() {
+		// #2293 for meta[name=generator]
+		const pkg = getEleventyPackageJson();
+
+		let version = coerce(pkg.version).toString();
+		let eleventy = {
+			version,
+			generator: `Eleventy v${version}`,
+		};
+		if (this.environmentVariables) {
+			eleventy.env = Object.assign({}, this.environmentVariables);
+		}
+		if (this.dirs) {
+			eleventy.directories = Object.assign({}, this.dirs.getUserspaceInstance());
+		}
+		eleventy.pendingEditsCount = (this.templateConfig.getPendingDataOverrides() || []).length;
+
+		// `eleventy` is Reserved
+		if (this.config.freezeReservedData) {
+			DeepFreeze(eleventy);
+		}
+
+		return eleventy;
+	}
+
 	async #getInitialGlobalData() {
 		let globalData = await this.initialGlobalData.getData();
 
-		if (!("eleventy" in globalData)) {
-			globalData.eleventy = {};
-		}
-
-		// #2293 for meta[name=generator]
-		const pkg = getEleventyPackageJson();
-		globalData.eleventy.version = coerce(pkg.version).toString();
-		globalData.eleventy.generator = `Eleventy v${globalData.eleventy.version}`;
-
-		if (this.environmentVariables) {
-			if (!("env" in globalData.eleventy)) {
-				globalData.eleventy.env = {};
-			}
-
-			Object.assign(globalData.eleventy.env, this.environmentVariables);
-		}
-
-		if (this.dirs) {
-			if (!("directories" in globalData.eleventy)) {
-				globalData.eleventy.directories = {};
-			}
-
-			Object.assign(globalData.eleventy.directories, this.dirs.getUserspaceInstance());
-		}
-
-		// Reserved
-		if (this.config.freezeReservedData) {
-			DeepFreeze(globalData.eleventy);
-		}
+		globalData.eleventy = this.getEleventyGlobal();
 
 		return globalData;
 	}
@@ -397,25 +434,34 @@ class TemplateData {
 
 	async #getGlobalData() {
 		let rawImports = this.getRawImports();
+
+		// Data from the configuration API eleventyConfig.addGLobalData and `eleventy` global
 		let configApiGlobalData = await this.getInitialGlobalData();
+		// Some day we may treat the `eleventy` global assigned here as different to Config API data (readonly vs internal)
+		if (this.#globalDataCascade) {
+			this.#globalDataCascade.mergeTopLevel(configApiGlobalData);
+		}
 
 		let globalJson = await this.getAllGlobalData();
-		let mergedGlobalData = Merge(globalJson, configApiGlobalData);
+
+		let noFilePathEditOverrides = this.templateConfig.getDataOverrideForPath();
+
+		let mergedGlobalData = Merge(globalJson, configApiGlobalData, noFilePathEditOverrides);
 
 		// OK: Shallow merge when combining rawImports (pkg) with global data files
 		return Object.assign({}, mergedGlobalData, rawImports);
 	}
 
 	async getGlobalData() {
-		if (!this.globalData) {
-			this.globalData = this.#getGlobalData();
+		if (!this.#globalData) {
+			this.#globalData = this.#getGlobalData();
 		}
 
-		return this.globalData;
+		return this.#globalData;
 	}
 
 	/* Template and Directory data files */
-	async combineLocalData(localDataPaths) {
+	async combineLocalData(localDataPaths, dataCascade) {
 		let localData = {};
 		if (!Array.isArray(localDataPaths)) {
 			localDataPaths = [localDataPaths];
@@ -457,20 +503,46 @@ class TemplateData {
 					}
 					dataSource[key] = path;
 				}
+
 				Merge(localData, cleanedDataForPath);
+
+				if (dataCascade) {
+					dataCascade.mergeTopLevel(localData, path);
+				}
 			}
 		}
+
 		return localData;
 	}
 
-	async getTemplateDirectoryData(templatePath) {
-		if (!this.templateDirectoryData[templatePath]) {
-			let localDataPaths = await this.getLocalDataPaths(templatePath);
-			let importedData = await this.combineLocalData(localDataPaths);
+	getCollectionsDataCascade() {
+		return this.#collectionsDataCascade;
+	}
 
-			this.templateDirectoryData[templatePath] = importedData;
+	getGlobalDataCascade() {
+		return this.#globalDataCascade;
+	}
+
+	async getTemplateDirectoryData(templatePath) {
+		if (!this.#templateDirectoryData[templatePath]) {
+			let cascade;
+			if (!this.#dataCascadeManager.has(templatePath)) {
+				cascade = this.#dataCascadeManager.create(templatePath);
+			} else {
+				cascade = this.#dataCascadeManager.get(templatePath);
+			}
+
+			let localDataPaths = await this.getLocalDataPaths(templatePath);
+			let importedData = await this.combineLocalData(localDataPaths, cascade);
+
+			this.#templateDirectoryData[templatePath] = importedData;
 		}
-		return this.templateDirectoryData[templatePath];
+
+		return this.#templateDirectoryData[templatePath];
+	}
+
+	getTemplateDirectoryDataCascade(templatePath) {
+		return this.#dataCascadeManager.get(templatePath);
 	}
 
 	getUserDataExtensions() {
@@ -520,8 +592,6 @@ class TemplateData {
 		}
 	}
 
-	// ignoreProcessing = false for global data files
-	// ignoreProcessing = true for local data files
 	async getDataValue(path) {
 		let extension = TemplatePath.getExtension(path);
 
@@ -549,12 +619,20 @@ class TemplateData {
 			// We always need to use `import()`, as `require` isn’t available in ESM.
 			let returnValue = await EleventyImport(path, type);
 
-			// TODO special exception for Global data `permalink.js`
+			// Returning a function is executed immediately (it has always done this for global data)
+
+			// TODO some API to allow returning a function without executing it immediately
+			// (e.g. `permalink.js` or `eleventyDataSchema.js` global data)
 			// module.exports = (data) => `${data.page.filePathStem}/`; // Does not work
 			// module.exports = () => ((data) => `${data.page.filePathStem}/`); // Works
 			if (typeof returnValue === "function") {
 				let configApiGlobalData = await this.getInitialGlobalData();
 				returnValue = await returnValue(configApiGlobalData || {});
+			}
+
+			let editOverrides = this.templateConfig.getDataOverrideForPath(path);
+			if (editOverrides) {
+				returnValue = Merge(returnValue, editOverrides);
 			}
 
 			dataBench.after();
@@ -565,11 +643,14 @@ class TemplateData {
 			// Other extensions
 			let { parser, options } = this.getUserDataParser(extension);
 
-			return this._parseDataFile(path, parser, options);
+			let returnValue = this._parseDataFile(path, parser, options);
+
+			return returnValue;
 		} else if (extension === "json") {
 			// File to string, parse with JSON (preprocess)
-			const parser = (content) => JSON.parse(content);
-			return this._parseDataFile(path, parser);
+			let returnValue = this._parseDataFile(path, (content) => JSON.parse(content));
+
+			return returnValue;
 		} else {
 			throw new TemplateDataParseError(
 				`Could not find an appropriate data parser for ${path}. Do you need to add a plugin to your config file?`,

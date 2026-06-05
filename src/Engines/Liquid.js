@@ -61,6 +61,8 @@ export default class Liquid extends TemplateEngine {
 		 * @this {object}
 		 */
 		return function (...args) {
+			// TODO ArgumentHelper.wrapFilter(fn);
+
 			// Set this.eleventy and this.page
 			if (typeof this.context?.get === "function") {
 				augmentObject(this, {

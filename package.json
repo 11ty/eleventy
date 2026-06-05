@@ -1,7 +1,7 @@
 {
-	"name": "@11ty/eleventy",
-	"version": "4.0.0-alpha.7",
-	"description": "A simpler static site generator.",
+	"name": "@awesome.me/build",
+	"version": "4.0.0-alpha.8",
+	"description": "A simpler way to build awesome web sites.",
 	"publishConfig": {
 		"access": "public",
 		"provenance": true
@@ -19,7 +19,7 @@
 		"./utils/git": "./src/Util/Git.js"
 	},
 	"bin": {
-		"eleventy": "cmd.cjs"
+		"build": "cmd.cjs"
 	},
 	"license": "MIT",
 	"engines": {
@@ -135,7 +135,7 @@
 		"@11ty/dependency-tree": "^4.0.2",
 		"@11ty/dependency-tree-esm": "^2.0.4",
 		"@11ty/dependency-tree-typescript": "^1.0.0",
-		"@11ty/eleventy-dev-server": "^3.0.0-alpha.8",
+		"@11ty/eleventy-dev-server": "file:../eleventy-dev-server",
 		"@11ty/eleventy-plugin-bundle": "^3.0.7",
 		"@11ty/eleventy-utils": "^2.0.7",
 		"@11ty/gray-matter": "^2.0.2",

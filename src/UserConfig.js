@@ -30,6 +30,7 @@ class UserConfig {
 	/** @type {number} */
 	#concurrency = 1;
 	// Before using os.availableParallelism(); see https://github.com/11ty/eleventy/issues/3596
+	#experimentalFlags = [];
 
 	constructor() {
 		// These are completely unnecessary lines to satisfy TypeScript
@@ -1185,6 +1186,10 @@ class UserConfig {
 		return this.#concurrency;
 	}
 
+	addExperimentalBehavior(flag) {
+		this.#experimentalFlags.push(flag);
+	}
+
 	getMergingConfigObject() {
 		let obj = {
 			// filters removed in 1.0 (use addTransform instead)
@@ -1257,6 +1262,7 @@ class UserConfig {
 			freezeReservedData: this.freezeReservedData,
 			customDateParsing: this.customDateParsingCallbacks,
 			errorReporting: this.errorReporting,
+			experimentalFlags: this.#experimentalFlags,
 		};
 
 		if (Array.isArray(this.dataFileSuffixesOverride)) {
@@ -1273,8 +1279,9 @@ class UserConfig {
 		return obj;
 	}
 
-	// Removed features
+	// Throws an error (no backwards compat)
 	get DateTime() {
+		// this.DateTime removed in v4
 		throw new Error(
 			'Luxon’s DateTime property in configuration was removed in Eleventy v4. Please `import { DateTime } from "luxon"` directly.',
 		);
@@ -1282,13 +1289,6 @@ class UserConfig {
 
 	_normalizeTemplateFormats() {
 		throw new Error("The internal _normalizeTemplateFormats() method was removed in Eleventy v3");
-	}
-
-	setBrowserSyncConfig() {
-		this._attemptedBrowserSyncUse = true;
-		debug(
-			"The `setBrowserSyncConfig` method was removed in Eleventy v2. Use `setServerOptions` with the new Eleventy development server or the `@11ty/eleventy-browser-sync` plugin moving forward.",
-		);
 	}
 
 	configureTemplateHandling(options = {}) {
@@ -1314,6 +1314,9 @@ class UserConfig {
 	// Used by the Upgrade Helper Plugin v1 (no longer relevant)
 	// https://github.com/11ty/eleventy-upgrade-help/blob/v1.x/src/data-deep-merge.js#L5-L9
 	isDataDeepMergeModified() {}
+
+	// No-op from v2
+	setBrowserSyncConfig() {}
 }
 
 export default UserConfig;

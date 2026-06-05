@@ -408,6 +408,9 @@ class TemplateWriter {
 
 	async createTemplateMap(paths, to) {
 		this.templateMap = new TemplateMap(this.templateConfig);
+		if (this.templateData) {
+			this.templateMap.setTemplateData(this.templateData);
+		}
 
 		await this.#addToTemplateMap(paths, to);
 		await this.templateMap.cache();

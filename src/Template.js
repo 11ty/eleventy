@@ -23,7 +23,6 @@ import ReservedData from "./Util/ReservedData.js";
 import TransformsUtil from "./Util/TransformsUtil.js";
 import { FileSystemManager } from "./Util/FileSystemManager.js";
 import { TemplatePreprocessors } from "./TemplatePreprocessors.js";
-import PathNormalizer from "./Util/PathNormalizer.js";
 import { getDirectoryFromUrl } from "./Util/UrlUtil.js";
 
 const { set: lodashSet, get: lodashGet } = lodash;
@@ -36,6 +35,11 @@ class Template extends TemplateContent {
 	#fsManager;
 	#stats;
 	#dataCache;
+
+	#cacheRenderedPromise;
+	#cacheRenderedTransformsAndLayoutsPromise;
+	#cacheRenderedDataLocationsTransformsAndLayoutsPromise;
+	#layoutDataCascade;
 	#preprocessors;
 	#preprocessorCache;
 
@@ -140,8 +144,9 @@ class Template extends TemplateContent {
 		super.resetCaches(types);
 
 		if (types.render) {
-			delete this._cacheRenderedPromise;
-			delete this._cacheRenderedTransformsAndLayoutsPromise;
+			this.#cacheRenderedPromise = undefined;
+			this.#cacheRenderedTransformsAndLayoutsPromise = undefined;
+			this.#cacheRenderedDataLocationsTransformsAndLayoutsPromise = undefined;
 		}
 	}
 
@@ -375,6 +380,10 @@ class Template extends TemplateContent {
 		return {};
 	}
 
+	getLayoutDataCascade() {
+		return this.#layoutDataCascade;
+	}
+
 	async #getData() {
 		debugDev("%o getData", this.inputPath);
 		let localData = {};
@@ -401,6 +410,9 @@ class Template extends TemplateContent {
 				let layout = this.getLayout(layoutKey);
 
 				mergedLayoutData = await layout.getData();
+
+				// TODO disable/toggle enabled
+				this.#layoutDataCascade = layout.getLayoutDataCascade();
 				debugDev("%o getData merged layout chain front matter", this.inputPath);
 			}
 		}
@@ -412,7 +424,9 @@ class Template extends TemplateContent {
 				ReservedData.checkSubset(mergedData);
 			}
 
-			await this.addPage(mergedData);
+			let pageData = await this.getPageData(mergedData);
+
+			Merge(mergedData, { page: pageData });
 
 			debugDev("%o getData mergedData", this.inputPath);
 
@@ -435,30 +449,73 @@ class Template extends TemplateContent {
 		return this.#dataCache;
 	}
 
-	async addPage(data) {
-		if (!("page" in data)) {
-			data.page = {};
+	mergeDataCascadeLocations(data) {
+		if (!this.dataCascade) {
+			return;
 		}
 
-		// Make sure to keep these keys synchronized in src/Util/ReservedData.js
-		data.page.inputPath = this.inputPath;
-		// parsed dir never has the trailing slash
-		data.page.inputPathDir = PathNormalizer.getDirectoryFromFilePath(this.inputPath);
-		data.page.fileSlug = this.fileSlugStr;
-		data.page.filePathStem = this.filePathStem;
-		data.page.outputFileExtension = this.engine.defaultTemplateFileExtension;
-		data.page.templateSyntax = this.getEngineNames(data[this.config.keys.engineOverride]);
+		// Set page.* as read only
+		this.dataCascade.mergeToLocation(data.page, "page"); // read only
 
-		let newDate = await this.getMappedDate(data);
+		// TODO add support for page.date (points to `date`)
+
+		// Only works with strings here, functions are read-only (above)
+		if (typeof data?.eleventyComputed?.permalink === "string") {
+			this.dataCascade.mergeToLocation(
+				data.page.url,
+				"page.url",
+				data?.eleventyComputed?.permalink,
+				"eleventyComputed.permalink",
+			);
+			this.dataCascade.mergeToLocation(
+				data.page.outputPath,
+				"page.outputPath",
+				data?.eleventyComputed?.permalink,
+				"eleventyComputed.permalink",
+			);
+		} else if (typeof data?.permalink === "string") {
+			this.dataCascade.mergeToLocation(data.page.url, "page.url", data?.permalink, "permalink");
+			this.dataCascade.mergeToLocation(
+				data.page.outputPath,
+				"page.outputPath",
+				data?.permalink,
+				"permalink",
+			);
+		}
+
+		if (this.computedData?.computedKeys) {
+			let keys = Array.from(this.computedData?.computedKeys).filter(
+				(selector) => !["page.url", "page.outputPath"].includes(selector),
+			);
+			for (let selector of keys) {
+				// TODO add support for string computed data
+				this.dataCascade.markLocationAsReadOnly(selector);
+			}
+		}
+	}
+
+	async getPageData(data) {
+		let page = {
+			// Make sure to keep these keys synchronized in src/Util/ReservedData.js
+			inputPath: this.inputPath,
+			fileSlug: this.fileSlugStr,
+			filePathStem: this.filePathStem,
+			outputFileExtension: this.engine.defaultTemplateFileExtension,
+			templateSyntax: this.templateRender.getEnginesList(data[this.config.keys.engineOverride]),
+		};
+
+		let newDate = await this.getMappedDate(data?.date, page);
 		// Skip date assignment if custom date is falsy.
 		if (newDate) {
-			data.page.date = newDate;
+			page.date = newDate;
 		}
 
-		// data.page.url
-		// data.page.outputPath
-		// data.page.excerpt from gray-matter and Front Matter
-		// data.page.lang from I18nPlugin
+		// page.url
+		// page.outputPath
+		// page.excerpt from gray-matter and Front Matter
+		// page.lang from I18nPlugin
+
+		return page;
 	}
 
 	// Tests only
@@ -483,12 +540,12 @@ class Template extends TemplateContent {
 	// This is the primary render mechanism, called via TemplateMap->populateContentDataInMap
 	async renderPageEntryWithoutLayout(pageEntry) {
 		// @cachedproperty
-		if (!this._cacheRenderedPromise) {
-			this._cacheRenderedPromise = this.renderDirect(pageEntry.rawInput, pageEntry.data);
+		if (!this.#cacheRenderedPromise) {
+			this.#cacheRenderedPromise = this.renderDirect(pageEntry.rawInput, pageEntry.data);
 			this.renderCount++;
 		}
 
-		return this._cacheRenderedPromise;
+		return this.#cacheRenderedPromise;
 	}
 
 	setLinters(linters) {
@@ -647,10 +704,16 @@ class Template extends TemplateContent {
 				return;
 			}
 
-			let { href, path, dir } = await this.getOutputLocations(data);
+			let { href, path } = await this.getOutputLocations(data);
 			data.page.url = href;
 			data.page.outputPath = path;
-			data.page.dir = dir;
+		}
+
+		if (this.dataCascade) {
+			data.page.mapUrl =
+				this.eleventyConfig.directories.getOutputPathRelativeToOutputDirectory(
+					data.page.outputPath,
+				) + ".map";
 		}
 	}
 
@@ -750,6 +813,8 @@ class Template extends TemplateContent {
 		if (!Pagination.hasPagination(data)) {
 			await this.addComputedData(data);
 
+			this.mergeDataCascadeLocations(data);
+
 			let obj = {
 				template: this, // not on the docs but folks are relying on it
 				rawInput,
@@ -778,6 +843,8 @@ class Template extends TemplateContent {
 
 			for (let pageEntry of pageTemplates) {
 				await pageEntry.template.addComputedData(pageEntry.data);
+
+				pageEntry.template.mergeDataCascadeLocations(pageEntry.data);
 
 				let obj = {
 					template: pageEntry.template, // not on the docs but folks are relying on it
@@ -873,7 +940,7 @@ class Template extends TemplateContent {
 		let layoutKey = pageEntry.data[this.config.keys.layout];
 		if (this.engine.useLayouts() && layoutKey) {
 			let layout = pageEntry.template.getLayout(layoutKey);
-			content = await layout.renderPageEntry(pageEntry);
+			content = await layout.renderLayoutPageEntry(pageEntry);
 		} else {
 			content = pageEntry.templateContent;
 		}
@@ -884,14 +951,51 @@ class Template extends TemplateContent {
 		return content;
 	}
 
-	async renderPageEntry(pageEntry) {
-		// @cachedproperty
-		if (!pageEntry.template._cacheRenderedTransformsAndLayoutsPromise) {
-			pageEntry.template._cacheRenderedTransformsAndLayoutsPromise =
-				this.#renderPageEntryWithLayoutsAndTransforms(pageEntry);
+	async #renderDataLocationsPageEntry(pageEntry) {
+		if (!(pageEntry?.outputPath || "").endsWith(".html")) {
+			return;
 		}
 
-		return pageEntry.template._cacheRenderedTransformsAndLayoutsPromise;
+		// Don’t run linters/transforms/layouts if we didn’t render (via incremental)!
+		if (pageEntry.template.isDryRun && pageEntry.template.isIncremental) {
+			return pageEntry.template.getDataMapContent();
+		}
+
+		let content;
+		let layoutKey = pageEntry.data[this.config.keys.layout];
+		if (this.engine.useLayouts() && layoutKey) {
+			let layout = pageEntry.template.getLayout(layoutKey);
+			content = await layout.renderLayoutPageEntry(pageEntry, this.dataCascade);
+		} else {
+			content = pageEntry.template.getDataMapContent();
+		}
+
+		content = await this.runTransforms(content, pageEntry);
+		return content;
+	}
+
+	static async renderPageEntryDataLocations(pageEntry) {
+		if (!pageEntry.template.dataCascade) {
+			return;
+		}
+
+		// @cachedproperty
+		if (!pageEntry.template.#cacheRenderedDataLocationsTransformsAndLayoutsPromise) {
+			pageEntry.template.#cacheRenderedDataLocationsTransformsAndLayoutsPromise =
+				pageEntry.template.#renderDataLocationsPageEntry(pageEntry);
+		}
+		return pageEntry.template.#cacheRenderedDataLocationsTransformsAndLayoutsPromise;
+	}
+
+	// This could be `static`
+	async renderPageEntry(pageEntry) {
+		// @cachedproperty
+		if (!pageEntry.template.#cacheRenderedTransformsAndLayoutsPromise) {
+			pageEntry.template.#cacheRenderedTransformsAndLayoutsPromise =
+				pageEntry.template.#renderPageEntryWithLayoutsAndTransforms(pageEntry);
+		}
+
+		return pageEntry.template.#cacheRenderedTransformsAndLayoutsPromise;
 	}
 
 	retrieveDataForJsonOutput(data, selectors) {
@@ -913,11 +1017,13 @@ class Template extends TemplateContent {
 
 		for (let page of mapEntry._pages) {
 			let content;
+			let contentMap;
 
 			// Note that behavior.render is overridden when using json output
 			if (page.template.isRenderable()) {
 				// this reuses page.templateContent, it doesn’t render it
 				content = await page.template.renderPageEntry(page);
+				contentMap = await Template.renderPageEntryDataLocations(page);
 			}
 
 			if (to === "json") {
@@ -926,7 +1032,8 @@ class Template extends TemplateContent {
 					inputPath: page.inputPath,
 					outputPath: page.outputPath,
 					rawInput: page.rawInput,
-					content: content,
+					content,
+					// contentMap,
 				};
 
 				if (this.config.dataFilterSelectors?.size > 0) {
@@ -955,6 +1062,14 @@ class Template extends TemplateContent {
 			// compile returned undefined
 			if (content !== undefined) {
 				ret.push(this._write(page, content));
+			}
+
+			// write data map
+			if (contentMap !== undefined && page.outputPath) {
+				// TODO customize this
+				let mapOutputPath = page.outputPath + ".map";
+				this.fsManager.createDirectoryForFileSync(mapOutputPath);
+				this.fsManager.writeFileSync(mapOutputPath, contentMap);
 			}
 		}
 
@@ -1023,15 +1138,13 @@ class Template extends TemplateContent {
 		return newDate;
 	}
 
-	async getMappedDate(data) {
-		let dateValue = data?.date;
-
+	async getMappedDate(dateValue, pageData) {
 		// These can return a Date object, or a string.
 		// Already type checked to be functions in UserConfig
 		for (let fn of this.config.customDateParsing) {
 			let ret = fn.call(
 				{
-					page: data.page,
+					page: pageData,
 				},
 				dateValue,
 			);
@@ -1043,7 +1156,7 @@ class Template extends TemplateContent {
 		}
 
 		if (dateValue) {
-			debug("getMappedDate: using a date in the data for %o of %o", this.inputPath, data.date);
+			debug("getMappedDate: using a date in the data for %o of %o", this.inputPath, dateValue);
 			if (dateValue?.constructor?.name === "DateTime") {
 				// a luxon instance
 				debug("getMappedDate: found DateTime instance: %o", dateValue);
@@ -1127,7 +1240,6 @@ class Template extends TemplateContent {
 	// Important reminder: Template data is first generated in TemplateMap
 	async getTemplateMapEntry(data) {
 		debugDev("%o getMapped()", this.inputPath);
-
 		this.behavior.setRenderViaDataCascade(data);
 
 		// does not return outputPath or url, we don’t want to render permalinks yet

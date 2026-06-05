@@ -4,7 +4,7 @@ import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 // TODO add a first-class Markdown component to expose this using Markdown-only syntax (will need to be synchronous for markdown-it)
 
 import { ProxyWrap } from "../Util/Objects/ProxyWrap.js";
-import TemplateDataInitialGlobalData from "../Data/TemplateDataInitialGlobalData.js";
+import ConfigurationGlobalData from "../Data/ConfigurationGlobalData.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import TemplateRender from "../TemplateRender.js";
 import ProjectDirectories from "../Util/ProjectDirectories.js";
@@ -467,7 +467,7 @@ class RenderManager {
 
 	get initialGlobalData() {
 		if (!this._data) {
-			this._data = new TemplateDataInitialGlobalData(this.templateConfig);
+			this._data = new ConfigurationGlobalData(this.templateConfig);
 		}
 		return this._data;
 	}
