@@ -75,7 +75,7 @@ class TemplateConfig {
 			}
 		} else {
 			this.projectConfigPaths = [
-				...expandEligibleJavaScriptFilePaths("build-awesome.config"),
+				...expandEligibleJavaScriptFilePaths("buildawesome.config"),
 				".eleventy.js",
 				...expandEligibleJavaScriptFilePaths("eleventy.config"),
 			];
