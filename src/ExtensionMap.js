@@ -262,15 +262,20 @@ export default class ExtensionMap {
 				html: { key: "html", extension: "html" },
 				njk: { key: "njk", extension: "njk" },
 				liquid: { key: "liquid", extension: "liquid" },
+
+				"server.js": { key: "11ty.js", extension: "server.js" },
+				"server.cjs": { key: "11ty.js", extension: "server.cjs" },
+				"server.mjs": { key: "11ty.js", extension: "server.mjs" },
+
 				"11ty.js": { key: "11ty.js", extension: "11ty.js" },
 				"11ty.cjs": { key: "11ty.js", extension: "11ty.cjs" },
 				"11ty.mjs": { key: "11ty.js", extension: "11ty.mjs" },
 			};
 
 			if (isTypeScriptSupported()) {
-				this._extensionToKeyMap["11ty.ts"] = { key: "11ty.js", extension: "11ty.ts" };
-				this._extensionToKeyMap["11ty.cts"] = { key: "11ty.js", extension: "11ty.cts" };
-				this._extensionToKeyMap["11ty.mts"] = { key: "11ty.js", extension: "11ty.mts" };
+				this._extensionToKeyMap["server.ts"] = { key: "11ty.js", extension: "server.ts" };
+				this._extensionToKeyMap["server.cts"] = { key: "11ty.js", extension: "server.cts" };
+				this._extensionToKeyMap["server.mts"] = { key: "11ty.js", extension: "server.mts" };
 			}
 
 			if ("extensionMap" in this.config) {

@@ -310,3 +310,25 @@ test("11ty.js class templates with instance properties (data and render arrows, 
 	t.deepEqual(results.length, 1);
 	t.deepEqual(results[0].content.trim(), `Hello world!`);
 });
+
+test("server.js Virtual Templates (object)", async (t) => {
+  let templateDefinition = {
+    data: () => {
+      return { var: 2 };
+    },
+    render: function(data) {
+      return `this is a test ${data.var}.`;
+    }
+  };
+
+	let elev = new Eleventy("./test/stubs-virtual-nowrite", "./test/stubs-virtual-nowrite/_site", {
+		config: function (eleventyConfig) {
+			eleventyConfig.addTemplate("virtual.server.js", templateDefinition);
+    }
+	});
+
+	let results = await elev.toJSON();
+
+	t.deepEqual(results.length, 1);
+	t.deepEqual(results[0].content.trim(), `this is a test 2.`);
+});

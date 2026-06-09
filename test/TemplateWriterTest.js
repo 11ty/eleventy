@@ -511,7 +511,7 @@ test("Write Test 11ty.js", async (t) => {
   let { templateWriter: tw, eleventyFiles: evf } = getTemplateWriterInstance(["11ty.js"], eleventyConfig);
 
   let files = await glob(evf.getFileGlobs());
-  t.deepEqual(evf.getRawFiles(), [`./test/stubs/writeTestJS/**/*.{11ty.js,11ty.cjs,11ty.mjs${isTypeScriptSupported() ? ",11ty.ts,11ty.cts,11ty.mts" : ""}}`]);
+  t.deepEqual(evf.getRawFiles(), [`./test/stubs/writeTestJS/**/*.{server.js,server.cjs,server.mjs,11ty.js,11ty.cjs,11ty.mjs,server.ts,server.cts,server.mts}`]);
   t.deepEqual(files, ["test/stubs/writeTestJS/test.11ty.cjs"]);
 
   let { template: tmpl } = tw.createTemplate(files[0]);
