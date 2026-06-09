@@ -204,63 +204,56 @@ class TemplateData {
 		// Backwards compatibility
 		if (this.config.jsDataFileSuffix) {
 			let suffixes = [];
-			suffixes.push(this.config.jsDataFileSuffix); // e.g. filename.11tydata.json
+			suffixes.push(this.config.jsDataFileSuffix); // e.g. filename.data.json
 			suffixes.push(""); // suffix-less for free with old API, e.g. filename.json
 			return suffixes;
 		}
+
 		return []; // if both of these entries are set to false, use no files
 	}
 
 	// This is used exclusively for --watch and --serve chokidar targets
 	async getTemplateDataFileGlob() {
 		let suffixes = this.getDataFileSuffixes();
-		let globSuffixesWithLeadingDot = new Set();
-		globSuffixesWithLeadingDot.add("json"); // covers .11tydata.json too
-		let globSuffixesWithoutLeadingDot = new Set();
+		let globSuffixes = new Set();
+		globSuffixes.add("json"); // covers .data.json too
 
-		// Typically using [ '.11tydata', '' ] suffixes to find data files
+		// Typically using [ '.data', '' ] suffixes to find data files
 		for (let suffix of suffixes) {
-			// TODO the `suffix` truthiness check is purely for backwards compat?
-			if (suffix && typeof suffix === "string") {
-				if (suffix.startsWith(".")) {
-					// .suffix.js
-					globSuffixesWithLeadingDot.add(`${suffix.slice(1)}.mjs`);
-					globSuffixesWithLeadingDot.add(`${suffix.slice(1)}.cjs`);
-					globSuffixesWithLeadingDot.add(`${suffix.slice(1)}.js`);
+			if (!suffix || typeof suffix !== "string") {
+				continue;
+			}
 
-					if (isTypeScriptSupported()) {
-						globSuffixesWithLeadingDot.add(`${suffix.slice(1)}.mts`);
-						globSuffixesWithLeadingDot.add(`${suffix.slice(1)}.cts`);
-						globSuffixesWithLeadingDot.add(`${suffix.slice(1)}.ts`);
-					}
-				} else {
-					// "suffix.js" without leading dot
-					globSuffixesWithoutLeadingDot.add(`${suffix || ""}.mjs`);
-					globSuffixesWithoutLeadingDot.add(`${suffix || ""}.cjs`);
-					globSuffixesWithoutLeadingDot.add(`${suffix || ""}.js`);
+			// .suffix.js
+			if (suffix.startsWith(".")) {
+				suffix = suffix.slice(1);
+			}
 
-					if (isTypeScriptSupported()) {
-						globSuffixesWithoutLeadingDot.add(`${suffix || ""}.mts`);
-						globSuffixesWithoutLeadingDot.add(`${suffix || ""}.cts`);
-						globSuffixesWithoutLeadingDot.add(`${suffix || ""}.ts`);
-					}
-				}
+			globSuffixes.add(`${suffix || ""}.mjs`);
+			globSuffixes.add(`${suffix || ""}.cjs`);
+			globSuffixes.add(`${suffix || ""}.js`);
+
+			if (isTypeScriptSupported()) {
+				globSuffixes.add(`${suffix || ""}.mts`);
+				globSuffixes.add(`${suffix || ""}.cts`);
+				globSuffixes.add(`${suffix || ""}.ts`);
 			}
 		}
 
 		// Configuration Data Extensions e.g. yaml
 		if (this.hasUserDataExtensions()) {
 			for (let extension of this.getUserDataExtensions()) {
-				globSuffixesWithLeadingDot.add(extension); // covers .11tydata.{extension} too
+				if (extension.startsWith(".")) {
+					extension = extension.slice(1);
+				}
+
+				globSuffixes.add(extension); // covers .data.{extension} too
 			}
 		}
 
 		let paths = [];
-		if (globSuffixesWithLeadingDot.size > 0) {
-			paths.push(`${this.inputDir}**/*.{${Array.from(globSuffixesWithLeadingDot).join(",")}}`);
-		}
-		if (globSuffixesWithoutLeadingDot.size > 0) {
-			paths.push(`${this.inputDir}**/*{${Array.from(globSuffixesWithoutLeadingDot).join(",")}}`);
+		if (globSuffixes.size > 0) {
+			paths.push(`${this.inputDir}**/*.{${Array.from(globSuffixes).join(",")}}`);
 		}
 
 		return TemplatePath.addLeadingDotSlashArray(paths);
@@ -682,7 +675,7 @@ class TemplateData {
 					paths.push(base + suffix + "." + extension);
 				}
 			}
-			paths.push(base + suffix + ".json"); // default: .11tydata.json
+			paths.push(base + suffix + ".json"); // default: .data.json
 
 			// inject user extensions
 			this._pushExtensionsToPaths(paths, base + suffix, extensions);
@@ -699,7 +692,7 @@ class TemplateData {
 		if (parsed.dir) {
 			let fileNameNoExt = this.extensionMap.removeTemplateExtension(parsed.base);
 
-			// default dataSuffix: .11tydata, is appended in _addBaseToPaths
+			// default dataSuffix: .data, is appended in _addBaseToPaths
 			debug("Using %o suffixes to find data files.", this.getDataFileSuffixes());
 
 			// Template data file paths
@@ -731,7 +724,7 @@ class TemplateData {
 					TemplatePath.join(inputDir, TemplatePath.getLastPathSegment(inputDir)),
 				);
 
-				// in root input dir, search for index.11tydata.json et al
+				// in root input dir, search for index.data.json et al
 				if (this.config.dataFileDirBaseNameOverride) {
 					let indexDataFile =
 						TemplatePath.getDirFromFilePath(lastInputDir) +

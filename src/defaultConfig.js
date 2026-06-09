@@ -27,7 +27,6 @@ import TransformsUtil from "./Util/TransformsUtil.js";
  * @property {string} [markdownTemplateEngine='liquid'] - Template engine to process markdown files with.
  * @property {string} [htmlTemplateEngine='liquid'] - Template engine to process html files with.
  * @property {boolean} [dataTemplateEngine=false] - Changed in v1.0
- * @property {string} [jsDataFileSuffix='.11tydata'] - File suffix for jsData files.
  * @property {object} keys
  * @property {string} [keys.package='pkg'] - Global data property for package.json data
  * @property {string} [keys.layout='layout']
@@ -73,6 +72,7 @@ export default function (config) {
 
 	return {
 		templateFormats: ["liquid", "md", "njk", "html", "11ty.js"],
+
 		// to add a parent directory structure to URLs (not reflected on the file system), change this
 		pathPrefix: "/",
 		markdownTemplateEngine: "liquid",
@@ -80,7 +80,7 @@ export default function (config) {
 
 		// Renamed from `jsDataFileSuffix` in 2.0 (and swapped to an Array)
 		// If you remove "" we won’t look for dir/dir.json or file.json
-		dataFileSuffixes: [".11tydata", ""],
+		dataFileSuffixes: [".data", ""],
 
 		// "index" will look for `directory/index.*` directory data files instead of `directory/directory.*`
 		dataFileDirBaseNameOverride: false,

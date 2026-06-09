@@ -379,26 +379,22 @@ test("getLocalDataPaths", async (t) => {
 
   t.deepEqual(paths, [
     "./test/stubs/stubs.json",
-    "./test/stubs/stubs.11tydata.json",
-    "./test/stubs/stubs.11tydata.mjs",
-    "./test/stubs/stubs.11tydata.cjs",
-    "./test/stubs/stubs.11tydata.js",
-    ...(isTypeScriptSupported() ? [
-      "./test/stubs/stubs.11tydata.mts",
-      "./test/stubs/stubs.11tydata.cts",
-      "./test/stubs/stubs.11tydata.ts",
-    ] : []),
+    "./test/stubs/stubs.data.json",
+    "./test/stubs/stubs.data.mjs",
+    "./test/stubs/stubs.data.cjs",
+    "./test/stubs/stubs.data.js",
+    "./test/stubs/stubs.data.mts",
+    "./test/stubs/stubs.data.cts",
+    "./test/stubs/stubs.data.ts",
 
     "./test/stubs/component/component.json",
-    "./test/stubs/component/component.11tydata.json",
-    "./test/stubs/component/component.11tydata.mjs",
-    "./test/stubs/component/component.11tydata.cjs",
-    "./test/stubs/component/component.11tydata.js",
-    ...(isTypeScriptSupported() ? [
-      "./test/stubs/component/component.11tydata.mts",
-      "./test/stubs/component/component.11tydata.cts",
-      "./test/stubs/component/component.11tydata.ts",
-    ] : []),
+    "./test/stubs/component/component.data.json",
+    "./test/stubs/component/component.data.mjs",
+    "./test/stubs/component/component.data.cjs",
+    "./test/stubs/component/component.data.js",
+    "./test/stubs/component/component.data.mts",
+    "./test/stubs/component/component.data.cts",
+    "./test/stubs/component/component.data.ts",
   ]);
 });
 
@@ -415,36 +411,30 @@ test("getLocalDataPaths (with setDataFileBaseName #1699)", async (t) => {
   let paths = await dataObj.getLocalDataPaths("./test/stubs/component/component.liquid");
 
   t.deepEqual(paths, [
-    "./test/stubs/index.11tydata.json",
-    "./test/stubs/index.11tydata.mjs",
-    "./test/stubs/index.11tydata.cjs",
-    "./test/stubs/index.11tydata.js",
-    ...(isTypeScriptSupported() ? [
-      "./test/stubs/index.11tydata.mts",
-      "./test/stubs/index.11tydata.cts",
-      "./test/stubs/index.11tydata.ts",
-    ] : []),
+    "./test/stubs/index.data.json",
+    "./test/stubs/index.data.mjs",
+    "./test/stubs/index.data.cjs",
+    "./test/stubs/index.data.js",
+    "./test/stubs/index.data.mts",
+    "./test/stubs/index.data.cts",
+    "./test/stubs/index.data.ts",
 
-    "./test/stubs/component/index.11tydata.json",
-    "./test/stubs/component/index.11tydata.mjs",
-    "./test/stubs/component/index.11tydata.cjs",
-    "./test/stubs/component/index.11tydata.js",
-    ...(isTypeScriptSupported() ? [
-      "./test/stubs/component/index.11tydata.mts",
-      "./test/stubs/component/index.11tydata.cts",
-      "./test/stubs/component/index.11tydata.ts",
-    ] : []),
+    "./test/stubs/component/index.data.json",
+    "./test/stubs/component/index.data.mjs",
+    "./test/stubs/component/index.data.cjs",
+    "./test/stubs/component/index.data.js",
+    "./test/stubs/component/index.data.mts",
+    "./test/stubs/component/index.data.cts",
+    "./test/stubs/component/index.data.ts",
 
     "./test/stubs/component/component.json",
-    "./test/stubs/component/component.11tydata.json",
-    "./test/stubs/component/component.11tydata.mjs",
-    "./test/stubs/component/component.11tydata.cjs",
-    "./test/stubs/component/component.11tydata.js",
-    ...(isTypeScriptSupported() ? [
-      "./test/stubs/component/component.11tydata.mts",
-      "./test/stubs/component/component.11tydata.cts",
-      "./test/stubs/component/component.11tydata.ts",
-    ] : []),
+    "./test/stubs/component/component.data.json",
+    "./test/stubs/component/component.data.mjs",
+    "./test/stubs/component/component.data.cjs",
+    "./test/stubs/component/component.data.js",
+    "./test/stubs/component/component.data.mts",
+    "./test/stubs/component/component.data.cts",
+    "./test/stubs/component/component.data.ts",
   ]);
 });
 
@@ -611,36 +601,31 @@ test("Deeper getLocalDataPaths", async (t) => {
 
   t.deepEqual(paths, [
     "./test/test.json",
-    "./test/test.11tydata.json",
-    "./test/test.11tydata.mjs",
-    "./test/test.11tydata.cjs",
-    "./test/test.11tydata.js",
-    ...(isTypeScriptSupported() ? [
-      "./test/test.11tydata.mts",
-      "./test/test.11tydata.cts",
-      "./test/test.11tydata.ts",
-    ] : []),
+    "./test/test.data.json",
+    "./test/test.data.mjs",
+    "./test/test.data.cjs",
+    "./test/test.data.js",
+    "./test/test.data.mts",
+    "./test/test.data.cts",
+    "./test/test.data.ts",
 
     "./test/stubs/stubs.json",
-    "./test/stubs/stubs.11tydata.json",
-    "./test/stubs/stubs.11tydata.mjs",
-    "./test/stubs/stubs.11tydata.cjs",
-    "./test/stubs/stubs.11tydata.js",
-    ...(isTypeScriptSupported() ? [
-      "./test/stubs/stubs.11tydata.mts",
-      "./test/stubs/stubs.11tydata.cts",
-      "./test/stubs/stubs.11tydata.ts",
-    ] : []),
+    "./test/stubs/stubs.data.json",
+    "./test/stubs/stubs.data.mjs",
+    "./test/stubs/stubs.data.cjs",
+    "./test/stubs/stubs.data.js",
+    "./test/stubs/stubs.data.mts",
+    "./test/stubs/stubs.data.cts",
+    "./test/stubs/stubs.data.ts",
+
     "./test/stubs/component/component.json",
-    "./test/stubs/component/component.11tydata.json",
-    "./test/stubs/component/component.11tydata.mjs",
-    "./test/stubs/component/component.11tydata.cjs",
-    "./test/stubs/component/component.11tydata.js",
-    ...(isTypeScriptSupported() ? [
-      "./test/stubs/component/component.11tydata.mts",
-      "./test/stubs/component/component.11tydata.cts",
-      "./test/stubs/component/component.11tydata.ts",
-    ] : []),
+    "./test/stubs/component/component.data.json",
+    "./test/stubs/component/component.data.mjs",
+    "./test/stubs/component/component.data.cjs",
+    "./test/stubs/component/component.data.js",
+    "./test/stubs/component/component.data.mts",
+    "./test/stubs/component/component.data.cts",
+    "./test/stubs/component/component.data.ts",
   ]);
 });
 
@@ -658,25 +643,22 @@ test("getLocalDataPaths with an 11ty js template", async (t) => {
 
   t.deepEqual(paths, [
     "./test/stubs/stubs.json",
-    "./test/stubs/stubs.11tydata.json",
-    "./test/stubs/stubs.11tydata.mjs",
-    "./test/stubs/stubs.11tydata.cjs",
-    "./test/stubs/stubs.11tydata.js",
-    ...(isTypeScriptSupported() ? [
-      "./test/stubs/stubs.11tydata.mts",
-      "./test/stubs/stubs.11tydata.cts",
-      "./test/stubs/stubs.11tydata.ts",
-    ] : []),
+    "./test/stubs/stubs.data.json",
+    "./test/stubs/stubs.data.mjs",
+    "./test/stubs/stubs.data.cjs",
+    "./test/stubs/stubs.data.js",
+    "./test/stubs/stubs.data.mts",
+    "./test/stubs/stubs.data.cts",
+    "./test/stubs/stubs.data.ts",
+
     "./test/stubs/component/component.json",
-    "./test/stubs/component/component.11tydata.json",
-    "./test/stubs/component/component.11tydata.mjs",
-    "./test/stubs/component/component.11tydata.cjs",
-    "./test/stubs/component/component.11tydata.js",
-    ...(isTypeScriptSupported() ? [
-      "./test/stubs/component/component.11tydata.mts",
-      "./test/stubs/component/component.11tydata.cts",
-      "./test/stubs/component/component.11tydata.ts",
-    ] : []),
+    "./test/stubs/component/component.data.json",
+    "./test/stubs/component/component.data.mjs",
+    "./test/stubs/component/component.data.cjs",
+    "./test/stubs/component/component.data.js",
+    "./test/stubs/component/component.data.mts",
+    "./test/stubs/component/component.data.cts",
+    "./test/stubs/component/component.data.ts",
   ]);
 });
 
@@ -694,25 +676,22 @@ test("getLocalDataPaths with inputDir passed in (trailing slash)", async (t) => 
 
   t.deepEqual(paths, [
     "./test/stubs/stubs.json",
-    "./test/stubs/stubs.11tydata.json",
-    "./test/stubs/stubs.11tydata.mjs",
-    "./test/stubs/stubs.11tydata.cjs",
-    "./test/stubs/stubs.11tydata.js",
-    ...(isTypeScriptSupported() ? [
-      "./test/stubs/stubs.11tydata.mts",
-      "./test/stubs/stubs.11tydata.cts",
-      "./test/stubs/stubs.11tydata.ts",
-    ] : []),
+    "./test/stubs/stubs.data.json",
+    "./test/stubs/stubs.data.mjs",
+    "./test/stubs/stubs.data.cjs",
+    "./test/stubs/stubs.data.js",
+    "./test/stubs/stubs.data.mts",
+    "./test/stubs/stubs.data.cts",
+    "./test/stubs/stubs.data.ts",
+
     "./test/stubs/component/component.json",
-    "./test/stubs/component/component.11tydata.json",
-    "./test/stubs/component/component.11tydata.mjs",
-    "./test/stubs/component/component.11tydata.cjs",
-    "./test/stubs/component/component.11tydata.js",
-    ...(isTypeScriptSupported() ? [
-      "./test/stubs/component/component.11tydata.mts",
-      "./test/stubs/component/component.11tydata.cts",
-      "./test/stubs/component/component.11tydata.ts",
-    ] : []),
+    "./test/stubs/component/component.data.json",
+    "./test/stubs/component/component.data.mjs",
+    "./test/stubs/component/component.data.cjs",
+    "./test/stubs/component/component.data.js",
+    "./test/stubs/component/component.data.mts",
+    "./test/stubs/component/component.data.cts",
+    "./test/stubs/component/component.data.ts",
   ]);
 });
 
@@ -730,25 +709,22 @@ test("getLocalDataPaths with inputDir passed in (no trailing slash)", async (t) 
 
   t.deepEqual(paths, [
     "./test/stubs/stubs.json",
-    "./test/stubs/stubs.11tydata.json",
-    "./test/stubs/stubs.11tydata.mjs",
-    "./test/stubs/stubs.11tydata.cjs",
-    "./test/stubs/stubs.11tydata.js",
-    ...(isTypeScriptSupported() ? [
-      "./test/stubs/stubs.11tydata.mts",
-      "./test/stubs/stubs.11tydata.cts",
-      "./test/stubs/stubs.11tydata.ts",
-    ] : []),
+    "./test/stubs/stubs.data.json",
+    "./test/stubs/stubs.data.mjs",
+    "./test/stubs/stubs.data.cjs",
+    "./test/stubs/stubs.data.js",
+    "./test/stubs/stubs.data.mts",
+    "./test/stubs/stubs.data.cts",
+    "./test/stubs/stubs.data.ts",
+
     "./test/stubs/component/component.json",
-    "./test/stubs/component/component.11tydata.json",
-    "./test/stubs/component/component.11tydata.mjs",
-    "./test/stubs/component/component.11tydata.cjs",
-    "./test/stubs/component/component.11tydata.js",
-    ...(isTypeScriptSupported() ? [
-      "./test/stubs/component/component.11tydata.mts",
-      "./test/stubs/component/component.11tydata.cts",
-      "./test/stubs/component/component.11tydata.ts",
-    ] : []),
+    "./test/stubs/component/component.data.json",
+    "./test/stubs/component/component.data.mjs",
+    "./test/stubs/component/component.data.cjs",
+    "./test/stubs/component/component.data.js",
+    "./test/stubs/component/component.data.mts",
+    "./test/stubs/component/component.data.cts",
+    "./test/stubs/component/component.data.ts",
   ]);
 });
 
@@ -766,25 +742,22 @@ test("getLocalDataPaths with inputDir passed in (no leading slash)", async (t) =
 
   t.deepEqual(paths, [
     "./test/stubs/stubs.json",
-    "./test/stubs/stubs.11tydata.json",
-    "./test/stubs/stubs.11tydata.mjs",
-    "./test/stubs/stubs.11tydata.cjs",
-    "./test/stubs/stubs.11tydata.js",
-    ...(isTypeScriptSupported() ? [
-      "./test/stubs/stubs.11tydata.mts",
-      "./test/stubs/stubs.11tydata.cts",
-      "./test/stubs/stubs.11tydata.ts",
-    ] : []),
+    "./test/stubs/stubs.data.json",
+    "./test/stubs/stubs.data.mjs",
+    "./test/stubs/stubs.data.cjs",
+    "./test/stubs/stubs.data.js",
+    "./test/stubs/stubs.data.mts",
+    "./test/stubs/stubs.data.cts",
+    "./test/stubs/stubs.data.ts",
+
     "./test/stubs/component/component.json",
-    "./test/stubs/component/component.11tydata.json",
-    "./test/stubs/component/component.11tydata.mjs",
-    "./test/stubs/component/component.11tydata.cjs",
-    "./test/stubs/component/component.11tydata.js",
-    ...(isTypeScriptSupported() ? [
-      "./test/stubs/component/component.11tydata.mts",
-      "./test/stubs/component/component.11tydata.cts",
-      "./test/stubs/component/component.11tydata.ts",
-    ] : []),
+    "./test/stubs/component/component.data.json",
+    "./test/stubs/component/component.data.mjs",
+    "./test/stubs/component/component.data.cjs",
+    "./test/stubs/component/component.data.js",
+    "./test/stubs/component/component.data.mts",
+    "./test/stubs/component/component.data.cts",
+    "./test/stubs/component/component.data.ts",
   ]);
 });
 
@@ -812,7 +785,7 @@ test("getTemplateDataFileGlob", async (t) => {
   let tw = new TemplateData(eleventyConfig);
 
   t.deepEqual(await tw.getTemplateDataFileGlob(), [
-    `./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js${isTypeScriptSupported() ? ",11tydata.mts,11tydata.cts,11tydata.ts" : ""}}`,
+    `./test/stubs/**/*.{json,data.mjs,data.cjs,data.js,data.mts,data.cts,data.ts}`,
   ]);
 });
 
