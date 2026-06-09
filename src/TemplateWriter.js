@@ -3,16 +3,16 @@ import { createDebug } from "obug";
 
 import Template from "./Template.js";
 import TemplateMap from "./TemplateMap.js";
-import EleventyBaseError from "./Errors/EleventyBaseError.js";
-import { EleventyErrorHandler } from "./Errors/EleventyErrorHandler.js";
-import EleventyErrorUtil from "./Errors/EleventyErrorUtil.js";
+import BaseError from "./Errors/BaseError.js";
+import { ErrorHandler } from "./Errors/ErrorHandler.js";
+import ErrorUtil from "./Errors/ErrorUtil.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
 
-const debug = createDebug("Eleventy:TemplateWriter");
+const debug = createDebug("BuildAwesome:TemplateWriter");
 
-class TemplateWriterMissingConfigArgError extends EleventyBaseError {}
-class EleventyPassthroughCopyError extends EleventyBaseError {}
-class EleventyTemplateError extends EleventyBaseError {}
+class TemplateWriterMissingConfigArgError extends BaseError {}
+class PassthroughCopyError extends BaseError {}
+class TemplateError extends BaseError {}
 
 class TemplateWriter {
 	#eleventyFiles;
@@ -69,7 +69,7 @@ class TemplateWriter {
 	/* Getter for error handler */
 	get errorHandler() {
 		if (!this.#errorHandler) {
-			this.#errorHandler = new EleventyErrorHandler();
+			this.#errorHandler = new ErrorHandler();
 			this.#errorHandler.isVerbose = this.verboseMode;
 			this.#errorHandler.logger = this.logger;
 		}
@@ -436,7 +436,7 @@ class TemplateWriter {
 
 		return this.#passthroughManager.copyAll(templateExtensionPaths).catch((e) => {
 			this.errorHandler.warn(e, "Error with passthrough copy");
-			return Promise.reject(new EleventyPassthroughCopyError("Having trouble copying", e));
+			return Promise.reject(new PassthroughCopyError("Having trouble copying", e));
 		});
 	}
 
@@ -452,12 +452,12 @@ class TemplateWriter {
 				this.#generateTemplate(mapEntry, to).catch(function (e) {
 					// Premature templateContent in layout render, this also happens in
 					// TemplateMap.populateContentDataInMap for non-layout content
-					if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
+					if (ErrorUtil.isPrematureTemplateContentError(e)) {
 						usedTemplateContentTooEarlyMap.push(mapEntry);
 					} else {
 						let outputPaths = `"${mapEntry._pages.map((page) => page.outputPath).join(`", "`)}"`;
 						return Promise.reject(
-							new EleventyTemplateError(
+							new TemplateError(
 								`Having trouble writing to ${outputPaths} from "${mapEntry.inputPath}"`,
 								e,
 							),
@@ -471,7 +471,7 @@ class TemplateWriter {
 			promises.push(
 				this.#generateTemplate(mapEntry, to).catch(function (e) {
 					return Promise.reject(
-						new EleventyTemplateError(
+						new TemplateError(
 							`Having trouble writing to (second pass) "${mapEntry.outputPath}" from "${mapEntry.inputPath}"`,
 							e,
 						),
@@ -504,12 +504,12 @@ class TemplateWriter {
 		let paths = await this._getAllPaths();
 
 		// This must happen before writePassthroughCopy
-		this.templateConfig.userConfig.emit("eleventy#beforerender");
+		this.templateConfig.userConfig.emit("buildawesome#beforerender");
 
 		let aggregatePassthroughCopyPromise = this.writePassthroughCopy(paths);
 
 		let templatesPromise = Promise.all(await this.generateTemplates(paths)).then((results) => {
-			this.templateConfig.userConfig.emit("eleventy#render");
+			this.templateConfig.userConfig.emit("buildawesome#render");
 
 			return results;
 		});

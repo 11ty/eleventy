@@ -2,7 +2,7 @@
  * This class serves as basis for all Eleventy-specific errors.
  * @ignore
  */
-class EleventyBaseError extends Error {
+export default class BaseError extends Error {
 	/**
 	 * @param {string} message - The error message to display.
 	 * @param {unknown} [originalError] - The original error caught.
@@ -26,4 +26,3 @@ class EleventyBaseError extends Error {
 		}
 	}
 }
-export default EleventyBaseError;

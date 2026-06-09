@@ -1,4 +1,4 @@
 // see BundleEleventy.js for Core WITH bundled Eleventy core plugins
 import "./shims/shim-core.js";
 
-export { MinimalCore as Eleventy } from "../../../src/CoreMinimal.js";
+export { CoreMinimal as Eleventy, CoreMinimal as BuildAwesome } from "../../../src/CoreMinimal.js";

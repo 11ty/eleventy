@@ -1,4 +1,4 @@
-import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
+import ExtensionMap from "../src/ExtensionMap.js";
 import Template from "../src/Template.js";
 import FileSystemSearch from "../src/FileSystemSearch.js";
 import TemplateEngineManager from "../src/Engines/TemplateEngineManager.js";
@@ -24,7 +24,7 @@ export default async function getNewTemplate(
 
   let engineManager = new TemplateEngineManager(eleventyConfig);
   if (!map) {
-    map = new EleventyExtensionMap(eleventyConfig);
+    map = new ExtensionMap(eleventyConfig);
     map.setFormats(["liquid", "md", "njk", "html", "11ty.js"]);
     map.engineManager = engineManager;
   }

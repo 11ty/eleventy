@@ -10,7 +10,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import "tsx/esm";
 // import 'tsimp';
 
-import Eleventy from "../src/Eleventy.js";
+import Eleventy from "../src/Core.js";
 
 test("Eleventy with JSX", async () => {
 	let elev = new Eleventy("./test/stubs-fancyjs/test.11ty.tsx", undefined, {

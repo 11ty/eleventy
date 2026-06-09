@@ -26,11 +26,11 @@
 1. Check it all in and commit
 1. Tag new version
 1. Wait for GitHub Actions to complete to know that the build did not fail.
-1. Publish a release on GitHub at https://github.com/11ty/eleventy/releases pointing to the tag of the release. Hitting the publish button on this workflow will use GitHub Actions to publish the package to npm on the correct dist-tag and includes npm package provenance for the release.
+1. Publish a release on GitHub at https://github.com/11ty/build-awesome/releases pointing to the tag of the release. Hitting the publish button on this workflow will use GitHub Actions to publish the package to npm on the correct dist-tag and includes npm package provenance for the release.
 
 - Main release: no version suffix publishes to `latest` (default) tag on npm
   - Make sure to include OpenCollective usernames for release notes here https://www.11ty.dev/supporters-for-release-notes/
-- Canary release: `-alpha.` version suffix in `package.json` publishes to `canary` tag on npm: https://github.com/11ty/eleventy/issues/2758
+- Canary release: `-alpha.` version suffix in `package.json` publishes to `canary` tag on npm: https://github.com/11ty/build-awesome/issues/2758
 - Beta release: `-beta.` version suffix publishes to `beta` tag on npm
 
 Unfortunate note about npm and tags (specifically `canary` here): if you push a 1.0.0-canary.x to `canary` (even though `2.0.0-canary.x` exists), it will use the last pushed tag when you npm install from `@canary` (not the highest version number)

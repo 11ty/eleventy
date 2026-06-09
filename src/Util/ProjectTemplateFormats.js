@@ -1,5 +1,5 @@
 import { createDebug } from "obug";
-const debug = createDebug("Eleventy:Util:ProjectTemplateFormats");
+const debug = createDebug("BuildAwesome:Util:ProjectTemplateFormats");
 
 class ProjectTemplateFormats {
 	#useAll = {};

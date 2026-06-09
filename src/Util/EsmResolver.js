@@ -2,7 +2,7 @@ import { createDebug } from "obug";
 import { fileURLToPath } from "../Adapters/Packages/url.js";
 import PathNormalizer from "./PathNormalizer.js";
 
-const debug = createDebug("Eleventy:EsmResolver");
+const debug = createDebug("BuildAwesome:EsmResolver");
 
 let lastModifiedPaths = new Map();
 

@@ -1,7 +1,7 @@
 import { createRequire } from "node:module";
 import test from "ava";
 import { DateTime } from "luxon";
-import Eleventy from "../src/Eleventy.js";
+import Eleventy from "../src/Core.js";
 
 const require = createRequire(import.meta.url);
 

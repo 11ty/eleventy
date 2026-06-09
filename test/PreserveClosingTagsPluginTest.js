@@ -1,7 +1,7 @@
 import test from "ava";
 
 import { PreserveClosingTagsPlugin } from "../src/Plugins/PreserveClosingTagsPlugin.js";
-import Eleventy from "../src/Eleventy.js";
+import Eleventy from "../src/Core.js";
 
 test("Using the PreserveClosingTagsPlugin plugin (meta off) #3356", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", "./test/stubs-virtual/_site", {

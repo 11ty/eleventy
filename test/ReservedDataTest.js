@@ -1,6 +1,6 @@
 import test from "ava";
 import ReservedData from "../src/Util/ReservedData.js";
-import Eleventy from "../src/Eleventy.js";
+import Eleventy from "../src/Core.js";
 
 test("No reserved Keys", t => {
   t.deepEqual(ReservedData.getReservedKeys({ key: {} }).sort(), []);

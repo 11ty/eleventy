@@ -1,7 +1,7 @@
 import { DepGraph as DependencyGraph } from "dependency-graph";
 import { createDebug } from "obug";
 
-const debug = createDebug("Eleventy:TemplateDepGraph");
+const debug = createDebug("BuildAwesome:TemplateDepGraph");
 
 const COLLECTION_PREFIX = "__collection:";
 

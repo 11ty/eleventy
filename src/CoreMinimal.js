@@ -5,8 +5,8 @@ import chalk from "./Adapters/Packages/chalk.js";
 
 import TemplateData from "./Data/TemplateData.js";
 import TemplateWriter from "./TemplateWriter.js";
-import EleventyExtensionMap from "./EleventyExtensionMap.js";
-import { EleventyErrorHandler } from "./Errors/EleventyErrorHandler.js";
+import ExtensionMap from "./ExtensionMap.js";
+import { ErrorHandler } from "./Errors/ErrorHandler.js";
 import TemplateConfig from "./TemplateConfig.js";
 import TemplateEngineManager from "./Engines/TemplateEngineManager.js";
 
@@ -16,21 +16,17 @@ import simplePlural from "./Util/Pluralize.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
 import ProjectDirectories from "./Util/ProjectDirectories.js";
 import {
-	getEleventyPackageJson,
+	getCorePackageJson,
 	importJsonSync,
 	getWorkingProjectPackageJsonPath,
 } from "./Util/ImportJsonSync.js";
 import ProjectTemplateFormats from "./Util/ProjectTemplateFormats.js";
+import { setEnvValue } from "./Util/EnvironmentVars.cjs";
 
-const pkg = getEleventyPackageJson();
-const debug = createDebug("Eleventy");
+const pkg = getCorePackageJson();
+const debug = createDebug("BuildAwesome:Core");
 
-/**
- * Eleventy’s programmatic API
- * @module 11ty/eleventy/Eleventy
- */
-
-export class MinimalCore {
+export class CoreMinimal {
 	/**
 	 * Userspace package.json file contents
 	 * @type {object|undefined}
@@ -56,7 +52,7 @@ export class MinimalCore {
 	#needsInit = true;
 	/** @type {Promise|undefined} */
 	#initPromise;
-	/** @type {EleventyErrorHandler|undefined} */
+	/** @type {ErrorHandler|undefined} */
 	#errorHandler;
 	/** @type {Map} */
 	#privateCaches = new Map();
@@ -93,7 +89,7 @@ export class MinimalCore {
 	}
 
 	/**
-	 * @typedef {object} EleventyOptions
+	 * @typedef {object} BuildAwesomeOptions
 	 * @property {'cli'|'script'=} source
 	 * @property {'build'|'serve'|'watch'=} runMode
 	 * @property {boolean=} dryRun
@@ -105,7 +101,7 @@ export class MinimalCore {
 
 	 * @param {string} [input] - Directory or filename for input/sources files.
 	 * @param {string} [output] - Directory serving as the target for writing the output files.
-	 * @param {EleventyOptions} [options={}]
+	 * @param {BuildAwesomeOptions} [options={}]
 	 * @param {TemplateConfig} [eleventyConfig]
 	 */
 	constructor(...args) {
@@ -135,8 +131,8 @@ export class MinimalCore {
 		this.eleventyConfig = eleventyConfig;
 
 		/**
-		 * @type {EleventyOptions}
-		 * @description Options object passed to the Eleventy constructor
+		 * @type {BuildAwesomeOptions}
+		 * @description Options object passed to the constructor
 		 * @default {}
 		 */
 		this.options = options;
@@ -232,10 +228,10 @@ export class MinimalCore {
 	}
 
 	/**
-	 * @deprecated since 1.0.1, use static Eleventy.getVersion()
+	 * @deprecated since 1.0.1, use static getVersion()
 	 */
 	getVersion() {
-		return MinimalCore.getVersion();
+		return CoreMinimal.getVersion();
 	}
 
 	async initializeConfig(initOverrides) {
@@ -274,7 +270,7 @@ export class MinimalCore {
 
 		/* Programmatic API config */
 		if (this.options.config && typeof this.options.config === "function") {
-			debug("Running options.config configuration callback (passed to Eleventy constructor)");
+			debug("Running options.config configuration callback (passed to constructor)");
 			// TODO use return object here?
 			await this.options.config(this.eleventyConfig.userConfig);
 		}
@@ -293,7 +289,7 @@ export class MinimalCore {
 
 		/**
 		 * @type {object}
-		 * @description Initialize Eleventy’s configuration, including the user config file
+		 * @description Initialize configuration, including the user config file
 		 */
 		this.config = this.eleventyConfig.getConfig();
 
@@ -353,7 +349,7 @@ export class MinimalCore {
 	// Not used internally, removed in 3.0.
 	setInputDir() {
 		throw new Error(
-			"Eleventy->setInputDir was removed in 3.0. Use the inputDir option to the constructor",
+			"The setInputDir method was removed in 3.0. Use the inputDir option passed to the constructor.",
 		);
 	}
 
@@ -363,9 +359,9 @@ export class MinimalCore {
 	}
 
 	/**
-	 * Updates the dry-run mode of Eleventy.
+	 * Updates the dry-run mode (whether or not to write files).
 	 *
-	 * @param {boolean} isDryRun - Shall Eleventy run in dry mode?
+	 * @param {boolean} isDryRun - Shall we run in dry mode?
 	 */
 	setDryRun(isDryRun) {
 		this.isDryRun = !!isDryRun;
@@ -374,7 +370,7 @@ export class MinimalCore {
 	/**
 	 * Sets the incremental build mode.
 	 *
-	 * @param {boolean} isIncremental - Shall Eleventy run in incremental build mode and only write the files that trigger watch updates
+	 * @param {boolean} isIncremental - Shall we run in incremental build mode and only write the files that trigger watch updates
 	 */
 	setIncrementalBuild(isIncremental) {
 		this.isIncremental = Boolean(isIncremental);
@@ -407,9 +403,6 @@ export class MinimalCore {
 		}
 	}
 
-	/**
-	 * Restarts Eleventy.
-	 */
 	async restart() {
 		debug("Restarting.");
 		this.start = this.getNewTimestamp();
@@ -439,9 +432,6 @@ export class MinimalCore {
 		}
 	}
 
-	/**
-	 * Starts Eleventy.
-	 */
 	async init(options = {}) {
 		let { viaConfigReset } = Object.assign({ viaConfigReset: false }, options);
 		if (!this.#hasConfigInitialized) {
@@ -451,18 +441,18 @@ export class MinimalCore {
 			this.config.events.reset();
 		}
 
-		await this.config.events.emit("eleventy.config", this.eleventyConfig);
+		await this.config.events.emit("buildawesome.config", this.eleventyConfig);
 
 		if (this.env) {
-			await this.config.events.emit("eleventy.env", this.env);
+			await this.config.events.emit("buildawesome.env", this.env);
 		}
 
 		let formats = this.templateFormats.getTemplateFormats();
 		let engineManager = new TemplateEngineManager(this.eleventyConfig);
-		this.extensionMap = new EleventyExtensionMap(this.eleventyConfig);
+		this.extensionMap = new ExtensionMap(this.eleventyConfig);
 		this.extensionMap.setFormats(formats);
 		this.extensionMap.engineManager = engineManager;
-		await this.config.events.emit("eleventy.extensionmap", this.extensionMap);
+		await this.config.events.emit("buildawesome.extensionmap", this.extensionMap);
 
 		this.templateData = new TemplateData(this.eleventyConfig);
 		this.templateData.setProjectUsingEsm(this.isEsm);
@@ -472,7 +462,7 @@ export class MinimalCore {
 		}
 
 		// Note these directories are all project root relative
-		this.config.events.emit("eleventy.directories", this.directories.getUserspaceInstance());
+		this.config.events.emit("buildawesome.directories", this.directories.getUserspaceInstance());
 
 		this.writer = new TemplateWriter(formats, this.templateData, this.eleventyConfig);
 
@@ -538,13 +528,13 @@ Verbose Output: ${this.verboseMode}`;
 		// Recognize that global data `eleventy.version` is coerced to remove prerelease tags
 		// and this is the raw version (3.0.0 versus 3.0.0-alpha.6).
 		// `eleventy.env.version` does not yet exist (unnecessary)
-		process.env.ELEVENTY_VERSION = MinimalCore.getVersion();
+		setEnvValue("VERSION", CoreMinimal.getVersion());
 
-		process.env.ELEVENTY_ROOT = env.root;
-		debug("Setting process.env.ELEVENTY_ROOT: %o", env.root);
+		setEnvValue("ROOT", env.root);
+		debug("Setting process.env.ELEVENTY_ROOT and BUILDAWESOME_ROOT: %o", env.root);
 
-		process.env.ELEVENTY_SOURCE = env.source;
-		process.env.ELEVENTY_RUN_MODE = env.runMode;
+		setEnvValue("SOURCE", env.source);
+		setEnvValue("RUN_MODE", env.runMode);
 	}
 
 	/** @param {boolean} value */
@@ -577,10 +567,10 @@ Verbose Output: ${this.verboseMode}`;
 		this.logger.overrideLogger(false);
 	}
 
-	/** @type {EleventyErrorHandler} */
+	/** @type {ErrorHandler} */
 	get errorHandler() {
 		if (!this.#errorHandler) {
-			this.#errorHandler = new EleventyErrorHandler();
+			this.#errorHandler = new ErrorHandler();
 			this.#errorHandler.isVerbose = this.verboseMode;
 			this.#errorHandler.logger = this.logger;
 		}
@@ -589,10 +579,10 @@ Verbose Output: ${this.verboseMode}`;
 	}
 
 	/**
-	 * Updates the verbose mode of Eleventy.
+	 * Updates the verbose mode (logs more detailed information).
 	 *
 	 * @method
-	 * @param {boolean} isVerbose - Shall Eleventy run in verbose mode?
+	 * @param {boolean} isVerbose - Shall we run in verbose mode?
 	 */
 	setIsVerbose(isVerbose) {
 		if (!this.#hasConfigInitialized) {
@@ -633,7 +623,7 @@ Verbose Output: ${this.verboseMode}`;
 	}
 
 	/**
-	 * Updates the template formats of Eleventy.
+	 * Updates the template formats.
 	 *
 	 * @method
 	 * @param {string} formats - The new template formats.
@@ -643,7 +633,7 @@ Verbose Output: ${this.verboseMode}`;
 	}
 
 	/**
-	 * Updates the run mode of Eleventy.
+	 * Updates the run mode (build/watch/serve).
 	 *
 	 * @method
 	 * @param {string} runMode - One of "build", "watch", or "serve"
@@ -691,7 +681,7 @@ Verbose Output: ${this.verboseMode}`;
 	}
 
 	/**
-	 * Resets the config of Eleventy.
+	 * Resets the config
 	 *
 	 * @method
 	 */
@@ -772,7 +762,7 @@ Verbose Output: ${this.verboseMode}`;
 	}
 
 	toNDJSON() {
-		throw new Error("Feature removed in Eleventy v4: https://github.com/11ty/eleventy/issues/3382");
+		throw new Error("Feature removed in v4: https://github.com/11ty/eleventy/issues/3382");
 	}
 
 	/*
@@ -844,8 +834,7 @@ Verbose Output: ${this.verboseMode}`;
 				incremental: this.isIncremental,
 			};
 
-			await this.config.events.emit("beforeBuild", eventsArg);
-			await this.config.events.emit("eleventy.before", eventsArg);
+			await this.config.events.emit("buildawesome.before", eventsArg);
 
 			let promise;
 			if (to === "fs") {
@@ -862,7 +851,7 @@ Verbose Output: ${this.verboseMode}`;
 
 			let resolved = await promise;
 
-			// Passing the processed output to the eleventy.after event (2.0+)
+			// Passing the processed output to the buildawesome.after event (2.0+)
 			eventsArg.results = resolved.templates;
 
 			if (to === "json" || to === "fs:templates") {
@@ -876,11 +865,10 @@ Verbose Output: ${this.verboseMode}`;
 			// always reset after first build
 			this.setIgnoreInitial(false);
 			this.writer.resetIncremental();
-			this.config.events.emit("eleventy#previousqueue", incrementalFiles);
+			this.config.events.emit("buildawesome#previousqueue", incrementalFiles);
 
 			eventsArg.uses = this.eleventyConfig.usesGraph.map;
-			await this.config.events.emit("afterBuild", eventsArg);
-			await this.config.events.emit("eleventy.after", eventsArg);
+			await this.config.events.emit("buildawesome.after", eventsArg);
 
 			this.buildCount++;
 		} catch (error) {
@@ -906,21 +894,21 @@ Verbose Output: ${this.verboseMode}`;
 
 			debug(`
 Have a suggestion/feature request/feedback? Feeling frustrated? I want to hear it!
-Open an issue: https://github.com/11ty/eleventy/issues/new`);
+Open an issue: https://github.com/11ty/build-awesome/issues/new`);
 		}
 
 		return returnObj;
 	}
 
 	/**
-	 * Logs some statistics after a complete run of Eleventy.
+	 * Logs some statistics after a complete run.
 	 *
 	 * @returns {string} ret - The log message.
 	 */
 	logFinished() {
 		if (!this.writer) {
 			throw new Error(
-				"Did you call Eleventy.init to create the TemplateWriter instance? Hint: you probably didn’t.",
+				"Internal error: missing TemplateWriter instance. Make sure you call init() to create it.",
 			);
 		}
 
@@ -969,7 +957,7 @@ Open an issue: https://github.com/11ty/eleventy/issues/new`);
 				chalk.gray(`(${((time * 1000) / writeCount).toFixed(1)}ms each, v${pkg.version}${cfgStr})`),
 			);
 		} else {
-			ret.push(chalk.gray(`(v${MinimalCore.getVersion()}${cfgStr})`));
+			ret.push(chalk.gray(`(v${CoreMinimal.getVersion()}${cfgStr})`));
 		}
 
 		return ret.join(" ");

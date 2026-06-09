@@ -5,7 +5,7 @@ import JavaScriptDependencies from "./Util/JavaScriptDependencies.js";
 import PathNormalizer from "./Util/PathNormalizer.js";
 import { TemplateDepGraph } from "./Util/TemplateDepGraph.js";
 
-const debug = createDebug("Eleventy:Dependencies");
+const debug = createDebug("BuildAwesome:Dependencies");
 
 class GlobalDependencyMap {
 	// dependency-graph requires these keys to be alphabetic strings

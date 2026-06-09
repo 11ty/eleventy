@@ -1,7 +1,7 @@
 import TemplateContentPrematureUseError from "./TemplateContentPrematureUseError.js";
 
 /* Hack to workaround the variety of error handling schemes in template languages */
-class EleventyErrorUtil {
+export default class ErrorUtil {
 	static get prefix() {
 		return ">>>>>11ty>>>>>";
 	}
@@ -14,7 +14,7 @@ class EleventyErrorUtil {
 			return false;
 		}
 
-		return msg.includes(EleventyErrorUtil.prefix) && msg.includes(EleventyErrorUtil.suffix);
+		return msg.includes(ErrorUtil.prefix) && msg.includes(ErrorUtil.suffix);
 	}
 
 	static cleanMessage(msg) {
@@ -22,25 +22,25 @@ class EleventyErrorUtil {
 			return "";
 		}
 
-		if (!EleventyErrorUtil.hasEmbeddedError(msg)) {
+		if (!ErrorUtil.hasEmbeddedError(msg)) {
 			return "" + msg;
 		}
 
-		return msg.slice(0, Math.max(0, msg.indexOf(EleventyErrorUtil.prefix)));
+		return msg.slice(0, Math.max(0, msg.indexOf(ErrorUtil.prefix)));
 	}
 
 	static deconvertErrorToObject(error) {
 		if (!error || !error.message) {
 			throw new Error(`Could not convert error object from: ${error}`);
 		}
-		if (!EleventyErrorUtil.hasEmbeddedError(error.message)) {
+		if (!ErrorUtil.hasEmbeddedError(error.message)) {
 			return error;
 		}
 
 		let msg = error.message;
 		let objectString = msg.substring(
-			msg.indexOf(EleventyErrorUtil.prefix) + EleventyErrorUtil.prefix.length,
-			msg.lastIndexOf(EleventyErrorUtil.suffix),
+			msg.indexOf(ErrorUtil.prefix) + ErrorUtil.prefix.length,
+			msg.lastIndexOf(ErrorUtil.suffix),
 		);
 		let obj = JSON.parse(objectString);
 		obj.name = error.name;
@@ -50,9 +50,9 @@ class EleventyErrorUtil {
 	// pass an error through a random template engine’s error handling unscathed
 	static convertErrorToString(error) {
 		return (
-			EleventyErrorUtil.prefix +
+			ErrorUtil.prefix +
 			JSON.stringify({ message: error.message, stack: error.stack }) +
-			EleventyErrorUtil.suffix
+			ErrorUtil.suffix
 		);
 	}
 
@@ -61,10 +61,9 @@ class EleventyErrorUtil {
 		return (
 			e instanceof TemplateContentPrematureUseError ||
 			e?.cause instanceof TemplateContentPrematureUseError || // Custom (per Node-convention)
-			["RenderError", "UndefinedVariableError"].includes(e?.originalError?.name) && e?.originalError?.originalError instanceof TemplateContentPrematureUseError || // Liquid
+			(["RenderError", "UndefinedVariableError"].includes(e?.originalError?.name) &&
+				e?.originalError?.originalError instanceof TemplateContentPrematureUseError) || // Liquid
 			e?.message?.includes("TemplateContentPrematureUseError") // Nunjucks
 		);
 	}
 }
-
-export default EleventyErrorUtil;

@@ -5,7 +5,7 @@ on:
 permissions: read-all
 jobs:
   release:
-    # see https://github.com/11ty/eleventy/settings/environments
+    # see https://github.com/11ty/build-awesome/settings/environments
     environment: GitHub Publish
     runs-on: ubuntu-latest
     permissions:

@@ -2,11 +2,11 @@ import { createDebug } from "obug";
 
 import { inspect } from "../Adapters/Packages/inspect.js";
 import ConsoleLogger from "../Util/ConsoleLogger.js";
-import EleventyErrorUtil from "./EleventyErrorUtil.js";
+import ErrorUtil from "./ErrorUtil.js";
 
-const debug = createDebug("Eleventy:EleventyErrorHandler");
+const debug = createDebug("BuildAwesome:ErrorHandler");
 
-class EleventyErrorHandler {
+export class ErrorHandler {
 	constructor() {
 		this._isVerbose = true;
 	}
@@ -80,7 +80,7 @@ class EleventyErrorHandler {
 			showStack = false;
 		}
 
-		let totalErrorCount = EleventyErrorHandler.getTotalErrorCount(e);
+		let totalErrorCount = ErrorHandler.getTotalErrorCount(e);
 		let ref = e;
 		let index = 1;
 		let debugs = [];
@@ -92,8 +92,8 @@ class EleventyErrorHandler {
 				nextRef.originalError = nextRef.cause?.originalError ?? nextRef?.cause;
 			}
 
-			if (!nextRef && EleventyErrorUtil.hasEmbeddedError(ref.message)) {
-				nextRef = EleventyErrorUtil.deconvertErrorToObject(ref);
+			if (!nextRef && ErrorUtil.hasEmbeddedError(ref.message)) {
+				nextRef = ErrorUtil.deconvertErrorToObject(ref);
 			}
 
 			if (nextRef?.skipOriginalStack) {
@@ -102,7 +102,7 @@ class EleventyErrorHandler {
 
 			messages.push(
 				`${totalErrorCount > 1 ? `${index}. ` : ""}${(
-					EleventyErrorUtil.cleanMessage(ref.message) || "(No error message provided)"
+					ErrorUtil.cleanMessage(ref.message) || "(No error message provided)"
 				).trim()}${ref.name !== "Error" ? ` (via ${ref.name})` : ""}`,
 			);
 
@@ -140,5 +140,3 @@ class EleventyErrorHandler {
 		}
 	}
 }
-
-export { EleventyErrorHandler };

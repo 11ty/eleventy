@@ -1,5 +1,5 @@
 import test from "ava";
-import Eleventy from "../src/Eleventy.js";
+import Eleventy from "../src/Core.js";
 
 test("Empty collections api #3467 (return undefined)", async (t) => {
 	let elev = new Eleventy("./test/stubs-virtual", "./test/stubs-virtual/_site", {

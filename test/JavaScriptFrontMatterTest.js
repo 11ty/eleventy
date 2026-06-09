@@ -1,5 +1,5 @@
 import test from "ava";
-import Eleventy from "../src/Eleventy.js";
+import Eleventy from "../src/Core.js";
 
 test("Custom Front Matter Parsing Options (using JavaScript node-retrieve-globals)", async (t) => {
   let elev = new Eleventy("./test/stubs/script-frontmatter/test.njk", "./_site");

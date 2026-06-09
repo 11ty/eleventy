@@ -1,5 +1,5 @@
 import test from "ava";
-import Eleventy from "../src/Eleventy.js";
+import Eleventy from "../src/Core.js";
 import { eleventyImageTransformPlugin } from "@11ty/eleventy-img";
 import { normalizeNewLines } from "./Util/normalizeNewLines.js";
 

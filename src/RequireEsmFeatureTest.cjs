@@ -38,6 +38,6 @@ if(!canRequireModules()) {
 }
 
 // If we made it here require(ESM) works fine (via --experimental-require-module or newer Node.js defaults)
-let mod = require("./Eleventy.js");
+let mod = require("./Core.js");
 
 module.exports = mod;

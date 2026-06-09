@@ -1,12 +1,9 @@
 import { Merge, TemplatePath } from "@11ty/eleventy-utils";
-import { createDebug } from "obug";
 
 import TemplateLayoutPathResolver from "./TemplateLayoutPathResolver.js";
 import TemplateContent from "./TemplateContent.js";
 import layoutCache from "./LayoutCache.js";
 import { DataCascade } from "./Data/DataCascade.js";
-
-const debugDev = createDebug("Dev:Eleventy:TemplateLayout");
 
 // https://github.com/11ty/eleventy/issues/3954
 class CdataWrapper {
@@ -96,7 +93,6 @@ class TemplateLayout extends TemplateContent {
 			let layout = new TemplateLayout(key, extensionMap, eleventyConfig);
 
 			layoutCache.add(layout);
-			debugDev("Added %o to LayoutCache", key);
 
 			return layout;
 		}
@@ -242,7 +238,6 @@ class TemplateLayout extends TemplateContent {
 
 			return fns;
 		} catch (e) {
-			debugDev("Clearing LayoutCache after error.");
 			layoutCache.clear();
 			throw e;
 		}

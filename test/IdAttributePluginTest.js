@@ -1,7 +1,7 @@
 import test from "ava";
 
 import { IdAttributePlugin } from "../src/Plugins/IdAttributePlugin.js";
-import Eleventy from "../src/Eleventy.js";
+import Eleventy from "../src/Core.js";
 
 test("Using the IdAttribute plugin #3356", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", "./test/stubs-virtual/_site", {

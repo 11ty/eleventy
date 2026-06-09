@@ -1,15 +1,14 @@
 import test from "ava";
-import Eleventy from "../src/Eleventy.js";
+import Eleventy from "../src/Core.js";
 
-test("#3808 addCollection in eleventy.before", async (t) => {
+test("#3808 addCollection in buildawesome.before", async (t) => {
   let elev = new Eleventy("test/noop", false, {
     config(eleventyConfig) {
       eleventyConfig.addTemplate("post1.md", "# Post1");
       eleventyConfig.addTemplate("post2.md", "# Post2");
       eleventyConfig.addTemplate("index.njk", "{{ collections.posts.length }}");
 
-      eleventyConfig.on("eleventy.before", async () => {
-      // eleventyConfig.on("eleventy.beforeConfig", async (eleventyConfig) => {
+      eleventyConfig.on("buildawesome.before", async () => {
         eleventyConfig.addCollection("posts", async collectionApi => {
           return collectionApi.getFilteredByGlob("**/post*.md");
         });
@@ -24,7 +23,7 @@ test("#3808 addCollection in eleventy.before", async (t) => {
 
 // /* broken */
 // export default function(eleventyConfig) {
-//   eleventyConfig.on("eleventy.before", async () => {
+//   eleventyConfig.on("buildawesome.before", async () => {
 //     eleventyConfig.addCollection("posts", collectionApi => {
 //       return collectionApi.getFilteredByGlob("**/post*.md");
 //     });
@@ -33,7 +32,7 @@ test("#3808 addCollection in eleventy.before", async (t) => {
 
 // /* works */
 // export default function(eleventyConfig) {
-//   eleventyConfig.on("eleventy.beforeConfig", async (eleventyConfig) => {
+//   eleventyConfig.on("buildawesome.beforeConfig", async (eleventyConfig) => {
 //     eleventyConfig.addCollection("posts", collectionApi => {
 //       return collectionApi.getFilteredByGlob("**/post*.md");
 //     });

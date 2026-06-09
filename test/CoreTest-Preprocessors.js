@@ -1,5 +1,5 @@
 import test from "ava";
-import Eleventy from "../src/Eleventy.js";
+import Eleventy from "../src/Core.js";
 
 test("#188: Content preprocessing (dot in file extension)", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {

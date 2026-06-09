@@ -2,6 +2,7 @@ import module from "node:module";
 import { fileURLToPath } from "../Adapters/Packages/url.js";
 import PathNormalizer from "./PathNormalizer.js";
 import { resolve, addToModifiedPaths } from "./EsmResolver.js";
+import { getEnvValue } from "./EnvironmentVars.cjs";
 
 // ESM Cache Buster
 // - registerHooks requires Node 22.15+ (and is sync only, shipped with v4.0.0-alpha.8)
@@ -10,7 +11,7 @@ import { resolve, addToModifiedPaths } from "./EsmResolver.js";
 // Fixes https://github.com/11ty/eleventy/issues/3270
 
 // ENV variable for https://github.com/11ty/eleventy/issues/3371
-if (!process?.env?.ELEVENTY_SKIP_ESM_RESOLVER) {
+if (!getEnvValue("SKIP_ESM_RESOLVER")) {
 	if ("registerHooks" in module) {
 		module.registerHooks({
 			// sync-only
@@ -20,7 +21,7 @@ if (!process?.env?.ELEVENTY_SKIP_ESM_RESOLVER) {
 }
 
 export function addModifiedPath(path, date) {
-	if (process?.env?.ELEVENTY_SKIP_ESM_RESOLVER) {
+	if (getEnvValue("SKIP_ESM_RESOLVER")) {
 		return;
 	}
 

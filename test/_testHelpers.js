@@ -2,9 +2,9 @@ import { existsSync, rmSync } from "node:fs";
 import { isPlainObject } from "@11ty/eleventy-utils";
 import TemplateConfig from "../src/TemplateConfig.js";
 import ProjectDirectories from "../src/Util/ProjectDirectories.js";
-import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
+import ExtensionMap from "../src/ExtensionMap.js";
 import TemplatePassthroughManager from "../src/TemplatePassthroughManager.js";
-import EleventyFiles from "../src/EleventyFiles.js";
+import { Files } from "../src/Files.js";
 import FileSystemSearch from "../src/FileSystemSearch.js";
 import TemplateWriter from "../src/TemplateWriter.js";
 import TemplateEngineManager from "../src/Engines/TemplateEngineManager.js";
@@ -63,7 +63,7 @@ export function getTemplateWriterInstance(formats, templateConfig) {
   );
 
   let engineManager = new TemplateEngineManager(templateConfig);
-  let map = new EleventyExtensionMap(templateConfig);
+  let map = new ExtensionMap(templateConfig);
   map.engineManager = engineManager;
   map.setFormats(formats);
 
@@ -80,7 +80,7 @@ export function getTemplateWriterInstance(formats, templateConfig) {
 }
 
 export function getEleventyFilesInstance(formats, templateConfig) {
-	let map = new EleventyExtensionMap(templateConfig);
+	let map = new ExtensionMap(templateConfig);
 	map.setFormats(formats);
 
   let fss = new FileSystemSearch();
@@ -89,7 +89,7 @@ export function getEleventyFilesInstance(formats, templateConfig) {
 	mgr.extensionMap = map;
 	mgr.setFileSystemSearch(fss);
 
-	let files = new EleventyFiles(formats, templateConfig);
+	let files = new Files(formats, templateConfig);
 	files.setPassthroughManager(mgr);
 	files.setFileSystemSearch(fss);
 	files.extensionMap = map;

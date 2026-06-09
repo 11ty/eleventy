@@ -1,11 +1,11 @@
 import lodash from "@11ty/lodash-custom";
 
 import ReservedData from "../Util/ReservedData.js";
-import EleventyBaseError from "../Errors/EleventyBaseError.js";
+import BaseError from "../Errors/BaseError.js";
 
 const { set: lodashSet } = lodash;
 
-class TemplateDataConfigError extends EleventyBaseError {}
+class TemplateDataConfigError extends BaseError {}
 
 export default class ConfigurationGlobalData {
 	constructor(templateConfig) {

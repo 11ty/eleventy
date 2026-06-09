@@ -1,10 +1,10 @@
 import test from "ava";
 
-import EleventyServe from "../src/EleventyServe.js";
+import Serve from "../src/Serve.js";
 import TemplateConfig from "../src/TemplateConfig.js";
 
 async function getServerInstance(eleventyConfig) {
-  let es = new EleventyServe();
+  let es = new Serve();
   if (!eleventyConfig) {
     eleventyConfig = new TemplateConfig();
     await eleventyConfig.init();

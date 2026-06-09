@@ -5,7 +5,7 @@ import { createDebug } from "obug";
 import GlobRemap from "./Util/GlobRemap.js";
 import { isGlobMatch } from "./Util/GlobMatcher.js";
 
-const debug = createDebug("Eleventy:FileSystemSearch");
+const debug = createDebug("BuildAwesome:FileSystemSearch");
 
 class FileSystemSearch {
 	constructor() {

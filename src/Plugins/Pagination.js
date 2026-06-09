@@ -2,15 +2,15 @@ import { isPlainObject } from "@11ty/eleventy-utils";
 import lodash from "@11ty/lodash-custom";
 import { DeepCopy } from "@11ty/eleventy-utils";
 
-import EleventyBaseError from "../Errors/EleventyBaseError.js";
+import BaseError from "../Errors/BaseError.js";
 import { ProxyWrap } from "../Util/Objects/ProxyWrap.js";
 // import { DeepFreeze } from "../Util/Objects/DeepFreeze.js";
 import TemplateData from "../Data/TemplateData.js";
 
 const { set: lodashSet, get: lodashGet, chunk: lodashChunk } = lodash;
 
-class PaginationConfigError extends EleventyBaseError {}
-class PaginationError extends EleventyBaseError {}
+class PaginationConfigError extends BaseError {}
+class PaginationError extends BaseError {}
 
 class Pagination {
 	constructor(tmpl, data, config) {

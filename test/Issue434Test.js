@@ -1,5 +1,5 @@
 import test from "ava";
-import Eleventy from "../src/Eleventy.js";
+import Eleventy from "../src/Core.js";
 
 test("#434 Using `with context` to access collections", async (t) => {
 	let elev = new Eleventy("test/noop", false, {

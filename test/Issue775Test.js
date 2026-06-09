@@ -1,5 +1,5 @@
 import test from "ava";
-import Eleventy from "../src/Eleventy.js";
+import Eleventy from "../src/Core.js";
 
 test("#775 Using data cascade in Collection API", async (t) => {
 	let elev = new Eleventy("test/noop", false, {

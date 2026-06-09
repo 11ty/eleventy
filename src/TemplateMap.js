@@ -2,13 +2,13 @@ import { isPlainObject, TemplatePath } from "@11ty/eleventy-utils";
 import { createDebug } from "obug";
 
 import TemplateCollection from "./TemplateCollection.js";
-import EleventyErrorUtil from "./Errors/EleventyErrorUtil.js";
+import ErrorUtil from "./Errors/ErrorUtil.js";
 import UsingCircularTemplateContentReferenceError from "./Errors/UsingCircularTemplateContentReferenceError.js";
 import DuplicatePermalinkOutputError from "./Errors/DuplicatePermalinkOutputError.js";
 import TemplateData from "./Data/TemplateData.js";
 import GlobalDependencyMap from "./GlobalDependencyMap.js";
 
-const debug = createDebug("Eleventy:TemplateMap");
+const debug = createDebug("BuildAwesome:TemplateMap");
 
 // These template URL filenames are allowed to exclude file extensions
 const EXTENSIONLESS_URL_ALLOWLIST = [
@@ -326,7 +326,7 @@ class TemplateMap {
 			return this.getMapEntryForInputPath(inputPath);
 		});
 
-		await this.config.events.emitLazy("eleventy.contentMap", () => {
+		await this.config.events.emitLazy("buildawesome.contentmap", () => {
 			return {
 				inputPathToUrl: this.generateInputUrlContentMap(orderedMap),
 				urlToInputPath: this.generateUrlMap(orderedMap),
@@ -342,7 +342,7 @@ class TemplateMap {
 		this.checkForDuplicatePermalinks();
 		this.checkForMissingFileExtensions();
 
-		await this.config.events.emitLazy("eleventy.layouts", () => this.generateLayoutsMap());
+		await this.config.events.emitLazy("buildawesome.layouts", () => this.generateLayoutsMap());
 	}
 
 	generateInputUrlContentMap(orderedMap) {
@@ -431,7 +431,7 @@ class TemplateMap {
 								await pageEntry.template.renderPageEntryWithoutLayout(pageEntry);
 						}
 					} catch (e) {
-						if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
+						if (ErrorUtil.isPrematureTemplateContentError(e)) {
 							// Add to list of templates that need to be processed again
 							usedTemplateContentTooEarlyMap.push(map);
 
@@ -456,7 +456,7 @@ class TemplateMap {
 						await pageEntry.template.renderPageEntryWithoutLayout(pageEntry);
 				}
 			} catch (e) {
-				if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
+				if (ErrorUtil.isPrematureTemplateContentError(e)) {
 					// If we still have template content errors after the second pass,
 					// it's likely a circular reference
 					throw new UsingCircularTemplateContentReferenceError(

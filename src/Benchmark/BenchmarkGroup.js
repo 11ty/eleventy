@@ -4,7 +4,7 @@ import ConsoleLogger from "../Util/ConsoleLogger.js";
 import isAsyncFunction from "../Util/IsAsyncFunction.js";
 import Benchmark from "./Benchmark.js";
 
-const debugBenchmark = createDebug("Eleventy:Benchmark");
+const debugBenchmark = createDebug("BuildAwesome:Benchmark");
 
 class BenchmarkGroup {
 	constructor() {

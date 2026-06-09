@@ -1,5 +1,5 @@
 import test from "ava";
-import Eleventy from "../src/Eleventy.js";
+import Eleventy from "../src/Core.js";
 
 test.skip("#3400: Both a paired and unpaired shortcode.", async (t) => {
   let count = 0;

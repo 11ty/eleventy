@@ -1,5 +1,5 @@
 import test from "ava";
-import Eleventy from "../src/Eleventy.js";
+import Eleventy from "../src/Core.js";
 
 test("Paired shortcodes in macros #2261 #1749", async (t) => {
 	let elev = new Eleventy({

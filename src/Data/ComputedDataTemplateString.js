@@ -2,7 +2,7 @@ import lodash from "@11ty/lodash-custom";
 import { createDebug } from "obug";
 
 const { set: lodashSet } = lodash;
-const debug = createDebug("Eleventy:ComputedDataTemplateString");
+const debug = createDebug("BuildAwesome:ComputedDataTemplateString");
 
 /* Calculates computed data in Template Strings.
  * Ideally we would use the Proxy approach but it doesn’t work

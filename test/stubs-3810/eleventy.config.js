@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { RenderPlugin } from '../../src/Eleventy.js';
+import { RenderPlugin } from '../../src/Core.js';
 const { RenderManager } = RenderPlugin;
 
 export default function(eleventyConfig) {

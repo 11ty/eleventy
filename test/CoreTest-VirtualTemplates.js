@@ -2,7 +2,7 @@ import test from "ava";
 import fs from "fs";
 import { feedPlugin } from "@11ty/eleventy-plugin-rss";
 
-import Eleventy from "../src/Eleventy.js";
+import Eleventy from "../src/Core.js";
 import DuplicatePermalinkOutputError from "../src/Errors/DuplicatePermalinkOutputError.js";
 
 import { deleteDirectory } from "./_testHelpers.js";

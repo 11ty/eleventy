@@ -1,5 +1,5 @@
 import test from "ava";
-import Eleventy from "../src/Eleventy.js";
+import Eleventy from "../src/Core.js";
 
 test("#3788 Nunjucks shortcodes args", async (t) => {
 	let elev = new Eleventy("test/noop", false, {

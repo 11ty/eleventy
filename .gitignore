@@ -17,7 +17,7 @@ api-docs/
 .vscode
 .idea
 
-# Ignore eleventy output when doing manual tests
+# Ignore build output when doing manual tests
 _site/
 
 # Ignore test files

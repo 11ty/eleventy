@@ -1,5 +1,5 @@
 import test from "ava";
-import Eleventy from "../src/Eleventy.js";
+import Eleventy from "../src/Core.js";
 
 test("#3875 numeric tags", async (t) => {
   let elev = new Eleventy("test/noop", false, {

@@ -8,14 +8,14 @@ import { marked } from "marked";
 import nunjucks from "@11ty/nunjucks";
 import * as sass from "sass";
 
-import Eleventy, { HtmlBasePlugin } from "../src/Eleventy.js";
+import Eleventy, { HtmlBasePlugin } from "../src/Core.js";
 import TemplateContent from "../src/TemplateContent.js";
 import TemplateMap from "../src/TemplateMap.js";
 import TemplateConfig from "../src/TemplateConfig.js";
 import { getCreatedTimestamp, getUpdatedTimestamp } from "../src/Util/Git.js";
 import PathNormalizer from "../src/Util/PathNormalizer.js";
 import { normalizeNewLines, localizeNewLines } from "./Util/normalizeNewLines.js";
-import { isTypeScriptSupported } from "../src/Util/FeatureTests.cjs";
+import { isTypeScriptSupported } from "../src/Util/TypeScriptFeatureTest.cjs";
 import { deleteDirectory } from "./_testHelpers.js";
 
 const lodashGet = lodash.get;
@@ -93,7 +93,7 @@ test("Eleventy set input/output", async (t) => {
   t.truthy(elev.writer);
 });
 
-test("Eleventy process.ENV", async (t) => {
+test("process.env.ELEVENTY_*", async (t) => {
   delete process.env.ELEVENTY_ROOT;
   t.falsy(process.env.ELEVENTY_ROOT);
 
@@ -102,6 +102,19 @@ test("Eleventy process.ENV", async (t) => {
   t.truthy(process.env.ELEVENTY_ROOT);
 
   // all ELEVENTY_ env variables are also available on eleventy.env
+  let globals = await elev.templateData.getInitialGlobalData();
+  t.truthy(globals.eleventy.env.root);
+});
+
+test("process.env.BUILDAWESOME_*", async (t) => {
+  delete process.env.BUILDAWESOME_ROOT;
+  t.falsy(process.env.BUILDAWESOME_ROOT);
+
+  let elev = new Eleventy("./test/stubs", "./test/stubs/_site");
+  await elev.init();
+  t.truthy(process.env.BUILDAWESOME_ROOT);
+
+  // all BUILDAWESOME_ env variables are also available on eleventy.env
   let globals = await elev.templateData.getInitialGlobalData();
   t.truthy(globals.eleventy.env.root);
 });
@@ -739,8 +752,8 @@ test("Access to raw input of file (dryRun), issue #1206", async (t) => {
 	deleteDirectory("./test/stubs-1206/_site/");
 });
 
-test("eleventy.before and eleventy.after Event Arguments, directories", async (t) => {
-  t.plan(6);
+test("{eleventy,buildawesome}.before and {eleventy,buildawesome}.after Event Arguments, directories", async (t) => {
+  t.plan(12);
   let elev = new Eleventy("./test/noop/", "./test/noop/_site", {
     config: function (eleventyConfig) {
       eleventyConfig.on("eleventy.before", arg => {
@@ -748,7 +761,17 @@ test("eleventy.before and eleventy.after Event Arguments, directories", async (t
         t.is(arg.directories.input, "./test/noop/");
         t.is(arg.directories.includes, "./test/noop/_includes/");
       })
+      eleventyConfig.on("buildawesome.before", arg => {
+        t.is(arg.inputDir, "./test/noop/");
+        t.is(arg.directories.input, "./test/noop/");
+        t.is(arg.directories.includes, "./test/noop/_includes/");
+      })
       eleventyConfig.on("eleventy.after", arg => {
+        t.is(arg.inputDir, "./test/noop/");
+        t.is(arg.directories.input, "./test/noop/");
+        t.is(arg.directories.includes, "./test/noop/_includes/");
+      })
+      eleventyConfig.on("buildawesome.after", arg => {
         t.is(arg.inputDir, "./test/noop/");
         t.is(arg.directories.input, "./test/noop/");
         t.is(arg.directories.includes, "./test/noop/_includes/");
@@ -759,20 +782,20 @@ test("eleventy.before and eleventy.after Event Arguments, directories", async (t
   let results = await elev.toJSON();
 });
 
-test("eleventy.after fires sequentially setting eventEmitterMode 'sequential'", async (t) => {
+test("buildawesome.after fires sequentially setting eventEmitterMode 'sequential'", async (t) => {
   let reachFirst;
   const firstReached = new Promise(resolve => reachFirst = resolve)
   let next;
   const firstResult = new Promise(resolve => next = resolve)
   let secondCalled = false;
   let elev = new Eleventy("./test/noop/", "./test/noop/_site", {
-    config: function (eleventyConfig) {
-      eleventyConfig.setEventEmitterMode('sequential')
-      eleventyConfig.on("eleventy.after", arg => {
+    config: function (configApi) {
+      configApi.setEventEmitterMode('sequential')
+      configApi.on("buildawesome.after", arg => {
         reachFirst()
         return firstResult;
       })
-      eleventyConfig.on("eleventy.after", arg => {
+      configApi.on("buildawesome.after", arg => {
         secondCalled = true;
       })
     },
@@ -792,7 +815,7 @@ test("setInputDirectory config method #1503", async (t) => {
     config: function (eleventyConfig) {
       eleventyConfig.setInputDirectory("./test/noop2/");
 
-      eleventyConfig.on("eleventy.before", arg => {
+      eleventyConfig.on("buildawesome.before", arg => {
         t.is(arg.directories.input, "./test/noop2/");
         t.is(arg.directories.includes, "./test/noop2/_includes/");
         t.is(arg.directories.data, "./test/noop2/_data/");
@@ -811,7 +834,7 @@ test("setIncludesDirectory config method #1503", async (t) => {
     config: function (eleventyConfig) {
       eleventyConfig.setIncludesDirectory("myincludes");
 
-      eleventyConfig.on("eleventy.before", arg => {
+      eleventyConfig.on("buildawesome.before", arg => {
         t.is(arg.directories.input, "./test/noop/");
         t.is(arg.directories.includes, "./test/noop/myincludes/");
         t.is(arg.directories.data, "./test/noop/_data/");
@@ -830,7 +853,7 @@ test("setDataDirectory config method #1503", async (t) => {
     config: function (eleventyConfig) {
       eleventyConfig.setDataDirectory("data");
 
-      eleventyConfig.on("eleventy.before", arg => {
+      eleventyConfig.on("buildawesome.before", arg => {
         t.is(arg.directories.input, "./test/noop/");
         t.is(arg.directories.includes, "./test/noop/_includes/");
         t.is(arg.directories.data, "./test/noop/data/");
@@ -849,7 +872,7 @@ test("setLayoutsDirectory config method #1503", async (t) => {
     config: function (eleventyConfig) {
       eleventyConfig.setLayoutsDirectory("layouts");
 
-      eleventyConfig.on("eleventy.before", arg => {
+      eleventyConfig.on("buildawesome.before", arg => {
         t.is(arg.directories.input, "./test/noop/");
         t.is(arg.directories.includes, "./test/noop/_includes/");
         t.is(arg.directories.data, "./test/noop/_data/");
@@ -919,8 +942,8 @@ test("Eleventy config export (ESM)", async (t) => {
   t.plan(5);
   let elev = new Eleventy("test/stubs/cfg-directories-export", null, {
     configPath: "./test/stubs/cfg-directories-export/eleventy.config.js",
-    config: function (eleventyConfig) {
-      eleventyConfig.on("eleventy.after", arg => {
+    config: function (configApi) {
+      configApi.on("buildawesome.after", arg => {
         t.is(arg.directories.input, "./src/");
         t.is(arg.directories.includes, "./src/myincludes/");
         t.is(arg.directories.data, "./src/mydata/");
@@ -937,8 +960,8 @@ test("Eleventy config export (CommonJS)", async (t) => {
   t.plan(5);
   let elev = new Eleventy("test/stubs/cfg-directories-export-cjs", null, {
     configPath: "./test/stubs/cfg-directories-export-cjs/eleventy.config.cjs",
-    config: function (eleventyConfig) {
-      eleventyConfig.on("eleventy.after", arg => {
+    config: function (configApi) {
+      configApi.on("buildawesome.after", arg => {
         t.is(arg.directories.input, "./src/");
         t.is(arg.directories.includes, "./src/myincludes2/");
         t.is(arg.directories.data, "./src/mydata2/");
@@ -953,8 +976,8 @@ test("Eleventy config export (CommonJS)", async (t) => {
 
 test("Eleventy setting reserved data throws error (eleventy)", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addTemplate("index.html", `---
+    config: configApi => {
+      configApi.addTemplate("index.html", `---
 eleventy:
   key1: NOOOOO
 ---`);
@@ -971,8 +994,8 @@ eleventy:
 
 test("Eleventy setting reserved data throws error (pkg)", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addTemplate("index.html", `---
+    config: configApi => {
+      configApi.addTemplate("index.html", `---
 pkg:
   myOwn: OVERRIDE
 ---`);
@@ -989,8 +1012,8 @@ pkg:
 
 test("Eleventy pagination works okay with reserved data throws (eleventy) Issue #3262", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addTemplate("index.html", `---
+    config: configApi => {
+      configApi.addTemplate("index.html", `---
 pagination:
   data: "test"
   size: 1
@@ -1010,8 +1033,8 @@ test:
 
 test("Eleventy setting reserved data throws error (page)", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addTemplate("index.html", `---
+    config: configApi => {
+      configApi.addTemplate("index.html", `---
 page: "My page value"
 ---`)
     }
@@ -1025,8 +1048,8 @@ page: "My page value"
 
 test("Eleventy setting reserved data throws error (content)", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addTemplate("index.html", `---
+    config: configApi => {
+      configApi.addTemplate("index.html", `---
 content: "My page value"
 ---`)
     }
@@ -1040,8 +1063,8 @@ content: "My page value"
 
 test("Eleventy setting reserved data throws error (collections)", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addTemplate("index.html", `---
+    config: configApi => {
+      configApi.addTemplate("index.html", `---
 collections: []
 ---`)
     }
@@ -1055,8 +1078,8 @@ collections: []
 
 test("Eleventy setting pkg data is okay when pkg is remapped to parkour", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addTemplate("index.html", `---
+    config: configApi => {
+      configApi.addTemplate("index.html", `---
 pkg:
   myOwn: OVERRIDE
 ---`);
@@ -1085,8 +1108,8 @@ pkg:
 
 test("Eleventy setting pkg data is okay when keys.package is false", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addTemplate("index.html", `---
+    config: configApi => {
+      configApi.addTemplate("index.html", `---
 pkg:
   myOwn: OVERRIDE
 ---
@@ -1116,8 +1139,8 @@ pkg:
 
 test("Eleventy setting reserved data throws error (pkg remapped to parkour)", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addTemplate("index.html", `---
+    config: configApi => {
+      configApi.addTemplate("index.html", `---
 parkour:
   myOwn: OVERRIDE
 ---`);
@@ -1143,8 +1166,8 @@ parkour:
 
 test("Eleventy data schema (success) #879", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addTemplate("index1.html", "", {
+    config: configApi => {
+      configApi.addTemplate("index1.html", "", {
         draft: true,
         eleventyDataSchema: function(data) {
           if(typeof data.draft !== "boolean") {
@@ -1153,7 +1176,7 @@ test("Eleventy data schema (success) #879", async (t) => {
         }
       });
 
-      eleventyConfig.addTemplate("index2.html", "", {
+      configApi.addTemplate("index2.html", "", {
         draft: true,
         eleventyDataSchema: function(data) {
           if(typeof data.draft !== "boolean") {
@@ -1171,8 +1194,8 @@ test("Eleventy data schema (success) #879", async (t) => {
 
 test("Eleventy data schema (fails) #879", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addTemplate("index1.html", "", {
+    config: configApi => {
+      configApi.addTemplate("index1.html", "", {
         draft: 1,
         eleventyDataSchema: function(data) {
           if(typeof data.draft !== "boolean") {
@@ -1193,8 +1216,8 @@ test("Eleventy data schema (fails) #879", async (t) => {
 
 test("Eleventy data schema (fails, using zod) #879", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addTemplate("index1.html", "", {
+    config: configApi => {
+      configApi.addTemplate("index1.html", "", {
         draft: 1,
         eleventyDataSchema: function(data) {
           let result = z.object({
@@ -1220,12 +1243,12 @@ test("Eleventy data schema (fails, using zod) #879", async (t) => {
 test("Eleventy data schema has access to custom collections created via API #879", async (t) => {
   t.plan(2);
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addCollection("userCollection", function (collection) {
+    config: configApi => {
+      configApi.addCollection("userCollection", function (collection) {
         return collection.getAll();
       });
 
-      eleventyConfig.addTemplate("index1.html", "", {
+      configApi.addTemplate("index1.html", "", {
         eleventyDataSchema: function(data) {
           t.is(data.collections.userCollection.length, 1);
         }
@@ -1241,11 +1264,11 @@ test("Eleventy data schema has access to custom collections created via API #879
 test("Eleventy transforms filter (using collections and page override data)", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
     pathPrefix: "hi",
-    config: eleventyConfig => {
-      eleventyConfig.addPlugin(HtmlBasePlugin);
+    config: configApi => {
+      configApi.addPlugin(HtmlBasePlugin);
 
-      eleventyConfig.addTemplate("index.html", `<img src="/test.png" alt="abc">`, { tags: "posts" });
-      eleventyConfig.addTemplate("feed.njk", `{% for post in collections.posts %}{{ post.content | renderTransforms(post.page) | safe }}{% endfor %}`, {
+      configApi.addTemplate("index.html", `<img src="/test.png" alt="abc">`, { tags: "posts" });
+      configApi.addTemplate("feed.njk", `{% for post in collections.posts %}{{ post.content | renderTransforms(post.page) | safe }}{% endfor %}`, {
         permalink: "feed.xml"
       });
     }
@@ -1261,14 +1284,14 @@ test("Eleventy transforms filter (using collections and page override data)", as
 
 test("Custom Markdown Render with permalink, Issue #2780", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addExtension("md", {
+    config: configApi => {
+      configApi.addExtension("md", {
         compile: str => {
           return data => marked.parse(str);
         }
       });
 
-      eleventyConfig.addTemplate("template.md", `# Markdown?`, { permalink: "/permalink.html" });
+      configApi.addTemplate("template.md", `# Markdown?`, { permalink: "/permalink.html" });
     }
   });
 
@@ -1280,13 +1303,13 @@ test("Custom Markdown Render with permalink, Issue #2780", async (t) => {
 
 test("Custom Markdown Render with permalink, Issue #2780 #3339", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addTemplateFormats("markdown");
-      eleventyConfig.addExtension("markdown", {
+    config: configApi => {
+      configApi.addTemplateFormats("markdown");
+      configApi.addExtension("markdown", {
         key: "md"
       });
 
-      eleventyConfig.addTemplate("filename-hi.markdown", `# Markdown?`, { permalink: "/{{ page.fileSlug }}.html" });
+      configApi.addTemplate("filename-hi.markdown", `# Markdown?`, { permalink: "/{{ page.fileSlug }}.html" });
     }
   });
 
@@ -1298,8 +1321,8 @@ test("Custom Markdown Render with permalink, Issue #2780 #3339", async (t) => {
 
 test("Test input/output conflicts (input overwrites output), Issue #3327", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", "./test/stubs-virtual/", {
-    config: eleventyConfig => {
-      eleventyConfig.addTemplate("test.html", `# Markdown`, { permalink: "test.html" });
+    config: configApi => {
+      configApi.addTemplate("test.html", `# Markdown`, { permalink: "test.html" });
     }
   });
   elev.disableLogger();
@@ -1312,9 +1335,9 @@ test("Test input/output conflicts (input overwrites output), Issue #3327", async
 
 test("Test input/output conflicts (output overwrites another input), Issue #3327", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", "./test/stubs-virtual/", {
-    config: eleventyConfig => {
-      eleventyConfig.addTemplate("test.html", `# Markdown`);
-      eleventyConfig.addTemplate("index.html", `# Markdown`, { permalink: "test.html" });
+    config: configApi => {
+      configApi.addTemplate("test.html", `# Markdown`);
+      configApi.addTemplate("index.html", `# Markdown`, { permalink: "test.html" });
     }
   });
   elev.disableLogger();
@@ -1328,8 +1351,8 @@ test("Test input/output conflicts (output overwrites another input), Issue #3327
 test("Eleventy data schema has access to custom collections created via API #613 #3345", async (t) => {
 
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addCollection("userCollection", async function (collection) {
+    config: configApi => {
+      configApi.addCollection("userCollection", async function (collection) {
         let c = collection.getFilteredByTag("posts");
         for(let item of c) {
           const frontMatter = await item.template.read();
@@ -1339,8 +1362,8 @@ test("Eleventy data schema has access to custom collections created via API #613
         return c;
       });
 
-      eleventyConfig.addTemplate("home.html", "{% for post in collections.userCollection %}{{ post.content }}{% endfor %}");
-      eleventyConfig.addTemplate("post.html", "test", { tags: "posts" });
+      configApi.addTemplate("home.html", "{% for post in collections.userCollection %}{{ post.content }}{% endfor %}");
+      configApi.addTemplate("post.html", "test", { tags: "posts" });
     }
   });
   elev.disableLogger();
@@ -1353,8 +1376,8 @@ test("Eleventy data schema has access to custom collections created via API #613
 
 test("Custom Nunjucks syntax has shortcode with access to `this`, Issue #3310", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addShortcode("customized", function(argString) {
+    config: configApi => {
+      configApi.addShortcode("customized", function(argString) {
         return `${this.page.url}:${argString}:Custom Shortcode`;
       });
 
@@ -1372,8 +1395,8 @@ test("Custom Nunjucks syntax has shortcode with access to `this`, Issue #3310", 
         };
 
         this.run = function(context, argString) {
-          let fn = eleventyConfig.augmentFunctionContext(
-            eleventyConfig.getShortcode("customized"),
+          let fn = configApi.augmentFunctionContext(
+            configApi.getShortcode("customized"),
             {
               source: context.ctx,
               // lazy: false,
@@ -1388,9 +1411,9 @@ test("Custom Nunjucks syntax has shortcode with access to `this`, Issue #3310", 
 
       njkEnv.addExtension('CustomExtension', new CustomExtension());
 
-      eleventyConfig.addTemplateFormats("njknew");
+      configApi.addTemplateFormats("njknew");
 
-      eleventyConfig.addExtension("njknew", {
+      configApi.addExtension("njknew", {
         compile: (str, inputPath) => {
           let tmpl = new nunjucks.Template(str, njkEnv, inputPath, false);
           return function(data) {
@@ -1407,7 +1430,7 @@ test("Custom Nunjucks syntax has shortcode with access to `this`, Issue #3310", 
         }
       });
 
-      eleventyConfig.addTemplate("template.njknew", `<h1>{{ hello }}:{% customized "passed in" %}</h1>`, {
+      configApi.addTemplate("template.njknew", `<h1>{{ hello }}:{% customized "passed in" %}</h1>`, {
         hello: "goodbye"
       });
     }

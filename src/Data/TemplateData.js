@@ -7,27 +7,26 @@ import { inspect } from "../Adapters/Packages/inspect.js";
 import unique from "../Util/Objects/Unique.js";
 import TemplateGlob from "../TemplateGlob.js";
 import { DataCascadeManager } from "./DataCascade.js";
-import EleventyBaseError from "../Errors/EleventyBaseError.js";
+import BaseError from "../Errors/BaseError.js";
 import ConfigurationGlobalData from "./ConfigurationGlobalData.js";
 import {
-	getEleventyPackageJson,
+	getCorePackageJson,
 	importJsonSync,
 	getWorkingProjectPackageJsonPath,
 } from "../Util/ImportJsonSync.js";
-import { EleventyImport, EleventyLoadContent } from "../Util/Require.js";
+import { DynamicImport, LoadContent } from "../Util/Require.js";
 import { DeepFreeze } from "../Util/Objects/DeepFreeze.js";
 import { coerce } from "../Util/SemverCoerce.js";
 import ProjectDirectories from "../Util/ProjectDirectories.js";
 import ReservedData from "../Util/ReservedData.js";
-import { isTypeScriptSupported } from "../Util/FeatureTests.cjs";
+import { isTypeScriptSupported } from "../Util/TypeScriptFeatureTest.cjs";
 
 const { set: lodashSet, get: lodashGet } = lodash;
 
-const debugWarn = createDebug("Eleventy:Warnings");
-const debug = createDebug("Eleventy:TemplateData");
-const debugDev = createDebug("Dev:Eleventy:TemplateData");
+const debugWarn = createDebug("BuildAwesome:Warnings");
+const debug = createDebug("BuildAwesome:TemplateData");
 
-class TemplateDataParseError extends EleventyBaseError {}
+class TemplateDataParseError extends BaseError {}
 
 class TemplateData {
 	// Would be nice if the priorities here matched (see also FilePathUtil used by config file paths)
@@ -351,7 +350,7 @@ class TemplateData {
 
 		let files = TemplatePath.addLeadingDotSlashArray(await this.getGlobalDataFiles());
 
-		this.config.events.emit("eleventy.globalDataFiles", files);
+		this.config.events.emit("buildawesome.globaldatafiles", files);
 
 		let dataFileConflicts = {};
 
@@ -395,12 +394,12 @@ class TemplateData {
 
 	getEleventyGlobal() {
 		// #2293 for meta[name=generator]
-		const pkg = getEleventyPackageJson();
+		const pkg = getCorePackageJson();
 
 		let version = coerce(pkg.version).toString();
 		let eleventy = {
 			version,
-			generator: `Eleventy v${version}`,
+			generator: `Eleventy (Build Awesome) v${version}`,
 		};
 		if (this.environmentVariables) {
 			eleventy.env = Object.assign({}, this.environmentVariables);
@@ -474,7 +473,7 @@ class TemplateData {
 			return this.exists(path);
 		});
 
-		this.config.events.emit("eleventy.dataFiles", localDataPaths);
+		this.config.events.emit("buildawesome.datafiles", localDataPaths);
 
 		if (!localDataPaths.length) {
 			return localData;
@@ -574,7 +573,7 @@ class TemplateData {
 		let rawInput;
 
 		if (readFile) {
-			rawInput = EleventyLoadContent(path, options);
+			rawInput = LoadContent(path, options);
 		}
 
 		if (readFile && !rawInput) {
@@ -619,7 +618,7 @@ class TemplateData {
 			}
 
 			// We always need to use `import()`, as `require` isn’t available in ESM.
-			let returnValue = await EleventyImport(path, type);
+			let returnValue = await DynamicImport(path, type);
 
 			// Returning a function is executed immediately (it has always done this for global data)
 
@@ -694,9 +693,6 @@ class TemplateData {
 		let parsed = path.parse(templatePath);
 		let inputDir = this.inputDir;
 
-		debugDev("getLocalDataPaths(%o)", templatePath);
-		debugDev("parsed.dir: %o", parsed.dir);
-
 		let userExtensions = this.getUserDataExtensions();
 
 		if (parsed.dir) {
@@ -712,14 +708,10 @@ class TemplateData {
 			// Directory data file paths
 			let allDirs = TemplatePath.getAllDirs(parsed.dir);
 
-			debugDev("allDirs: %o", allDirs);
 			for (let dir of allDirs) {
 				let lastDir = TemplatePath.getLastPathSegment(dir);
 				let dirPathNoExt = dir + "/" + lastDir;
 
-				if (inputDir) {
-					debugDev("dirStr: %o; inputDir: %o", dir, inputDir);
-				}
 				// TODO use DirContains
 				if (!inputDir || (dir.startsWith(inputDir) && dir !== inputDir)) {
 					if (this.config.dataFileDirBaseNameOverride) {

@@ -1,14 +1,13 @@
 import { createDebug } from "obug";
-import EleventyBaseError from "../Errors/EleventyBaseError.js";
 
-const debug = createDebug("Eleventy:TemplateEngineManager");
+const debug = createDebug("BuildAwesome:TemplateEngineManager");
 
 class TemplateEngineManager {
 	#CustomEngine;
 
 	constructor(eleventyConfig) {
 		if (!eleventyConfig || eleventyConfig.constructor.name !== "TemplateConfig") {
-			throw new EleventyBaseError("Missing or invalid `config` argument.");
+			throw new Error("Internal error: missing or invalid `config` argument.");
 		}
 		this.eleventyConfig = eleventyConfig;
 

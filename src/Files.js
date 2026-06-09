@@ -8,9 +8,9 @@ import TemplateData from "./Data/TemplateData.js";
 import TemplateGlob from "./TemplateGlob.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 
-const debug = createDebug("Eleventy:EleventyFiles");
+const debug = createDebug("BuildAwesome:Files");
 
-class EleventyFiles {
+export class Files {
 	#extensionMap;
 	#watcherGlobs;
 
@@ -158,7 +158,7 @@ class EleventyFiles {
 
 		// Conditional added for tests that don’t have a config
 		if (this.config?.events) {
-			this.config.events.emit("eleventy.ignores", this.uniqueIgnores);
+			this.config.events.emit("buildawesome.ignores", this.uniqueIgnores);
 		}
 
 		this.normalizedTemplateGlobs = this.templateGlobs;
@@ -228,7 +228,9 @@ class EleventyFiles {
 							">>> When processing .gitignore/.eleventyignore, Eleventy does not currently support negative patterns but encountered one:",
 						);
 						debug(">>>", line);
-						debug("Follow along at https://github.com/11ty/eleventy/issues/693 to track support.");
+						debug(
+							"Follow along at https://github.com/11ty/build-awesome/issues/693 to track support.",
+						);
 					}
 
 					// empty lines or comments get filtered out
@@ -459,5 +461,3 @@ class EleventyFiles {
 			});
 	}
 }
-
-export default EleventyFiles;

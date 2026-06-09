@@ -1,9 +1,9 @@
 import { createDebug } from "obug";
-import EleventyBaseError from "../Errors/EleventyBaseError.js";
+import BaseError from "../Errors/BaseError.js";
 
-class TemplateEngineConfigError extends EleventyBaseError {}
+class TemplateEngineConfigError extends BaseError {}
 
-const debug = createDebug("Eleventy:TemplateEngine");
+const debug = createDebug("BuildAwesome:TemplateEngine");
 
 const AMENDED_INSTANCES = new Set();
 

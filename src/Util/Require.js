@@ -5,10 +5,10 @@ import { TemplatePath } from "@11ty/eleventy-utils";
 import importer from "./importer.js";
 import { clearRequireCache, requireCommonJsTypeScript } from "../Util/RequireUtils.js";
 import { addModifiedPath } from "./EsmResolverPortAdapter.js";
-import EleventyBaseError from "../Errors/EleventyBaseError.js";
+import BaseError from "../Errors/BaseError.js";
 import eventBus from "../EventBus.js";
 
-class EleventyImportError extends EleventyBaseError {}
+class ImportError extends BaseError {}
 
 const requestPromiseCache = new Map();
 
@@ -56,7 +56,7 @@ function loadContents(path, options = {}) {
 }
 
 let lastModifiedPaths = new Map();
-eventBus.on("eleventy.importCacheReset", (fileQueue) => {
+eventBus.on("buildawesome.importcachereset", (fileQueue) => {
 	for (let filePath of fileQueue) {
 		let absolutePath = TemplatePath.absolutePath(filePath);
 		let newDate = Date.now();
@@ -92,7 +92,7 @@ async function dynamicImportAbsolutePath(absolutePath, options = {}) {
 			return JSON.parse(rawInput);
 		} catch (e) {
 			return Promise.reject(
-				new EleventyImportError(getImportErrorMessage(absolutePath, "fs.readFile(json)"), e),
+				new ImportError(getImportErrorMessage(absolutePath, "fs.readFile(json)"), e),
 			);
 		}
 	}
@@ -187,7 +187,7 @@ async function dynamicImportAbsolutePath(absolutePath, options = {}) {
 		},
 		(error) => {
 			return Promise.reject(
-				new EleventyImportError(getImportErrorMessage(absolutePath, `import(${type})`), error),
+				new ImportError(getImportErrorMessage(absolutePath, `import(${type})`), error),
 			);
 		},
 	);
@@ -210,7 +210,7 @@ async function dynamicImportRaw(localPath, type) {
 }
 
 export {
-	loadContents as EleventyLoadContent,
-	dynamicImport as EleventyImport,
-	dynamicImportRaw as EleventyImportRaw,
+	loadContents as LoadContent,
+	dynamicImport as DynamicImport,
+	dynamicImportRaw as DynamicImportRaw,
 };

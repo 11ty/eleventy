@@ -13,17 +13,17 @@ function stringifyOptions(options) {
 	});
 }
 
-import EleventyBaseError from "./Errors/EleventyBaseError.js";
+import BaseError from "./Errors/BaseError.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
 import PathPrefixer from "./Util/PathPrefixer.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 import { getModulePackageJson } from "./Util/ImportJsonSync.js";
-import { EleventyImport } from "./Util/Require.js";
+import { DynamicImport } from "./Util/Require.js";
 import { isGlobMatch } from "./Util/GlobMatcher.js";
 
-const debug = createDebug("Eleventy:EleventyServe");
+const debug = createDebug("BuildAwesome:Serve");
 
-class EleventyServeConfigError extends EleventyBaseError {}
+class ServeConfigError extends BaseError {}
 
 const DEFAULT_SERVER_OPTIONS = {
 	module: "@11ty/eleventy-dev-server",
@@ -34,7 +34,7 @@ const DEFAULT_SERVER_OPTIONS = {
 	// logger: { info: function() {}, error: function() {} }
 };
 
-class EleventyServe {
+export default class Serve {
 	#eleventyConfig;
 	#savedConfigOptions;
 	#aliases;
@@ -50,16 +50,14 @@ class EleventyServe {
 
 	get config() {
 		if (!this.eleventyConfig) {
-			throw new EleventyServeConfigError(
-				"You need to set the eleventyConfig property on EleventyServe.",
-			);
+			throw new ServeConfigError("You need to set the eleventyConfig property on Serve.");
 		}
 
 		return this.eleventyConfig.getConfig();
 	}
 
 	set config(config) {
-		throw new Error("It’s not allowed to set config on EleventyServe. Set eleventyConfig instead.");
+		throw new Error("It’s not allowed to set config on Serve. Set eleventyConfig instead.");
 	}
 
 	setAliases(aliases) {
@@ -72,9 +70,7 @@ class EleventyServe {
 
 	get eleventyConfig() {
 		if (!this.#eleventyConfig) {
-			throw new EleventyServeConfigError(
-				"You need to set the eleventyConfig property on EleventyServe.",
-			);
+			throw new ServeConfigError("You need to set the eleventyConfig property on Serve.");
 		}
 
 		return this.#eleventyConfig;
@@ -84,7 +80,7 @@ class EleventyServe {
 		this.#eleventyConfig = config;
 
 		if (checkPassthroughCopyBehavior(this.#eleventyConfig.userConfig, "serve")) {
-			this.#eleventyConfig.userConfig.events.on("eleventy.passthrough", ({ map }) => {
+			this.#eleventyConfig.userConfig.events.on("buildawesome.passthrough", ({ map }) => {
 				// for-free passthrough copy
 				this.setAliases(map);
 			});
@@ -107,7 +103,7 @@ class EleventyServe {
 	async getServerModule(name) {
 		try {
 			if (!name || name === DEFAULT_SERVER_OPTIONS.module) {
-				return EleventyServe.getDevServer();
+				return Serve.getDevServer();
 			}
 
 			// Look for peer dep in local project
@@ -134,7 +130,7 @@ class EleventyServe {
 				}
 			}
 
-			let module = await EleventyImport(serverPath);
+			let module = await DynamicImport(serverPath);
 
 			if (!("getServer" in module)) {
 				throw new Error(
@@ -158,7 +154,7 @@ class EleventyServe {
 			);
 			debug("Eleventy server error %o", e);
 
-			return EleventyServe.getDevServer();
+			return Serve.getDevServer();
 		}
 	}
 
@@ -334,7 +330,7 @@ class EleventyServe {
 		await this.serve(this._commandLinePort);
 	}
 
-	// checkPassthroughCopyBehavior check is called upstream in Eleventy.js
+	// checkPassthroughCopyBehavior check is called upstream in Core.js
 	watchPassthroughCopy(globs = []) {
 		for (let glob of globs) {
 			this.#watchTargets.add(glob);
@@ -379,5 +375,3 @@ class EleventyServe {
 		this.#editCallbacks.push(callback);
 	}
 }
-
-export default EleventyServe;

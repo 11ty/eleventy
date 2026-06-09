@@ -1,8 +1,8 @@
 import { TemplatePath } from "@11ty/eleventy-utils";
 
-import { isTypeScriptSupported } from "./Util/FeatureTests.cjs";
+import { isTypeScriptSupported } from "./Util/TypeScriptFeatureTest.cjs";
 
-class EleventyExtensionMap {
+export default class ExtensionMap {
 	#engineManager;
 
 	constructor(config) {
@@ -42,7 +42,7 @@ class EleventyExtensionMap {
 
 	get engineManager() {
 		if (!this.#engineManager) {
-			throw new Error("Internal error: Missing `#engineManager` in EleventyExtensionMap.");
+			throw new Error("Internal error: Missing `#engineManager` in ExtensionMap.");
 		}
 
 		return this.#engineManager;
@@ -288,5 +288,3 @@ class EleventyExtensionMap {
 		return Object.keys(this.extensionToKeyMap).join(" ");
 	}
 }
-
-export default EleventyExtensionMap;

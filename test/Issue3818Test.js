@@ -1,5 +1,5 @@
 import test from "ava";
-import Eleventy from "../src/Eleventy.js";
+import Eleventy from "../src/Core.js";
 import WebCPlugin from "@11ty/eleventy-plugin-webc";
 
 test("#3818 WebC Permalink", async (t) => {

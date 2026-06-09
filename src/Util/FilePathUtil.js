@@ -1,4 +1,4 @@
-import { isTypeScriptSupported } from "./FeatureTests.cjs";
+import { isTypeScriptSupported } from "./TypeScriptFeatureTest.cjs";
 
 // the order here is important
 const ELIGIBLE_EXTENSIONS = [

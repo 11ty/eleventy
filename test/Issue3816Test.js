@@ -2,7 +2,7 @@ import markdownIt from "markdown-it";
 import markdownItAbbr from "markdown-it-abbr";
 
 import test from "ava";
-import Eleventy from "../src/Eleventy.js";
+import Eleventy from "../src/Core.js";
 
 test("#3816 amendLibrary and setLibrary together", async (t) => {
   t.plan(1);

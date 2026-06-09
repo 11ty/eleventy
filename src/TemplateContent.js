@@ -8,17 +8,16 @@ import JavaScriptFrontMatter from "./Engines/FrontMatter/JavaScript.js";
 import { EOL } from "./Util/NewLineAdapter.js";
 import TemplateData from "./Data/TemplateData.js";
 import TemplateRender from "./TemplateRender.js";
-import EleventyBaseError from "./Errors/EleventyBaseError.js";
-import EleventyErrorUtil from "./Errors/EleventyErrorUtil.js";
+import BaseError from "./Errors/BaseError.js";
+import ErrorUtil from "./Errors/ErrorUtil.js";
 import eventBus from "./EventBus.js";
 
 const { set: lodashSet } = lodash;
-const debug = createDebug("Eleventy:TemplateContent");
-const debugDev = createDebug("Dev:Eleventy:TemplateContent");
+const debug = createDebug("BuildAwesome:TemplateContent");
 
-class TemplateContentFrontMatterError extends EleventyBaseError {}
-class TemplateContentCompileError extends EleventyBaseError {}
-class TemplateContentRenderError extends EleventyBaseError {}
+class TemplateContentFrontMatterError extends BaseError {}
+class TemplateContentCompileError extends BaseError {}
+class TemplateContentRenderError extends BaseError {}
 
 class TemplateContent {
 	#initialized = false;
@@ -515,7 +514,6 @@ class TemplateContent {
 		// this.templateRender is guaranteed here
 		let tr = await this.getTemplateRender();
 		if (engineOverride !== undefined) {
-			debugDev("%o overriding template engine to use %o", this.inputPath, engineOverride);
 			await tr.setEngineOverride(engineOverride, bypassMarkdown);
 		} else {
 			tr.setUseMarkdown(!bypassMarkdown);
@@ -525,8 +523,6 @@ class TemplateContent {
 				return str;
 			};
 		}
-
-		debugDev("%o compile() using engine: %o", this.inputPath, tr.engineName);
 
 		try {
 			let res;
@@ -560,7 +556,7 @@ class TemplateContent {
 			let fn = await tr.getCompiledTemplate(str);
 			inputPathBenchmark.after();
 			templateBenchmark.after();
-			debugDev("%o getCompiledTemplate function created", this.inputPath);
+
 			if (this.config.useTemplateCache && res) {
 				res(fn);
 			}
@@ -749,11 +745,10 @@ class TemplateContent {
 				inputPathBenchmark.after();
 			}
 			templateBenchmark.after();
-			debugDev("%o getCompiledTemplate called, rendered content created", this.inputPath);
 
 			return rendered;
 		} catch (e) {
-			if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
+			if (ErrorUtil.isPrematureTemplateContentError(e)) {
 				return Promise.reject(e);
 			} else {
 				let tr = await this.getTemplateRender();
@@ -831,7 +826,7 @@ class TemplateContent {
 
 TemplateContent._inputCache = new Map();
 TemplateContent._compileCache = new Map();
-eventBus.on("eleventy.resourceModified", (path) => {
+eventBus.on("buildawesome.resourcemodified", (path) => {
 	// delete from input cache
 	TemplateContent.deleteFromInputCache(path);
 
@@ -844,7 +839,7 @@ eventBus.on("eleventy.resourceModified", (path) => {
 });
 
 // Used when the configuration file reset https://github.com/11ty/eleventy/issues/2147
-eventBus.on("eleventy.compileCacheReset", () => {
+eventBus.on("buildawesome.compilecachereset", () => {
 	TemplateContent._compileCache = new Map();
 });
 

@@ -1,8 +1,8 @@
 import test from "ava";
-import { EleventyErrorHandler } from "../src/Errors/EleventyErrorHandler.js";
+import { ErrorHandler } from "../src/Errors/ErrorHandler.js";
 
 test("Log a warning, warning", (t) => {
-  let errorHandler = new EleventyErrorHandler();
+  let errorHandler = new ErrorHandler();
   let output = [];
   errorHandler.logger = {
     log: function (str) {
@@ -25,7 +25,7 @@ test("Log a warning, warning", (t) => {
 });
 
 test("Log a warning, error", (t) => {
-  let errorHandler = new EleventyErrorHandler();
+  let errorHandler = new ErrorHandler();
 
   let output = [];
   errorHandler.logger = {

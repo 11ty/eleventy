@@ -4,8 +4,8 @@ import lodash from "@11ty/lodash-custom";
 
 import chalk from "./Adapters/Packages/chalk.js";
 import getDefaultConfig from "./Adapters/getDefaultConfig.js";
-import { EleventyImportRaw } from "./Util/Require.js";
-import EleventyBaseError from "./Errors/EleventyBaseError.js";
+import { DynamicImportRaw } from "./Util/Require.js";
+import BaseError from "./Errors/BaseError.js";
 import UserConfig from "./UserConfig.js";
 import GlobalDependencyMap from "./GlobalDependencyMap.js";
 import ExistsCache from "./Util/ExistsCache.js";
@@ -14,8 +14,7 @@ import ProjectTemplateFormats from "./Util/ProjectTemplateFormats.js";
 import { expandEligibleJavaScriptFilePaths } from "./Util/FilePathUtil.js";
 
 const { set: lodashSet, get: lodashGet } = lodash;
-const debug = createDebug("Eleventy:TemplateConfig");
-const debugDev = createDebug("Dev:Eleventy:TemplateConfig");
+const debug = createDebug("BuildAwesome:TemplateConfig");
 
 /**
  * @module 11ty/eleventy/TemplateConfig
@@ -31,13 +30,13 @@ const debugDev = createDebug("Dev:Eleventy:TemplateConfig");
  * Errors in eleventy config.
  * @ignore
  */
-class EleventyConfigError extends EleventyBaseError {}
+class ConfigError extends BaseError {}
 
 /**
  * Errors in eleventy plugins.
  * @ignore
  */
-class EleventyPluginError extends EleventyBaseError {}
+class PluginError extends BaseError {}
 
 /**
  * Config for a template.
@@ -63,7 +62,7 @@ class TemplateConfig {
 		/**
 		 * @type {String}
 		 * @description Path to local project config.
-		 * @default .eleventy.js
+		 * @default buildawesome.config.js
 		 */
 		if (projectConfigPath !== undefined) {
 			this.#configManuallyDefined = true;
@@ -101,7 +100,7 @@ class TemplateConfig {
 			return this.existsCache.exists(filePath);
 		};
 
-		this.userConfig.events.on("eleventy#templateModified", (inputPath, metadata = {}) => {
+		this.userConfig.events.on("buildawesome#templatemodified", (inputPath, metadata = {}) => {
 			// Issue #3569, set that this file exists in the cache
 			this.#existsCache.set(inputPath, true);
 		});
@@ -199,8 +198,6 @@ class TemplateConfig {
 	 */
 	async reset() {
 		this.#existsCache.reset();
-
-		debugDev("Resetting configuration: TemplateConfig and UserConfig.");
 		this.userConfig.reset();
 		this.usesGraph.reset(); // needs to be before forceReloadConfig #3711
 
@@ -208,7 +205,7 @@ class TemplateConfig {
 		await this.forceReloadConfig();
 
 		// Clear the compile cache
-		eventBus.emit("eleventy.compileCacheReset");
+		eventBus.emit("buildawesome.compilecachereset");
 	}
 
 	/**
@@ -277,7 +274,6 @@ class TemplateConfig {
 
 		if (this.hasConfigMerged) {
 			// merge it again
-			debugDev("Merging in getConfig again after setting the local project config path.");
 			await this.forceReloadConfig();
 		}
 	}
@@ -363,7 +359,7 @@ class TemplateConfig {
 					namespaceStr = ` (namespace: ${namespaces.join(".")})`;
 				}
 
-				throw new EleventyPluginError(
+				throw new PluginError(
 					`Error processing ${name ? `the \`${name}\`` : "a"} plugin${namespaceStr}`,
 					e,
 				);
@@ -387,7 +383,7 @@ class TemplateConfig {
 		let path = this.getActiveConfigPath();
 
 		if (this.projectConfigPaths.length > 0 && this.#configManuallyDefined && !path) {
-			throw new EleventyConfigError(
+			throw new ConfigError(
 				"A configuration file was specified but not found: " + this.projectConfigPaths.join(", "),
 			);
 		}
@@ -395,8 +391,10 @@ class TemplateConfig {
 		debug(`Merging default config with ${path}`);
 		if (path) {
 			try {
-				let { default: configDefaultReturn, config: exportedConfigObject } =
-					await EleventyImportRaw(path, this.isEsm ? "esm" : "cjs");
+				let { default: configDefaultReturn, config: exportedConfigObject } = await DynamicImportRaw(
+					path,
+					this.isEsm ? "esm" : "cjs",
+				);
 
 				exportedConfig = exportedConfigObject || {};
 
@@ -421,7 +419,7 @@ class TemplateConfig {
 
 				// TODO the error message here is bad and I feel bad (needs more accurate info)
 				return Promise.reject(
-					new EleventyConfigError(
+					new ConfigError(
 						`Error in your Eleventy config file '${path}'.` +
 							(isModuleError ? chalk.cyan(" You may need to run `npm install`.") : ""),
 						err,
@@ -524,7 +522,7 @@ class TemplateConfig {
 		// But BEFORE the rest of the config options are merged
 		// this way we can pass directories and other template information to plugins
 
-		await this.userConfig.events.emit("eleventy.beforeConfig", this.userConfig);
+		await this.userConfig.events.emit("buildawesome.beforeconfig", this.userConfig);
 
 		let pluginsBench = this.aggregateBenchmark.get("Processing plugins in config");
 		pluginsBench.before();

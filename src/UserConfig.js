@@ -8,13 +8,13 @@ import isAsyncFunction from "./Util/IsAsyncFunction.js";
 import objectFilter from "./Util/Objects/ObjectFilter.js";
 import EventEmitter from "./Util/AsyncEventEmitter.js";
 import EleventyCompatibility from "./Util/Compatibility.js";
-import EleventyBaseError from "./Errors/EleventyBaseError.js";
+import BaseError from "./Errors/BaseError.js";
 import BenchmarkManager from "./Benchmark/BenchmarkManager.js";
 import { augmentFunction } from "./Engines/Util/ContextAugmenter.js";
 
-const debug = createDebug("Eleventy:UserConfig");
+const debug = createDebug("BuildAwesome:UserConfig");
 
-class UserConfigError extends EleventyBaseError {}
+class UserConfigError extends BaseError {}
 
 /**
  * Eleventy’s user-land Configuration API

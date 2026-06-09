@@ -1,5 +1,5 @@
 import test from "ava";
-import Eleventy from "../src/Eleventy.js";
+import Eleventy from "../src/Core.js";
 
 test("addBundle", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {

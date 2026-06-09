@@ -1,6 +1,6 @@
 {
   "name": "@11ty/client",
-  "description": "Run Eleventy in your browser.",
+  "description": "Run Build Awesome (Eleventy) in your browser.",
   "version": "PRIVATE",
   "private": true,
   "publishConfig": {
@@ -8,14 +8,14 @@
     "provenance": true
   },
   "type": "module",
-  "main": "./dist/eleventy.core.js",
+  "main": "./dist/core-minimal.js",
   "exports": {
-    ".": "./dist/eleventy.core.js",
-    "./eleventy": "./dist/eleventy.js",
-    "./liquid": "./dist/formats/eleventy-liquid.js",
-    "./njk": "./dist/formats/eleventy-nunjucks.js",
-    "./md": "./dist/formats/eleventy-markdown.js",
-    "./i18n": "./dist/plugins/eleventy-plugin-i18n.js"
+    ".": "./dist/core-minimal.js",
+    "./core-fs": "./dist/core-fs.js",
+    "./liquid": "./dist/formats/liquid.js",
+    "./njk": "./dist/formats/nunjucks.js",
+    "./md": "./dist/formats/markdown.js",
+    "./i18n": "./dist/plugins/plugin-i18n.js"
   },
   "files": [
     "./dist/**/*.js"
@@ -33,9 +33,9 @@
   "author": "Zach Leatherman <zachleatherman@gmail.com> (https://zachleat.com/)",
   "repository": {
     "type": "git",
-    "url": "git://github.com/11ty/eleventy.git"
+    "url": "git://github.com/11ty/build-awesome.git"
   },
-  "bugs": "https://github.com/11ty/eleventy/issues",
+  "bugs": "https://github.com/11ty/build-awesome/issues",
   "homepage": "https://www.11ty.dev/",
   "devDependencies": {
     "@11ty/package-bundler": "^0.5.6",

@@ -2,7 +2,7 @@ import { createDebug } from "obug";
 
 import EventEmitter from "./Util/AsyncEventEmitter.js";
 
-const debug = createDebug("Eleventy:EventBus");
+const debug = createDebug("BuildAwesome:EventBus");
 
 /**
  * @module 11ty/eleventy/EventBus

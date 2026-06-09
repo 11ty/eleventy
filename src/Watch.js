@@ -5,7 +5,7 @@ import chokidar from "chokidar";
 import { isGlobMatch } from "./Util/GlobMatcher.js";
 import { GlobStripper } from "./Util/GlobStripper.js";
 
-const debug = createDebug("Eleventy:Watch");
+const debug = createDebug("BuildAwesome:Watch");
 
 export class Watch {
 	/** @type {module:chokidar} */

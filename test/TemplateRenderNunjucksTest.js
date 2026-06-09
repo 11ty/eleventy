@@ -2,7 +2,7 @@ import test from "ava";
 import Nunjucks from "@11ty/nunjucks";
 
 import TemplateRender from "../src/TemplateRender.js";
-import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
+import ExtensionMap from "../src/ExtensionMap.js";
 import TemplateEngineManager from "../src/Engines/TemplateEngineManager.js";
 
 import { normalizeNewLines } from "./Util/normalizeNewLines.js";
@@ -18,7 +18,7 @@ async function getNewTemplateRender(name, inputDir, eleventyConfig) {
   }
 
   let tr = new TemplateRender(name, eleventyConfig);
-  tr.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  tr.extensionMap = new ExtensionMap(eleventyConfig);
   tr.extensionMap.engineManager = new TemplateEngineManager(eleventyConfig);
   tr.extensionMap.setFormats([]);
   await tr.init();

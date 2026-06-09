@@ -84,7 +84,7 @@ function parseFilePath(filepath) {
 
 function FilterPlugin(eleventyConfig) {
 	let contentMap;
-	eleventyConfig.on("eleventy.contentMap", function ({ inputPathToUrl }) {
+	eleventyConfig.on("buildawesome.contentmap", function ({ inputPathToUrl }) {
 		contentMap = inputPathToUrl;
 	});
 
@@ -130,7 +130,7 @@ function TransformPlugin(eleventyConfig, defaultOptions = {}) {
 	);
 
 	let contentMap = null;
-	eleventyConfig.on("eleventy.contentMap", function ({ inputPathToUrl }) {
+	eleventyConfig.on("buildawesome.contentmap", function ({ inputPathToUrl }) {
 		contentMap = inputPathToUrl;
 	});
 

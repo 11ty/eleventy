@@ -6,13 +6,13 @@ import { createDebug } from "obug";
 
 import { readableFileSize } from "./Util/FileSize.js";
 import { isDynamicPattern } from "./Util/GlobMatcher.js";
-import EleventyBaseError from "./Errors/EleventyBaseError.js";
+import BaseError from "./Errors/BaseError.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 import ProjectDirectories from "./Util/ProjectDirectories.js";
 
-const debug = createDebug("Eleventy:TemplatePassthrough");
+const debug = createDebug("BuildAwesome:TemplatePassthrough");
 
-class TemplatePassthroughError extends EleventyBaseError {}
+class TemplatePassthroughError extends BaseError {}
 
 class TemplatePassthrough {
 	isDryRun = false;

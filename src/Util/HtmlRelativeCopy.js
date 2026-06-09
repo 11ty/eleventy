@@ -141,7 +141,7 @@ class HtmlRelativeCopy {
 		// We use a Set here to allow passthrough copy manager to properly error on conflicts upstream
 		// Only errors when different inputs write to the same output
 		// Also errors if attempts to write outside the output folder.
-		this.#userConfig.emit("eleventy#copy", {
+		this.#userConfig.emit("buildawesome#copy", {
 			source,
 			target,
 			options: this.#copyOptions,

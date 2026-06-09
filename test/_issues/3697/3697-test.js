@@ -1,7 +1,7 @@
 // import path from "node:path";
 // import { fileURLToPath } from "node:url";
 import test from "ava";
-import Eleventy from "../../../src/Eleventy.js";
+import Eleventy from "../../../src/Core.js";
 
 test("Number file names on global data files", async t => {
   // TODO fix absolute paths here

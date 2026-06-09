@@ -3,8 +3,8 @@ import fs from "fs";
 import { glob } from "tinyglobby";
 import path from "path";
 
-import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
-import { isTypeScriptSupported } from "../src/Util/FeatureTests.cjs";
+import ExtensionMap from "../src/ExtensionMap.js";
+import { isTypeScriptSupported } from "../src/Util/TypeScriptFeatureTest.cjs";
 
 import { normalizeNewLines } from "./Util/normalizeNewLines.js";
 import { getRenderedTemplates as getRenderedTmpls } from "./_getRenderedTemplates.js";
@@ -527,7 +527,7 @@ test.skip("Markdown with alias", async (t) => {
     }
   });
 
-  let map = new EleventyExtensionMap(eleventyConfig);
+  let map = new ExtensionMap(eleventyConfig);
   map.setFormats(["md"]);
   map.config = {
     templateExtensionAliases: {
@@ -564,7 +564,7 @@ test.skip("JavaScript with alias", async (t) => {
     }
   });
 
-  let map = new EleventyExtensionMap(eleventyConfig);
+  let map = new ExtensionMap(eleventyConfig);
   map.setFormats(["11ty.js"]);
   map.config = {
     templateExtensionAliases: {

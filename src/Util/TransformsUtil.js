@@ -1,10 +1,10 @@
-import EleventyBaseError from "../Errors/EleventyBaseError.js";
+import BaseError from "../Errors/BaseError.js";
 import { isPlainObject } from "@11ty/eleventy-utils";
 import { createDebug } from "obug";
 
-const debug = createDebug("Eleventy:Transforms");
+const debug = createDebug("BuildAwesome:Transforms");
 
-class EleventyTransformError extends EleventyBaseError {}
+class TransformError extends BaseError {}
 
 class TransformsUtil {
 	static changeTransformsToArray(transformsObj) {
@@ -56,7 +56,7 @@ class TransformsUtil {
 					);
 				}
 			} catch (e) {
-				throw new EleventyTransformError(
+				throw new TransformError(
 					`Transform \`${name}\` encountered an error when transforming ${inputPath}.`,
 					e,
 				);

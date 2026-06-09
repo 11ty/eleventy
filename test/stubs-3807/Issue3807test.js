@@ -1,6 +1,6 @@
 import test from "ava";
 import fs from "node:fs";
-import Eleventy from "../../src/Eleventy.js";
+import Eleventy from "../../src/Core.js";
 
 // This tests Eleventy Watch and the file system!
 
@@ -33,7 +33,7 @@ test("#3807 Nunjucks cacheable should be reused when Nunjucks is the preprocesso
   let elev = new Eleventy("test/stubs-3807/", "test/stubs-3807/_site", {
     configPath: "test/stubs-3807/eleventy.config.js",
     config(eleventyConfig) {
-      eleventyConfig.on("eleventy.afterwatch", () => {
+      eleventyConfig.on("buildawesome.afterwatch", () => {
         let {resolve} = runs[index];
         index++;
         resolve();

@@ -9,13 +9,13 @@ import {
 	Template,
 } from "@11ty/nunjucks/index.js";
 import TemplateEngine from "./TemplateEngine.js";
-import EleventyBaseError from "../Errors/EleventyBaseError.js";
+import BaseError from "../Errors/BaseError.js";
 import { augmentObject } from "./Util/ContextAugmenter.js";
 import { ArgumentHelper } from "../Data/DataSourceLocation.js";
 
-const debug = createDebug("Eleventy:Nunjucks");
+const debug = createDebug("BuildAwesome:Nunjucks");
 
-class EleventyNunjucksError extends EleventyBaseError {}
+class EleventyNunjucksError extends BaseError {}
 
 export default class Nunjucks extends TemplateEngine {
 	constructor(name, eleventyConfig) {
@@ -77,7 +77,7 @@ export default class Nunjucks extends TemplateEngine {
 			this.njkEnv = new Environment(loaders, this.nunjucksEnvironmentOptions);
 		}
 
-		this.config.events.emit("eleventy.engine.njk", {
+		this.config.events.emit("buildawesome.engine.njk", {
 			nunjucks: NunjucksLib,
 			environment: this.njkEnv,
 		});
@@ -88,7 +88,7 @@ export default class Nunjucks extends TemplateEngine {
 
 		// Note that a new Nunjucks engine instance is created for subsequent builds
 		// Eleventy Nunjucks is set to `cacheable` false above to opt out of Eleventy cache
-		this.config.events.on("eleventy#templateModified", (templatePath) => {
+		this.config.events.on("buildawesome#templatemodified", (templatePath) => {
 			// NunjucksEnvironment:
 			// loader.pathToNames: {'ABSOLUTE_PATH/src/_includes/components/possum-home.css': 'components/possum-home.css'}
 			// loader.cache: { 'components/possum-home.css': [Template] }

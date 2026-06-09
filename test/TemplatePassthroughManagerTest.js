@@ -4,7 +4,7 @@ import fs from "fs";
 import TemplatePassthroughManager from "../src/TemplatePassthroughManager.js";
 import TemplateConfig from "../src/TemplateConfig.js";
 import FileSystemSearch from "../src/FileSystemSearch.js";
-import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
+import ExtensionMap from "../src/ExtensionMap.js";
 import ProjectDirectories from "../src/Util/ProjectDirectories.js";
 
 import { getTemplateConfigInstance, getTemplateConfigInstanceCustomCallback, getEleventyFilesInstance, deleteDirectory } from "./_testHelpers.js";
@@ -30,7 +30,7 @@ test("filterToPassthroughCopyFilesOnly", async (t) => {
   await eleventyConfig.init();
 
   let mgr = new TemplatePassthroughManager(eleventyConfig);
-  mgr.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  mgr.extensionMap = new ExtensionMap(eleventyConfig);
 
   t.deepEqual(mgr.filterToPassthroughCopyFilesOnly([]), []);
   t.deepEqual(mgr.filterToPassthroughCopyFilesOnly([], ""), []);
@@ -74,7 +74,7 @@ test("Get file paths", async (t) => {
   await eleventyConfig.init();
 
   let mgr = new TemplatePassthroughManager(eleventyConfig);
-  mgr.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  mgr.extensionMap = new ExtensionMap(eleventyConfig);
 
   t.deepEqual(mgr.getNonTemplatePaths(["test.png"]), ["test.png"]);
 });
@@ -84,7 +84,7 @@ test("Get file paths (filter out real templates)", async (t) => {
   await eleventyConfig.init();
 
   let mgr = new TemplatePassthroughManager(eleventyConfig);
-  mgr.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  mgr.extensionMap = new ExtensionMap(eleventyConfig);
   mgr.extensionMap.setFormats(["njk"]);
 
   t.deepEqual(mgr.getNonTemplatePaths(["test.njk"]), []);
@@ -95,7 +95,7 @@ test("Get file paths (filter out real templates), multiple", async (t) => {
   await eleventyConfig.init();
 
   let mgr = new TemplatePassthroughManager(eleventyConfig);
-  mgr.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  mgr.extensionMap = new ExtensionMap(eleventyConfig);
   mgr.extensionMap.setFormats(["njk"]);
 
   t.deepEqual(mgr.getNonTemplatePaths(["test.njk", "test.png"]), ["test.png"]);
@@ -106,7 +106,7 @@ test("Get file paths with a js file (filter out real templates), multiple", asyn
   await eleventyConfig.init();
 
   let mgr = new TemplatePassthroughManager(eleventyConfig);
-  mgr.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  mgr.extensionMap = new ExtensionMap(eleventyConfig);
   mgr.extensionMap.setFormats(["njk"]);
 
   t.deepEqual(mgr.getNonTemplatePaths(["test.njk", "test.js"]), ["test.js"]);
@@ -118,7 +118,7 @@ test("Get file paths (one image path)", async (t) => {
   await eleventyConfig.init();
 
   let mgr = new TemplatePassthroughManager(eleventyConfig);
-  mgr.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  mgr.extensionMap = new ExtensionMap(eleventyConfig);
 
   t.deepEqual(mgr.getNonTemplatePaths(["test.png"]), ["test.png"]);
 });

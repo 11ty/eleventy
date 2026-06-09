@@ -6,7 +6,7 @@ import {
   String as RenderPluginString,
   RenderManager,
 } from "../src/Plugins/RenderPlugin.js";
-import Eleventy from "../src/Eleventy.js";
+import Eleventy from "../src/Core.js";
 
 import { normalizeNewLines } from "./Util/normalizeNewLines.js";
 

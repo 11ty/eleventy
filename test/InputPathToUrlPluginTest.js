@@ -2,7 +2,7 @@ import test from "ava";
 
 import { TransformPlugin } from "../src/Plugins/InputPathToUrl.js";
 import { default as HtmlBasePlugin } from "../src/Plugins/HtmlBasePlugin.js";
-import Eleventy from "../src/Eleventy.js";
+import Eleventy from "../src/Core.js";
 import { normalizeNewLines } from "./Util/normalizeNewLines.js";
 
 const OUTPUT_HTML_STD = `<!doctype html>

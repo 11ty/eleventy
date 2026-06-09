@@ -5,7 +5,7 @@ import { globSync } from "tinyglobby";
 
 import { TransformPlugin as InputPathToUrlTransformPlugin } from "../src/Plugins/InputPathToUrl.js";
 import { default as HtmlBasePlugin } from "../src/Plugins/HtmlBasePlugin.js";
-import Eleventy from "../src/Eleventy.js";
+import Eleventy from "../src/Core.js";
 import { deleteDirectory } from "./_testHelpers.js";
 
 test.after.always("Directory cleanup", () => {
@@ -30,7 +30,7 @@ test("Basic usage", async (t) => {
 				mode: "html-relative"
 			})
 
-			eleventyConfig.on("eleventy.passthrough", copyMap => {
+			eleventyConfig.on("buildawesome.passthrough", copyMap => {
 				t.deepEqual(copyMap, {
 					map: {
 						"/test/possum.png": TemplatePath.normalizeOperatingSystemFilePath("test/stubs-autocopy/possum.png")
@@ -79,7 +79,7 @@ test("More complex image path (parent dir)", async (t) => {
 				mode: "html-relative"
 			})
 
-			eleventyConfig.on("eleventy.passthrough", copyMap => {
+			eleventyConfig.on("buildawesome.passthrough", copyMap => {
 				t.deepEqual(copyMap, {
 					map: {
 						"/stubs-img-transform/possum.png": TemplatePath.normalizeOperatingSystemFilePath("test/stubs-img-transform/possum.png")
@@ -129,7 +129,7 @@ test("No matches", async (t) => {
 				mode: "html-relative"
 			})
 
-			eleventyConfig.on("eleventy.passthrough", copyMap => {
+			eleventyConfig.on("buildawesome.passthrough", copyMap => {
 				t.deepEqual(copyMap, { map: {} })
 			});
 
@@ -156,7 +156,7 @@ test("Match but does not exist (throws error)", async (t) => {
 				mode: "html-relative"
 			});
 
-			eleventyConfig.on("eleventy.passthrough", copyMap => {
+			eleventyConfig.on("buildawesome.passthrough", copyMap => {
 				t.deepEqual(copyMap, { map: {} })
 			});
 
@@ -187,7 +187,7 @@ test("Match but does not exist (no error, using `failOnError: false`)", async (t
 				failOnError: false,
 			})
 
-			eleventyConfig.on("eleventy.passthrough", copyMap => {
+			eleventyConfig.on("buildawesome.passthrough", copyMap => {
 				t.deepEqual(copyMap, { map: {} })
 			});
 
@@ -221,7 +221,7 @@ test("Copying dotfiles are not allowed", async (t) => {
 				}
 			});
 
-			eleventyConfig.on("eleventy.passthrough", copyMap => {
+			eleventyConfig.on("buildawesome.passthrough", copyMap => {
 				t.deepEqual(copyMap, { map: {} })
 			});
 
@@ -256,7 +256,7 @@ test("Using with InputPathToUrl plugin", async (t) => {
 
 			eleventyConfig.addPlugin(InputPathToUrlTransformPlugin);
 
-			eleventyConfig.on("eleventy.passthrough", copyMap => {
+			eleventyConfig.on("buildawesome.passthrough", copyMap => {
 				t.deepEqual(copyMap, { map: {} })
 			});
 
@@ -292,7 +292,7 @@ test("Using with InputPathToUrl plugin (reverse addPlugin order)", async (t) => 
 				mode: "html-relative"
 			});
 
-			eleventyConfig.on("eleventy.passthrough", copyMap => {
+			eleventyConfig.on("buildawesome.passthrough", copyMap => {
 				t.deepEqual(copyMap, { map: {} })
 			});
 
@@ -326,7 +326,7 @@ test("Use with HtmlBasePlugin usage", async (t) => {
 				mode: "html-relative"
 			});
 
-			eleventyConfig.on("eleventy.passthrough", copyMap => {
+			eleventyConfig.on("buildawesome.passthrough", copyMap => {
 				t.deepEqual(copyMap, {
 					map: {
 						"/test/possum.png": TemplatePath.normalizeOperatingSystemFilePath("test/stubs-autocopy/possum.png")
@@ -380,7 +380,7 @@ test("Using with InputPathToUrl plugin and HtmlBasePlugin", async (t) => {
 			eleventyConfig.addPlugin(InputPathToUrlTransformPlugin);
 			eleventyConfig.addPlugin(HtmlBasePlugin);
 
-			eleventyConfig.on("eleventy.passthrough", copyMap => {
+			eleventyConfig.on("buildawesome.passthrough", copyMap => {
 				t.deepEqual(copyMap, { map: {} })
 			});
 
@@ -416,7 +416,7 @@ test("Multiple addPlugin calls (use both globs)", async (t) => {
 				mode: "html-relative"
 			});
 
-			eleventyConfig.on("eleventy.passthrough", copyMap => {
+			eleventyConfig.on("buildawesome.passthrough", copyMap => {
 				t.deepEqual(copyMap, {
 					map: {
 						"/test/possum.jpg": TemplatePath.normalizeOperatingSystemFilePath("test/stubs-autocopy/possum.jpg"),
@@ -473,7 +473,7 @@ test("Array of globs", async (t) => {
 				mode: "html-relative"
 			});
 
-			eleventyConfig.on("eleventy.passthrough", copyMap => {
+			eleventyConfig.on("buildawesome.passthrough", copyMap => {
 				t.deepEqual(copyMap, {
 					map: {
 						"/test/possum.jpg": TemplatePath.normalizeOperatingSystemFilePath("test/stubs-autocopy/possum.jpg"),
@@ -536,7 +536,7 @@ test("overwrite: false", async (t) => {
 				}
 			});
 
-			eleventyConfig.on("eleventy.passthrough", copyMap => {
+			eleventyConfig.on("buildawesome.passthrough", copyMap => {
 				t.deepEqual(copyMap, {
 					map: {}
 				})
@@ -582,7 +582,7 @@ test("Input -> output remapping not yet supported (throws error)", async (t) => 
 				mode: "html-relative"
 			});
 
-			eleventyConfig.on("eleventy.passthrough", copyMap => {
+			eleventyConfig.on("buildawesome.passthrough", copyMap => {
 				t.deepEqual(copyMap, { map: {} })
 			});
 

@@ -12,6 +12,6 @@ export { default as RenderPlugin } from "../../../src/Plugins/RenderPlugin.js";
 // - Extended configuration was removed from defaultConfig.js
 // This saved ~400KB (unmin) from the bundle but the separate bundle was way larger than the savings (> 1MB)
 
-export { Core as Eleventy } from "../../../src/Core.js";
+export { CoreFs as Eleventy, CoreFs as BuildAwesome } from "../../../src/CoreFs.js";
 
 export { default as FileSystem } from "node:fs";

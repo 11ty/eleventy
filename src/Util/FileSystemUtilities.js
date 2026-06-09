@@ -1,7 +1,7 @@
 import path from "node:path";
 import { mkdirSync, writeFileSync } from "node:fs";
 
-class FileSystemManager {
+export class FileSystemUtilities {
 	constructor(templateConfig) {
 		if (!templateConfig || templateConfig.constructor.name !== "TemplateConfig") {
 			throw new Error(
@@ -30,5 +30,3 @@ class FileSystemManager {
 		writeFileSync(filePath, content);
 	}
 }
-
-export { FileSystemManager };

@@ -1,5 +1,5 @@
 import test from "ava";
-import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
+import ExtensionMap from "../src/ExtensionMap.js";
 import TemplateEngineManager from "../src/Engines/TemplateEngineManager.js";
 import TemplateConfig from "../src/TemplateConfig.js";
 
@@ -7,7 +7,7 @@ async function getExtensionMap(formats, config = new TemplateConfig()) {
   if (config) {
     await config.init();
   }
-  let map = new EleventyExtensionMap(config);
+  let map = new ExtensionMap(config);
   map.setFormats(formats);
   map.engineManager = new TemplateEngineManager(config);
   return map;

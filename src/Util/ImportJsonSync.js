@@ -2,9 +2,9 @@ import { existsSync } from "node:fs";
 import { createDebug } from "obug";
 import { TemplatePath } from "@11ty/eleventy-utils";
 
-import { importJsonSync, eleventyPackageJson } from "./RequireUtils.js";
+import { importJsonSync, corePackageJson } from "./RequireUtils.js";
 
-const debug = createDebug("Eleventy:ImportJsonSync");
+const debug = createDebug("BuildAwesome:ImportJsonSync");
 
 function findFilePathInParentDirs(dir, filename) {
 	// `package.json` searches look in parent dirs:
@@ -23,11 +23,11 @@ function findFilePathInParentDirs(dir, filename) {
 	}
 }
 
-function getEleventyPackageJson() {
-	return eleventyPackageJson;
+function getCorePackageJson() {
+	return corePackageJson;
 }
 
-// Used by EleventyServe.js for custom servers only
+// Used by Serve.js for custom servers only
 function getModulePackageJson(dir) {
 	let filePath = findFilePathInParentDirs(TemplatePath.absolutePath(dir), "package.json");
 
@@ -60,7 +60,7 @@ function getWorkingProjectPackageJson(filePath) {
 
 export {
 	importJsonSync,
-	getEleventyPackageJson,
+	getCorePackageJson,
 	getModulePackageJson,
 	getWorkingProjectPackageJson,
 	findFilePathInParentDirs,

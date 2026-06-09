@@ -6,7 +6,7 @@ import assert from "node:assert";
 import module from "node:module";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import Eleventy from "../src/Eleventy.js";
+import Eleventy from "../src/Core.js";
 
 import { load } from "./mdx-hooks.js";
 if ("registerHooks" in module) {

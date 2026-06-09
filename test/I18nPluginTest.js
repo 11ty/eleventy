@@ -1,6 +1,6 @@
 import test from "ava";
 import { Comparator, LangUtils, default as I18nPlugin } from "../src/Plugins/I18nPlugin.js";
-import Eleventy from "../src/Eleventy.js";
+import Eleventy from "../src/Core.js";
 import { normalizeNewLines } from "./Util/normalizeNewLines.js";
 
 test("Comparator.isLangCode", (t) => {
@@ -36,7 +36,7 @@ test("contentMap Event from Eleventy", async (t) => {
         errorMode: "allow-fallback",
       });
 
-      eleventyConfig.on("eleventy.contentMap", (maps) => {
+      eleventyConfig.on("buildawesome.contentmap", (maps) => {
         t.truthy(maps);
 
         // if future maps are added, they should be tested here

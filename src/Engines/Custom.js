@@ -11,7 +11,7 @@ export default class CustomEngine extends TemplateEngine {
 		this.setDefaultEngine(undefined);
 
 		this.previousQueue = [];
-		this.config.events.on("eleventy#previousqueue", (filePaths) => {
+		this.config.events.on("buildawesome#previousqueue", (filePaths) => {
 			this.previousQueue = filePaths;
 		});
 	}

@@ -1,11 +1,10 @@
 import test from "ava";
 import { glob } from "tinyglobby";
 
-import EleventyFiles from "../src/EleventyFiles.js";
 import TemplateConfig from "../src/TemplateConfig.js";
 import TemplatePassthroughManager from "../src/TemplatePassthroughManager.js";
 import ProjectDirectories from "../src/Util/ProjectDirectories.js";
-import { isTypeScriptSupported } from "../src/Util/FeatureTests.cjs";
+import { isTypeScriptSupported } from "../src/Util/TypeScriptFeatureTest.cjs";
 
 import { getTemplateConfigInstance, getTemplateConfigInstanceCustomCallback, getEleventyFilesInstance } from "./_testHelpers.js";
 

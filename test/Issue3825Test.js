@@ -1,5 +1,5 @@
 import test from "ava";
-import Eleventy from "../src/Eleventy.js";
+import Eleventy from "../src/Core.js";
 
 test("#3825 #3834 addCollection consumes tag from pagination template", async (t) => {
   let elev = new Eleventy("test/noop", false, {

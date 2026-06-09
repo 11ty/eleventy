@@ -5,15 +5,15 @@ import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 
 import { ProxyWrap } from "../Util/Objects/ProxyWrap.js";
 import ConfigurationGlobalData from "../Data/ConfigurationGlobalData.js";
-import EleventyBaseError from "../Errors/EleventyBaseError.js";
+import BaseError from "../Errors/BaseError.js";
 import TemplateRender from "../TemplateRender.js";
 import ProjectDirectories from "../Util/ProjectDirectories.js";
 import TemplateConfig from "../TemplateConfig.js";
-import EleventyExtensionMap from "../EleventyExtensionMap.js";
+import ExtensionMap from "../ExtensionMap.js";
 import TemplateEngineManager from "../Engines/TemplateEngineManager.js";
 import Liquid from "../Adapters/Engines/Liquid.js";
 
-class EleventyNunjucksError extends EleventyBaseError {}
+class NunjucksError extends BaseError {}
 
 /** @this {object} */
 async function compile(content, templateLang, options = {}) {
@@ -35,7 +35,7 @@ async function compile(content, templateLang, options = {}) {
 		if (strictMode) {
 			throw new Error("Internal error: missing `extensionMap` in RenderPlugin->compile.");
 		}
-		extensionMap = new EleventyExtensionMap(templateConfig);
+		extensionMap = new ExtensionMap(templateConfig);
 		extensionMap.engineManager = new TemplateEngineManager(templateConfig);
 	}
 	let tr = new TemplateRender(templateLang, templateConfig);
@@ -99,7 +99,7 @@ async function compileFile(inputPath, options = {}, templateLang) {
 			throw new Error("Internal error: missing `extensionMap` in RenderPlugin->compileFile.");
 		}
 
-		extensionMap = new EleventyExtensionMap(templateConfig);
+		extensionMap = new ExtensionMap(templateConfig);
 		extensionMap.engineManager = new TemplateEngineManager(templateConfig);
 	}
 	let tr = new TemplateRender(inputPath, templateConfig);
@@ -163,12 +163,12 @@ async function renderShortcodeFn(fn, data) {
  */
 function RenderPlugin(eleventyConfig, options = {}) {
 	let templateConfig;
-	eleventyConfig.on("eleventy.config", (tmplConfigInstance) => {
+	eleventyConfig.on("buildawesome.config", (tmplConfigInstance) => {
 		templateConfig = tmplConfigInstance;
 	});
 
 	let extensionMap;
-	eleventyConfig.on("eleventy.extensionmap", (map) => {
+	eleventyConfig.on("buildawesome.extensionmap", (map) => {
 		extensionMap = map;
 	});
 
@@ -328,9 +328,7 @@ function RenderPlugin(eleventyConfig, options = {}) {
 
 				body(function (e, bodyContent) {
 					if (e) {
-						resolve(
-							new EleventyNunjucksError(`Error with Nunjucks paired shortcode \`${tagName}\``, e),
-						);
+						resolve(new NunjucksError(`Error with Nunjucks paired shortcode \`${tagName}\``, e));
 					}
 
 					Promise.resolve(
@@ -346,7 +344,7 @@ function RenderPlugin(eleventyConfig, options = {}) {
 						},
 						function (e) {
 							resolve(
-								new EleventyNunjucksError(`Error with Nunjucks paired shortcode \`${tagName}\``, e),
+								new NunjucksError(`Error with Nunjucks paired shortcode \`${tagName}\``, e),
 								null,
 							);
 						},
@@ -440,7 +438,7 @@ class RenderManager {
 			accessGlobalData: true,
 		});
 
-		this.#extensionMap = new EleventyExtensionMap(this.#templateConfig);
+		this.#extensionMap = new ExtensionMap(this.#templateConfig);
 		this.#extensionMap.engineManager = new TemplateEngineManager(this.#templateConfig);
 	}
 

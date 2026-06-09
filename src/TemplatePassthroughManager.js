@@ -1,14 +1,14 @@
 import { TemplatePath } from "@11ty/eleventy-utils";
 import { createDebug } from "obug";
 
-import EleventyBaseError from "./Errors/EleventyBaseError.js";
+import BaseError from "./Errors/BaseError.js";
 import TemplatePassthrough from "./TemplatePassthrough.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 import { isGlobMatch, isDynamicPattern } from "./Util/GlobMatcher.js";
 
-const debug = createDebug("Eleventy:TemplatePassthroughManager");
+const debug = createDebug("BuildAwesome:TemplatePassthroughManager");
 
-class TemplatePassthroughManagerCopyError extends EleventyBaseError {}
+class TemplatePassthroughManagerCopyError extends BaseError {}
 
 class TemplatePassthroughManager {
 	#isDryRun = false;
@@ -25,15 +25,15 @@ class TemplatePassthroughManager {
 		this.config = templateConfig.getConfig();
 
 		// eleventy# event listeners are removed on each build
-		this.config.events.on("eleventy#copy", ({ source, target, options }) => {
+		this.config.events.on("buildawesome#copy", ({ source, target, options }) => {
 			this.enqueueCopy(source, target, options);
 		});
 
-		this.config.events.on("eleventy#beforerender", () => {
+		this.config.events.on("buildawesome#beforerender", () => {
 			this.#afterBuild = Promise.withResolvers();
 		});
 
-		this.config.events.on("eleventy#render", () => {
+		this.config.events.on("buildawesome#render", () => {
 			let { resolve } = this.#afterBuild;
 			resolve();
 		});
@@ -376,7 +376,7 @@ class TemplatePassthroughManager {
 
 		return Promise.all(promises).then(async (results) => {
 			let aliases = this.getAliasesFromPassthroughResults(results);
-			await this.config.events.emit("eleventy.passthrough", {
+			await this.config.events.emit("buildawesome.passthrough", {
 				map: aliases,
 			});
 

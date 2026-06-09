@@ -17,18 +17,17 @@ import Pagination from "./Plugins/Pagination.js";
 import TemplateBehavior from "./TemplateBehavior.js";
 import TemplateContentPrematureUseError from "./Errors/TemplateContentPrematureUseError.js";
 import TemplateContentUnrenderedTemplateError from "./Errors/TemplateContentUnrenderedTemplateError.js";
-import EleventyBaseError from "./Errors/EleventyBaseError.js";
+import BaseError from "./Errors/BaseError.js";
 import { fromISOtoDateUTC } from "./Util/DateParse.js";
 import ReservedData from "./Util/ReservedData.js";
 import TransformsUtil from "./Util/TransformsUtil.js";
-import { FileSystemManager } from "./Util/FileSystemManager.js";
+import { FileSystemUtilities } from "./Util/FileSystemUtilities.js";
 import { TemplatePreprocessors } from "./TemplatePreprocessors.js";
 import { getDirectoryFromUrl } from "./Util/UrlUtil.js";
 
 const { set: lodashSet, get: lodashGet } = lodash;
 
-const debug = createDebug("Eleventy:Template");
-const debugDev = createDebug("Dev:Eleventy:Template");
+const debug = createDebug("BuildAwesome:Template");
 
 class Template extends TemplateContent {
 	#logger;
@@ -44,7 +43,6 @@ class Template extends TemplateContent {
 	#preprocessorCache;
 
 	constructor(templatePath, templateData, extensionMap, config) {
-		debugDev("new Template(%o)", templatePath);
 		super(templatePath, config);
 
 		this.parsed = parse(templatePath);
@@ -90,7 +88,7 @@ class Template extends TemplateContent {
 
 	get fsManager() {
 		if (!this.#fsManager) {
-			this.#fsManager = new FileSystemManager(this.eleventyConfig);
+			this.#fsManager = new FileSystemUtilities(this.eleventyConfig);
 		}
 		return this.#fsManager;
 	}
@@ -200,7 +198,7 @@ class Template extends TemplateContent {
 		try {
 			return TemplateLayout.getTemplate(layoutKey, this.eleventyConfig, this.extensionMap);
 		} catch (e) {
-			throw new EleventyBaseError(
+			throw new BaseError(
 				`Problem creating an Eleventy Layout for the "${this.inputPath}" template file.`,
 				e,
 			);
@@ -226,11 +224,9 @@ class Template extends TemplateContent {
 		// `permalink: false` means render but no file system write, e.g. use in collections only)
 		// `permalink: true` throws an error
 		if (typeof permalink === "boolean") {
-			debugDev("Using boolean permalink %o", permalink);
 			permalinkValue = permalink;
 		} else if (permalink && !isDynamicPermalinkEnabled) {
 			// Issue #838
-			debugDev("Not using dynamic permalinks, using %o", permalink);
 			permalinkValue = permalink;
 		} else if (isPlainObject(permalink)) {
 			// Empty permalink {} object should act as if no permalink was set at all
@@ -269,7 +265,6 @@ class Template extends TemplateContent {
 			// render variables inside permalink front matter, bypass markdown
 			permalinkValue = await super.renderPermalink(permalink, data);
 			debug("Rendering permalink for %o: %s becomes %o", this.inputPath, permalink, permalinkValue);
-			debugDev("Permalink rendered with data: %o", data);
 		}
 
 		// Override default permalink behavior. Only do this if permalink was _not_ in the data cascade
@@ -385,14 +380,12 @@ class Template extends TemplateContent {
 	}
 
 	async #getData() {
-		debugDev("%o getData", this.inputPath);
 		let localData = {};
 		let globalData = {};
 
 		if (this.templateData) {
 			localData = await this.templateData.getTemplateDirectoryData(this.inputPath);
 			globalData = await this.templateData.getGlobalData();
-			debugDev("%o getData getTemplateDirectoryData and getGlobalData", this.inputPath);
 		}
 
 		let { data: frontMatterData } = await this.getFrontMatterData();
@@ -413,7 +406,6 @@ class Template extends TemplateContent {
 
 				// TODO disable/toggle enabled
 				this.#layoutDataCascade = layout.getLayoutDataCascade();
-				debugDev("%o getData merged layout chain front matter", this.inputPath);
 			}
 		}
 
@@ -427,8 +419,6 @@ class Template extends TemplateContent {
 			let pageData = await this.getPageData(mergedData);
 
 			Merge(mergedData, { page: pageData });
-
-			debugDev("%o getData mergedData", this.inputPath);
 
 			return mergedData;
 		} catch (e) {
@@ -534,7 +524,7 @@ class Template extends TemplateContent {
 
 	// see also Eleventy->#resetFileInWatchQueue()
 	internalTriggerTemplateModifiedPath(changedFilePath) {
-		this.config.events.emit("eleventy#templateModified", changedFilePath);
+		this.config.events.emit("buildawesome#templatemodified", changedFilePath);
 	}
 
 	// This is the primary render mechanism, called via TemplateMap->populateContentDataInMap
@@ -1239,7 +1229,6 @@ class Template extends TemplateContent {
 
 	// Important reminder: Template data is first generated in TemplateMap
 	async getTemplateMapEntry(data) {
-		debugDev("%o getMapped()", this.inputPath);
 		this.behavior.setRenderViaDataCascade(data);
 
 		// does not return outputPath or url, we don’t want to render permalinks yet
