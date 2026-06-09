@@ -24,6 +24,7 @@ import TransformsUtil from "./Util/TransformsUtil.js";
 import { FileSystemUtilities } from "./Util/FileSystemUtilities.js";
 import { TemplatePreprocessors } from "./TemplatePreprocessors.js";
 import { getDirectoryFromUrl } from "./Util/UrlUtil.js";
+import { ResolveConfigurationData } from "./Data/ResolveConfigurationData.js";
 
 const { set: lodashSet, get: lodashGet } = lodash;
 
@@ -215,8 +216,11 @@ class Template extends TemplateContent {
 		}
 
 		let permalink =
-			data[this.config.keys.permalink] ??
-			data?.[this.config.keys.computed]?.[this.config.keys.permalink];
+			ResolveConfigurationData.getValue(data, this.config.keys.permalink) ??
+			ResolveConfigurationData.getValue(
+				data,
+				`${this.config.keys.computed}.${this.config.keys.permalink}`,
+			);
 		let permalinkValue;
 		let isDynamicPermalinkEnabled =
 			this.config.dynamicPermalinks && data.dynamicPermalink !== false;
@@ -638,7 +642,8 @@ class Template extends TemplateContent {
 	}
 
 	async addComputedData(data) {
-		if (isPlainObject(data?.[this.config.keys.computed])) {
+		let computedData = ResolveConfigurationData.getValue(data, this.config.keys.computed);
+		if (isPlainObject(computedData)) {
 			this.computedData = new ComputedData(this.config);
 
 			// Note that `permalink` is only a thing that gets consumed—it does not go directly into generated data
@@ -667,12 +672,13 @@ class Template extends TemplateContent {
 			);
 
 			// Check for reserved properties in computed data
+			let computedData = ResolveConfigurationData.getValue(data, this.config.keys.computed);
 			if (this.config.freezeReservedData) {
-				ReservedData.checkSubset(data[this.config.keys.computed]);
+				ReservedData.checkSubset(computedData);
 			}
 
 			// actually add the computed data
-			this._addComputedEntry(this.computedData, data[this.config.keys.computed]);
+			this._addComputedEntry(this.computedData, computedData);
 
 			// limited run of computed data—save the stuff that relies on collections for later.
 			debug("First round of computed data for %o", this.inputPath);

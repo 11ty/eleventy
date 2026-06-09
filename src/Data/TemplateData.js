@@ -20,6 +20,7 @@ import { coerce } from "../Util/SemverCoerce.js";
 import ProjectDirectories from "../Util/ProjectDirectories.js";
 import ReservedData from "../Util/ReservedData.js";
 import { isTypeScriptSupported } from "../Util/TypeScriptFeatureTest.cjs";
+import { ResolveConfigurationData } from "../Data/ResolveConfigurationData.js";
 
 const { set: lodashSet, get: lodashGet } = lodash;
 
@@ -780,19 +781,22 @@ class TemplateData {
 
 	static getNormalizedExcludedCollections(data) {
 		let excludes = [];
-		let key = "eleventyExcludeFromCollections";
-
-		if (data?.[key] !== true) {
-			if (Array.isArray(data[key])) {
-				excludes = data[key];
-			} else if (typeof data[key] === "string") {
-				excludes = (data[key] || "").split(",");
+		// TODO move this key to defaultConfig->keys->excludeFromCollections
+		let excludeValue = ResolveConfigurationData.getValue(
+			data,
+			"buildawesome.excludeFromCollections",
+		);
+		if (excludeValue !== true) {
+			if (Array.isArray(excludeValue)) {
+				excludes = excludeValue;
+			} else if (typeof excludeValue === "string") {
+				excludes = (excludeValue || "").split(",");
 			}
 		}
 
 		return {
 			excludes,
-			excludeAll: data?.eleventyExcludeFromCollections === true,
+			excludeAll: excludeValue === true,
 		};
 	}
 

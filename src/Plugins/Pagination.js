@@ -13,6 +13,8 @@ class PaginationConfigError extends BaseError {}
 class PaginationError extends BaseError {}
 
 class Pagination {
+	static NOT_FOUND_VALUE = "__NOT_FOUND_ERROR__";
+
 	constructor(tmpl, data, config) {
 		if (!config) {
 			throw new PaginationConfigError("Expected `config` argument to Pagination class.");
@@ -113,15 +115,13 @@ class Pagination {
 	}
 
 	_has(target, key) {
-		let notFoundValue = "__NOT_FOUND_ERROR__";
-		let data = lodashGet(target, key, notFoundValue);
-		return data !== notFoundValue;
+		let data = lodashGet(target, key, Pagination.NOT_FOUND_VALUE);
+		return data !== Pagination.NOT_FOUND_VALUE;
 	}
 
 	_get(target, key) {
-		let notFoundValue = "__NOT_FOUND_ERROR__";
-		let data = lodashGet(target, key, notFoundValue);
-		if (data === notFoundValue) {
+		let data = lodashGet(target, key, Pagination.NOT_FOUND_VALUE);
+		if (data === Pagination.NOT_FOUND_VALUE) {
 			throw new Error(
 				`Could not find pagination data${this.inputPathForErrorMessages}, went looking for: ${key}`,
 			);

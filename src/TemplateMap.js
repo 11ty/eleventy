@@ -7,6 +7,7 @@ import UsingCircularTemplateContentReferenceError from "./Errors/UsingCircularTe
 import DuplicatePermalinkOutputError from "./Errors/DuplicatePermalinkOutputError.js";
 import TemplateData from "./Data/TemplateData.js";
 import GlobalDependencyMap from "./GlobalDependencyMap.js";
+import { ResolveConfigurationData } from "./Data/ResolveConfigurationData.js";
 
 const debug = createDebug("BuildAwesome:TemplateMap");
 
@@ -117,8 +118,9 @@ class TemplateMap {
 		let consumes = [];
 		consumes.push(this.getPaginationTagTarget(entry));
 
-		if (Array.isArray(entry.data.eleventyImport?.collections)) {
-			for (let tag of entry.data.eleventyImport.collections) {
+		let importData = ResolveConfigurationData.getValue(entry.data, this.config.keys.import);
+		if (Array.isArray(importData?.collections)) {
+			for (let tag of importData.collections) {
 				consumes.push(tag);
 			}
 		}
@@ -229,7 +231,10 @@ class TemplateMap {
 				}
 
 				if (counter === 0 || map.data.pagination?.addAllPagesToCollections) {
-					if (map.data.eleventyExcludeFromCollections !== true) {
+					if (
+						ResolveConfigurationData.getValue(map.data, "buildawesome.excludeFromCollections") !==
+						true
+					) {
 						// is in *some* collections
 						this.collection.add(page);
 					}
@@ -388,9 +393,13 @@ class TemplateMap {
 
 			for (let pageEntry of map._pages) {
 				// Data Schema callback #879
-				if (typeof pageEntry.data[this.config.keys.dataSchema] === "function") {
+				let dataSchema = ResolveConfigurationData.getValue(
+					pageEntry.data,
+					this.config.keys.dataSchema,
+				);
+				if (dataSchema !== undefined && typeof dataSchema === "function") {
 					try {
-						await pageEntry.data[this.config.keys.dataSchema](pageEntry.data);
+						await dataSchema(pageEntry.data);
 					} catch (e) {
 						throw new Error(
 							`Error in the data schema for: ${map.inputPath} (via \`eleventyDataSchema\`)`,
@@ -537,7 +546,11 @@ class TemplateMap {
 		let promises = [];
 		for (let entry of this.map) {
 			for (let pageEntry of entry._pages) {
-				if (this.config.keys.computed in pageEntry.data) {
+				let computedData = ResolveConfigurationData.getValue(
+					pageEntry.data,
+					this.config.keys.computed,
+				);
+				if (computedData !== undefined) {
 					promises.push(pageEntry.template.resolveRemainingComputedData(pageEntry.data));
 				}
 			}
