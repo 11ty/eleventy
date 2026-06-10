@@ -1,11 +1,11 @@
 import test from "ava";
 import BuildAwesome from "../src/Core.js";
 
-test("Using buildawesome.computed and eleventyComputed (prefers former)", async (t) => {
+test("Using buildawesomeComputed and eleventyComputed (prefers former)", async (t) => {
   let elev = new BuildAwesome("./test/stubs-virtual/", undefined, {
     config: configApi => {
       // will override
-      configApi.addGlobalData("buildawesome.computed", () => {
+      configApi.addGlobalData("buildawesomeComputed", () => {
         return {
           key1: "value1"
         }
@@ -26,7 +26,7 @@ test("Using buildawesome.computed and eleventyComputed (prefers former)", async 
   t.is(results[0].content, `value1`);
 });
 
-test("Using buildawesome.computed and eleventyComputed (prefers former, reverse add)", async (t) => {
+test("Using buildawesomeComputed and eleventyComputed (prefers former, reverse add)", async (t) => {
   let elev = new BuildAwesome("./test/stubs-virtual/", undefined, {
     config: configApi => {
       configApi.addGlobalData("eleventyComputed", () => {
@@ -36,7 +36,7 @@ test("Using buildawesome.computed and eleventyComputed (prefers former, reverse 
       });
 
       // will override
-      configApi.addGlobalData("buildawesome.computed", () => {
+      configApi.addGlobalData("buildawesomeComputed", () => {
         return {
           key1: "value1"
         }
@@ -51,7 +51,7 @@ test("Using buildawesome.computed and eleventyComputed (prefers former, reverse 
   t.is(results[0].content, `value1`);
 });
 
-test("Using buildawesome.computed.permalink", async (t) => {
+test("Using buildawesomeComputed.permalink", async (t) => {
   let elev = new BuildAwesome("./test/stubs-virtual/", undefined, {
     config: configApi => {
       configApi.addGlobalData("permalink", () => {
@@ -59,7 +59,7 @@ test("Using buildawesome.computed.permalink", async (t) => {
       });
 
       // will override
-      configApi.addGlobalData("buildawesome.computed.permalink", () => {
+      configApi.addGlobalData("buildawesomeComputed.permalink", () => {
         return () => "/rewritten1.html"
       });
 

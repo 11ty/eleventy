@@ -1213,6 +1213,7 @@ test("Data Cascade (Deep merge)", async (t) => {
 
   let data = await tmpl.getData();
   t.deepEqual(Object.keys(data).sort(), [
+    "buildawesome",
     "datafile",
     "eleventy",
     "frontmatter",

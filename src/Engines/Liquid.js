@@ -329,6 +329,7 @@ export default class Liquid extends TemplateEngine {
 				{
 					page: data?.page,
 					eleventy: data?.eleventy,
+					buildawesome: data?.buildawesome,
 					collections: data?.collections,
 				},
 				liquidOptions?.globals,

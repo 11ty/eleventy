@@ -33,8 +33,8 @@ import TransformsUtil from "./Util/TransformsUtil.js";
  * @property {string} [keys.permalink='permalink']
  * @property {string} [keys.permalinkRoot='permalinkBypassOutputDir']
  * @property {string} [keys.engineOverride='templateEngineOverride']
- * @property {string} [keys.computed='buildawesome.computed']
- * @property {string} [keys.dataSchema='buildawesome.dataSchema']
+ * @property {string} [keys.computed='buildawesomeComputed']
+ * @property {string} [keys.dataSchema='buildawesomeDataSchema']
  * @property {object} dir
  * @property {string} [dir.input='.']
  * @property {string} [dir.includes='_includes']
@@ -92,9 +92,9 @@ export default function (config) {
 			permalink: "permalink",
 			permalinkRoot: "permalinkBypassOutputDir",
 			engineOverride: "templateEngineOverride",
-			computed: "buildawesome.computed",
-			dataSchema: "buildawesome.dataSchema",
-			import: "buildawesome.import",
+			computed: "buildawesomeComputed",
+			dataSchema: "buildawesomeDataSchema",
+			import: "buildawesomeImport",
 		},
 
 		// Deprecated, define using `export const directories = {}` instead.

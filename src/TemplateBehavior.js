@@ -65,9 +65,9 @@ class TemplateBehavior {
 			}
 		}
 
-		let computedKey = this.config.keys.computed;
 		let computedData = ResolveConfigurationData.getValue(data, this.config.keys.computed);
 		let permalink = ResolveConfigurationData.getValue(computedData, this.config.keys.permalink);
+
 		if (computedData && isPlainObject(permalink)) {
 			for (let key of Object.keys(permalink)) {
 				keys.add(key);

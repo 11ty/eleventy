@@ -232,7 +232,7 @@ class TemplateMap {
 
 				if (counter === 0 || map.data.pagination?.addAllPagesToCollections) {
 					if (
-						ResolveConfigurationData.getValue(map.data, "buildawesome.excludeFromCollections") !==
+						ResolveConfigurationData.getValue(map.data, "buildawesomeExcludeFromCollections") !==
 						true
 					) {
 						// is in *some* collections
@@ -393,7 +393,7 @@ class TemplateMap {
 
 			for (let pageEntry of map._pages) {
 				// Data Schema callback #879
-				let dataSchema = ResolveConfigurationData.getValue(
+				let { location: dataSchemaLocation, value: dataSchema } = ResolveConfigurationData.resolve(
 					pageEntry.data,
 					this.config.keys.dataSchema,
 				);
@@ -402,7 +402,7 @@ class TemplateMap {
 						await dataSchema(pageEntry.data);
 					} catch (e) {
 						throw new Error(
-							`Error in the data schema for: ${map.inputPath} (via \`eleventyDataSchema\`)`,
+							`Error in the data schema for: ${map.inputPath} (via \`${dataSchemaLocation}\`)`,
 							{ cause: e },
 						);
 					}

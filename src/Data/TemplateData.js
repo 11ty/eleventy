@@ -386,35 +386,36 @@ class TemplateData {
 		return globalData;
 	}
 
-	getEleventyGlobal() {
+	getCoreGlobal() {
 		// #2293 for meta[name=generator]
 		const pkg = getCorePackageJson();
 
 		let version = coerce(pkg.version).toString();
-		let eleventy = {
+		let global = {
 			version,
 			generator: `Eleventy (Build Awesome) v${version}`,
 		};
 		if (this.environmentVariables) {
-			eleventy.env = Object.assign({}, this.environmentVariables);
+			global.env = Object.assign({}, this.environmentVariables);
 		}
 		if (this.dirs) {
-			eleventy.directories = Object.assign({}, this.dirs.getUserspaceInstance());
+			global.directories = Object.assign({}, this.dirs.getUserspaceInstance());
 		}
-		eleventy.pendingEditsCount = (this.templateConfig.getPendingDataOverrides() || []).length;
+		global.pendingEditsCount = (this.templateConfig.getPendingDataOverrides() || []).length;
 
-		// `eleventy` is Reserved
 		if (this.config.freezeReservedData) {
-			DeepFreeze(eleventy);
+			DeepFreeze(global);
 		}
 
-		return eleventy;
+		return global;
 	}
 
 	async #getInitialGlobalData() {
 		let globalData = await this.initialGlobalData.getData();
 
-		globalData.eleventy = this.getEleventyGlobal();
+		let coreGlobal = this.getCoreGlobal();
+		globalData.eleventy = coreGlobal;
+		globalData.buildawesome = coreGlobal;
 
 		return globalData;
 	}
@@ -777,7 +778,7 @@ class TemplateData {
 		// TODO move this key to defaultConfig->keys->excludeFromCollections
 		let excludeValue = ResolveConfigurationData.getValue(
 			data,
-			"buildawesome.excludeFromCollections",
+			"buildawesomeExcludeFromCollections",
 		);
 		if (excludeValue !== true) {
 			if (Array.isArray(excludeValue)) {

@@ -144,6 +144,7 @@ async function renderShortcodeFn(fn, data) {
 		// save `page` and `eleventy` for reuse
 		data.page = this.page;
 		data.eleventy = this.eleventy;
+		data.buildawesome = this.buildawesome;
 	}
 
 	return fn(data);
@@ -224,6 +225,7 @@ function RenderPlugin(eleventyConfig, options = {}) {
 
 					normalizedContext.page = ctx.get(["page"]);
 					normalizedContext.eleventy = ctx.get(["eleventy"]);
+					normalizedContext.buildawesome = ctx.get(["buildawesome"]);
 				}
 
 				let argArray = [];
@@ -324,6 +326,7 @@ function RenderPlugin(eleventyConfig, options = {}) {
 
 					normalizedContext.page = context.ctx.page;
 					normalizedContext.eleventy = context.ctx.eleventy;
+					normalizedContext.buildawesome = context.ctx.buildawesome;
 				}
 
 				body(function (e, bodyContent) {

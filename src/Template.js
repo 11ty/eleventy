@@ -215,12 +215,10 @@ class Template extends TemplateContent {
 			throw new Error("Internal error: data argument missing in Template->_getLink");
 		}
 
+		let computedData = ResolveConfigurationData.getValue(data, this.config.keys.computed);
 		let permalink =
 			ResolveConfigurationData.getValue(data, this.config.keys.permalink) ??
-			ResolveConfigurationData.getValue(
-				data,
-				`${this.config.keys.computed}.${this.config.keys.permalink}`,
-			);
+			ResolveConfigurationData.getValue(computedData, this.config.keys.permalink);
 		let permalinkValue;
 		let isDynamicPermalinkEnabled =
 			this.config.dynamicPermalinks && data.dynamicPermalink !== false;
