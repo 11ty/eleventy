@@ -276,6 +276,10 @@ export default class ExtensionMap {
 				this._extensionToKeyMap["server.ts"] = { key: "11ty.js", extension: "server.ts" };
 				this._extensionToKeyMap["server.cts"] = { key: "11ty.js", extension: "server.cts" };
 				this._extensionToKeyMap["server.mts"] = { key: "11ty.js", extension: "server.mts" };
+
+				this._extensionToKeyMap["11ty.ts"] = { key: "11ty.js", extension: "11ty.ts" };
+				this._extensionToKeyMap["11ty.cts"] = { key: "11ty.js", extension: "11ty.cts" };
+				this._extensionToKeyMap["11ty.mts"] = { key: "11ty.js", extension: "11ty.mts" };
 			}
 
 			if ("extensionMap" in this.config) {
