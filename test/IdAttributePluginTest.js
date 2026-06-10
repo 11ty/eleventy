@@ -16,7 +16,7 @@ test("Using the IdAttribute plugin #3356", async (t) => {
 	t.is(results[0].content, `<h1 id="this-is-a-heading">This is a heading</h1><h2 id="already">This is another heading</h2><h2 id="this-is-another-heading">This is another heading</h2><h3 id="this-is-another-heading-2">This is another heading</h3>`);
 });
 
-test("Using the IdAttribute plugin, ignore attribute #3356", async (t) => {
+test("Using the IdAttribute plugin, eleventy:ignore attribute #3356", async (t) => {
   let elev = new Eleventy({
     input: "./test/stubs-3356/",
     // configPath: false,
@@ -24,6 +24,21 @@ test("Using the IdAttribute plugin, ignore attribute #3356", async (t) => {
       $config.addPlugin(IdAttributePlugin);
 
       $config.addTemplate("test.njk", `<h1>This is a heading</h1><h2 id="already">This is another heading</h2><h2>This is another heading</h2><h3>This is another <span eleventy:id-ignore>heading</span></h3>`, {});
+    },
+  });
+
+  let results = await elev.toJSON();
+	t.is(results[0].content, `<h1 id="this-is-a-heading">This is a heading</h1><h2 id="already">This is another heading</h2><h2 id="this-is-another-heading">This is another heading</h2><h3 id="this-is-another">This is another <span>heading</span></h3>`);
+});
+
+test("Using the IdAttribute plugin, buildawesome:ignore attribute #3356", async (t) => {
+  let elev = new Eleventy({
+    input: "./test/stubs-3356/",
+    // configPath: false,
+    config: function ($config) {
+      $config.addPlugin(IdAttributePlugin);
+
+      $config.addTemplate("test.njk", `<h1>This is a heading</h1><h2 id="already">This is another heading</h2><h2>This is another heading</h2><h3>This is another <span buildawesome:id-ignore>heading</span></h3>`, {});
     },
   });
 
