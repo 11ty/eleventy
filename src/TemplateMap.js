@@ -667,7 +667,7 @@ You *probably* want to add a file extension to your permalink so that hosts will
 
 Learn more: https://v3.11ty.dev/docs/permalinks/#trailing-slashes
 
-This is usually but not *always* an error so if you’d like to disable this error message, add \`eleventyAllowMissingExtension: true\` somewhere in the data cascade for this template or use \`eleventyConfig.configureErrorReporting({ allowMissingExtensions: true });\` to disable this feature globally.`);
+This is usually but not *always* an error so if you’d like to disable this error message, add \`eleventyAllowMissingExtension: true\` somewhere in the data cascade for this template or use \`$config.configureErrorReporting({ allowMissingExtensions: true });\` to disable this feature globally.`);
 					e.skipOriginalStack = true;
 					throw e;
 				}

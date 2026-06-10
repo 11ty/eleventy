@@ -3,16 +3,16 @@ import Eleventy from "../src/Core.js";
 
 test("#188: Content preprocessing (dot in file extension)", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addPreprocessor("drafts", ".njk", (data, content) => {
+    config: $config => {
+      $config.addPreprocessor("drafts", ".njk", (data, content) => {
         if(data.draft) {
           return false;
         }
         return `Hello ${content}`;
       });
 
-      eleventyConfig.addTemplate("index.njk", "Before");
-      eleventyConfig.addTemplate("draft.njk", "Before", { draft: true });
+      $config.addTemplate("index.njk", "Before");
+      $config.addTemplate("draft.njk", "Before", { draft: true });
     }
   });
 
@@ -23,16 +23,16 @@ test("#188: Content preprocessing (dot in file extension)", async (t) => {
 
 test("#188: Content preprocessing (no dot in file extension)", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addPreprocessor("drafts", "njk", (data, content) => {
+    config: $config => {
+      $config.addPreprocessor("drafts", "njk", (data, content) => {
         if(data.draft) {
           return false;
         }
         return `Hello ${content}`;
       });
 
-      eleventyConfig.addTemplate("index.njk", "Before");
-      eleventyConfig.addTemplate("draft.njk", "Before", { draft: true });
+      $config.addTemplate("index.njk", "Before");
+      $config.addTemplate("draft.njk", "Before", { draft: true });
     }
   });
 
@@ -44,16 +44,16 @@ test("#188: Content preprocessing (no dot in file extension)", async (t) => {
 
 test("#188: Content preprocessing (array, no dot in file extension)", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addPreprocessor("drafts", ["njk"], (data, content) => {
+    config: $config => {
+      $config.addPreprocessor("drafts", ["njk"], (data, content) => {
         if(data.draft) {
           return false;
         }
         return `Hello ${content}`;
       });
 
-      eleventyConfig.addTemplate("index.njk", "Before");
-      eleventyConfig.addTemplate("draft.njk", "Before", { draft: true });
+      $config.addTemplate("index.njk", "Before");
+      $config.addTemplate("draft.njk", "Before", { draft: true });
     }
   });
 
@@ -64,16 +64,16 @@ test("#188: Content preprocessing (array, no dot in file extension)", async (t) 
 
 test("#188: Content preprocessing (array, dot in file extension)", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addPreprocessor("drafts", [".njk"], (data, content) => {
+    config: $config => {
+      $config.addPreprocessor("drafts", [".njk"], (data, content) => {
         if(data.draft) {
           return false;
         }
         return `Hello ${content}`;
       });
 
-      eleventyConfig.addTemplate("index.njk", "Before");
-      eleventyConfig.addTemplate("draft.njk", "Before", { draft: true });
+      $config.addTemplate("index.njk", "Before");
+      $config.addTemplate("draft.njk", "Before", { draft: true });
     }
   });
 
@@ -84,16 +84,16 @@ test("#188: Content preprocessing (array, dot in file extension)", async (t) => 
 
 test("#188: Content preprocessing (wildcard)", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addPreprocessor("drafts", "*", (data, content) => {
+    config: $config => {
+      $config.addPreprocessor("drafts", "*", (data, content) => {
         if(data.draft) {
           return false;
         }
         return `Hello ${content}`;
       });
 
-      eleventyConfig.addTemplate("index.njk", "Before");
-      eleventyConfig.addTemplate("draft.njk", "Before", { draft: true });
+      $config.addTemplate("index.njk", "Before");
+      $config.addTemplate("draft.njk", "Before", { draft: true });
     }
   });
 
@@ -107,8 +107,8 @@ test("addPreprocessor with 11ty.js, Issue #3433", async (t) => {
   t.plan(5);
 
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addPreprocessor("testing", "11ty.js", (data, content) => {
+    config: $config => {
+      $config.addPreprocessor("testing", "11ty.js", (data, content) => {
         t.is( typeof content, "function" );
         t.is(content(), "Hello!");
 
@@ -119,7 +119,7 @@ test("addPreprocessor with 11ty.js, Issue #3433", async (t) => {
         };
       });
 
-      eleventyConfig.addTemplate("template.11ty.js", function() {
+      $config.addTemplate("template.11ty.js", function() {
         return "Hello!"
       });
     }
@@ -136,13 +136,13 @@ test("addPreprocessor and addExtension, Issue #3433", async (t) => {
   t.plan(5);
 
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addTemplateFormats("11ty.test");
-      eleventyConfig.addExtension("11ty.test", {
+    config: $config => {
+      $config.addTemplateFormats("11ty.test");
+      $config.addExtension("11ty.test", {
         key: "11ty.js",
       });
 
-      eleventyConfig.addPreprocessor("testing", "11ty.test", (data, content) => {
+      $config.addPreprocessor("testing", "11ty.test", (data, content) => {
         t.is( typeof content, "function" );
         t.is(content(), "Hello!");
 
@@ -153,7 +153,7 @@ test("addPreprocessor and addExtension, Issue #3433", async (t) => {
         };
       });
 
-      eleventyConfig.addTemplate("template.11ty.test", function() {
+      $config.addTemplate("template.11ty.test", function() {
         return "Hello!"
       });
     }
@@ -169,16 +169,16 @@ test("addPreprocessor and addExtension with custom `compile` (defaultRenderer), 
   t.plan(5);
 
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addTemplateFormats("11ty.test");
-      eleventyConfig.addExtension("11ty.test", {
+    config: $config => {
+      $config.addTemplateFormats("11ty.test");
+      $config.addExtension("11ty.test", {
         key: "11ty.js",
         compile: function() {
           return this.defaultRenderer;
         }
       });
 
-      eleventyConfig.addPreprocessor("testing", "11ty.test", (data, content) => {
+      $config.addPreprocessor("testing", "11ty.test", (data, content) => {
         t.is( typeof content, "function" );
         t.is(content(), "Hello!");
 
@@ -189,7 +189,7 @@ test("addPreprocessor and addExtension with custom `compile` (defaultRenderer), 
         };
       });
 
-      eleventyConfig.addTemplate("template.11ty.test", function() {
+      $config.addTemplate("template.11ty.test", function() {
         return "Hello!"
       });
     }
@@ -205,9 +205,9 @@ test("addPreprocessor and addExtension with custom `compile` (re-use render func
   t.plan(5);
 
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addTemplateFormats("11ty.test");
-      eleventyConfig.addExtension("11ty.test", {
+    config: $config => {
+      $config.addTemplateFormats("11ty.test");
+      $config.addExtension("11ty.test", {
         key: "11ty.js",
         compile: function(content) {
           return function() {
@@ -216,7 +216,7 @@ test("addPreprocessor and addExtension with custom `compile` (re-use render func
         }
       });
 
-      eleventyConfig.addPreprocessor("testing", "11ty.test", (data, content) => {
+      $config.addPreprocessor("testing", "11ty.test", (data, content) => {
         t.is( typeof content, "function" );
         t.is(content(), "Hello!");
 
@@ -227,7 +227,7 @@ test("addPreprocessor and addExtension with custom `compile` (re-use render func
         };
       });
 
-      eleventyConfig.addTemplate("template.11ty.test", function() {
+      $config.addTemplate("template.11ty.test", function() {
         return "Hello!"
       });
     }
@@ -243,9 +243,9 @@ test("addPreprocessor and addExtension with custom `compile` (new render functio
   t.plan(7);
 
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addTemplateFormats("11ty.test");
-      eleventyConfig.addExtension("11ty.test", {
+    config: $config => {
+      $config.addTemplateFormats("11ty.test");
+      $config.addExtension("11ty.test", {
         key: "11ty.js",
         compile: function(content) {
           // check preprocessor override
@@ -258,7 +258,7 @@ test("addPreprocessor and addExtension with custom `compile` (new render functio
         }
       });
 
-      eleventyConfig.addPreprocessor("testing", "11ty.test", (data, content) => {
+      $config.addPreprocessor("testing", "11ty.test", (data, content) => {
         // check template content directly
         t.is( typeof content, "function" );
         t.is(content(), "Original template content");
@@ -270,7 +270,7 @@ test("addPreprocessor and addExtension with custom `compile` (new render functio
         };
       });
 
-      eleventyConfig.addTemplate("template.11ty.test", function() {
+      $config.addTemplate("template.11ty.test", function() {
         return "Original template content"
       });
     }
@@ -286,8 +286,8 @@ test("addPreprocessor and addExtension with custom `compile` (new render functio
 test("Tags in pages excluded with preprocessing should not populate collections props", async (t) => {
   let preprocessorRuns = 0;
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addPreprocessor("drafts", "njk", (data, content) => {
+    config: $config => {
+      $config.addPreprocessor("drafts", "njk", (data, content) => {
         preprocessorRuns++;
         if(data.draft) {
           return false;
@@ -295,7 +295,7 @@ test("Tags in pages excluded with preprocessing should not populate collections 
         return `Hello ${content}`;
       });
 
-      eleventyConfig.addTemplate("paged.njk", "{{ tag }}", {
+      $config.addTemplate("paged.njk", "{{ tag }}", {
         pagination: {
           data: "collections",
           size: 1,
@@ -304,8 +304,8 @@ test("Tags in pages excluded with preprocessing should not populate collections 
         },
         permalink: "/{{ tag }}/"
       });
-      eleventyConfig.addTemplate("source.njk", "Before", { tags: ["yep"] });
-      eleventyConfig.addTemplate("source-draft.njk", "Before", { draft: true, tags: ["nope"] });
+      $config.addTemplate("source.njk", "Before", { tags: ["yep"] });
+      $config.addTemplate("source-draft.njk", "Before", { draft: true, tags: ["nope"] });
     }
   });
 
@@ -325,13 +325,13 @@ test("#4292: Preprocessors should only run once per build (bug running twice dur
 
   let preprocessorRuns = 0;
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addPreprocessor("drafts", ".njk", (data, content) => {
+    config: $config => {
+      $config.addPreprocessor("drafts", ".njk", (data, content) => {
         preprocessorRuns++;
         return `Hello ${content} Suffix`;
       });
 
-      eleventyConfig.addTemplate("index.njk", "Before");
+      $config.addTemplate("index.njk", "Before");
     }
   });
 
@@ -350,8 +350,8 @@ test("#4292: Preprocessors mutable data", async (t) => {
   t.plan(9);
 
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addPreprocessor("drafts", ".njk", (data, content) => {
+    config: $config => {
+      $config.addPreprocessor("drafts", ".njk", (data, content) => {
         t.is(data.title, "Title");
         data.title += " (draft)";
         t.is(data.title, "Title (draft)");
@@ -360,7 +360,7 @@ test("#4292: Preprocessors mutable data", async (t) => {
         return content;
       });
 
-      eleventyConfig.addTemplate("index.njk", "Hello {{title}} Suffix", {
+      $config.addTemplate("index.njk", "Hello {{title}} Suffix", {
         title: "Title"
       });
     }

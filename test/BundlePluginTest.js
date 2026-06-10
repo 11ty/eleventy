@@ -3,11 +3,11 @@ import Eleventy from "../src/Core.js";
 
 test("addBundle", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addPlugin(() => {
-        eleventyConfig.addBundle("css")
+    config: $config => {
+      $config.addPlugin(() => {
+        $config.addBundle("css")
       });
-      eleventyConfig.addTemplate("index.njk", "{% css %}/* Hi */{% endcss %}<style>{% getBundle 'css' %}</style>");
+      $config.addTemplate("index.njk", "{% css %}/* Hi */{% endcss %}<style>{% getBundle 'css' %}</style>");
     }
   });
 
@@ -17,12 +17,12 @@ test("addBundle", async (t) => {
 
 test("addBundle (empty css)", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addPlugin(() => {
-        eleventyConfig.addBundle("css");
+    config: $config => {
+      $config.addPlugin(() => {
+        $config.addBundle("css");
       });
 
-      eleventyConfig.addTemplate("index.njk", "Hi<style>{% getBundle 'css' %}</style>");
+      $config.addTemplate("index.njk", "Hi<style>{% getBundle 'css' %}</style>");
     }
   });
 
@@ -32,12 +32,12 @@ test("addBundle (empty css)", async (t) => {
 
 test("addBundle (empty js)", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addPlugin(() => {
-        eleventyConfig.addBundle("js");
+    config: $config => {
+      $config.addPlugin(() => {
+        $config.addBundle("js");
       });
 
-      eleventyConfig.addTemplate("index.njk", "Hi<script>{% getBundle 'js' %}</script>");
+      $config.addTemplate("index.njk", "Hi<script>{% getBundle 'js' %}</script>");
     }
   });
 
@@ -47,12 +47,12 @@ test("addBundle (empty js)", async (t) => {
 
 test("Empty script node is removed (not using bundle)", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addPlugin(() => {
-        eleventyConfig.addBundle("js");
+    config: $config => {
+      $config.addPlugin(() => {
+        $config.addBundle("js");
       });
 
-      eleventyConfig.addTemplate("index.njk", "Hi<script></script>");
+      $config.addTemplate("index.njk", "Hi<script></script>");
     }
   });
 
@@ -63,12 +63,12 @@ test("Empty script node is removed (not using bundle)", async (t) => {
 
 test("Empty style node is removed (not using bundle)", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addPlugin(() => {
-        eleventyConfig.addBundle("css");
+    config: $config => {
+      $config.addPlugin(() => {
+        $config.addBundle("css");
       });
 
-      eleventyConfig.addTemplate("index.njk", "Hi<style></style>");
+      $config.addTemplate("index.njk", "Hi<style></style>");
     }
   });
 
@@ -78,12 +78,12 @@ test("Empty style node is removed (not using bundle)", async (t) => {
 
 test("Empty link node is removed (not using bundle)", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addPlugin(() => {
-        eleventyConfig.addBundle("css");
+    config: $config => {
+      $config.addPlugin(() => {
+        $config.addBundle("css");
       });
 
-      eleventyConfig.addTemplate("index.njk", "Hi<link rel='stylesheet' href=''>");
+      $config.addTemplate("index.njk", "Hi<link rel='stylesheet' href=''>");
     }
   });
 
@@ -93,12 +93,12 @@ test("Empty link node is removed (not using bundle)", async (t) => {
 
 test("Empty link node is removed (no href attribute at all, not using bundle)", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addPlugin(() => {
-        eleventyConfig.addBundle("css");
+    config: $config => {
+      $config.addPlugin(() => {
+        $config.addBundle("css");
       });
 
-      eleventyConfig.addTemplate("index.njk", "Hi<link rel='stylesheet'>");
+      $config.addTemplate("index.njk", "Hi<link rel='stylesheet'>");
     }
   });
 
@@ -108,12 +108,12 @@ test("Empty link node is removed (no href attribute at all, not using bundle)", 
 
 test("Empty link node is kept (no rel attribute, not using bundle)", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addPlugin(() => {
-        eleventyConfig.addBundle("css");
+    config: $config => {
+      $config.addPlugin(() => {
+        $config.addBundle("css");
       });
 
-      eleventyConfig.addTemplate("index.njk", "Hi<link>");
+      $config.addTemplate("index.njk", "Hi<link>");
     }
   });
 

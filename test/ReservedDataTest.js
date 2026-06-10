@@ -29,9 +29,9 @@ test("`page` subkeys", t => {
 test("Eleventy freeze data set via config API throws error (page)", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
     configPath: "./test/stubs-virtual/eleventy.config.js",
-    config: eleventyConfig => {
-      eleventyConfig.addGlobalData("page", "lol no");
-      eleventyConfig.addTemplate("index.html", ``);
+    config: $config => {
+      $config.addGlobalData("page", "lol no");
+      $config.addTemplate("index.html", ``);
     }
   });
   elev.disableLogger();
@@ -44,9 +44,9 @@ test("Eleventy freeze data set via config API throws error (page)", async (t) =>
 test("Eleventy freeze data set via config API throws error (eleventy)", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
     configPath: "./test/stubs-virtual/eleventy.config.js",
-    config: eleventyConfig => {
-      eleventyConfig.addGlobalData("eleventy", "lol no");
-      eleventyConfig.addTemplate("index.html", ``);
+    config: $config => {
+      $config.addGlobalData("eleventy", "lol no");
+      $config.addTemplate("index.html", ``);
     }
   });
   elev.disableLogger();
@@ -59,8 +59,8 @@ test("Eleventy freeze data set via config API throws error (eleventy)", async (t
 test("Eleventy freeze data set global data file throws error (page)", async (t) => {
   let elev = new Eleventy({
     input: "./test/stubs-freeze/page/",
-    config: eleventyConfig => {
-      eleventyConfig.addTemplate("index.html", ``);
+    config: $config => {
+      $config.addTemplate("index.html", ``);
     }
   });
   elev.disableLogger();
@@ -73,8 +73,8 @@ test("Eleventy freeze data set global data file throws error (page)", async (t) 
 test("Eleventy freeze data set global data file throws error (eleventy)", async (t) => {
   let elev = new Eleventy({
     input: "./test/stubs-freeze/eleventy/",
-    config: eleventyConfig => {
-      eleventyConfig.addTemplate("index.html", ``);
+    config: $config => {
+      $config.addTemplate("index.html", ``);
     }
   });
   elev.disableLogger();

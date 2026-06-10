@@ -3,10 +3,10 @@ import Eleventy from "../src/Core.js";
 
 test("#3788 Nunjucks shortcodes args", async (t) => {
 	let elev = new Eleventy("test/noop", false, {
-		config(eleventyConfig) {
-			eleventyConfig.addTemplate("index.njk", `{% test %}:{% test "" %}`);
+		config($config) {
+			$config.addTemplate("index.njk", `{% test %}:{% test "" %}`);
 
-			eleventyConfig.addShortcode("test", (args) => {
+			$config.addShortcode("test", (args) => {
 				return JSON.stringify(args);
 			})
 		}

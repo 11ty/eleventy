@@ -3,8 +3,8 @@ import Eleventy from "../src/Core.js";
 
 test("#3850 Computed Data regression part 2", async (t) => {
   let elev = new Eleventy("test/noop", false, {
-    config(eleventyConfig) {
-      eleventyConfig.addTemplate("index.njk", `---
+    config($config) {
+      $config.addTemplate("index.njk", `---
 site:
   download_link_mac: "http://example.com/"
 eleventyComputed:

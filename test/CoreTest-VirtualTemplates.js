@@ -9,8 +9,8 @@ import { deleteDirectory } from "./_testHelpers.js";
 
 test("Virtual templates, issue #1612", async (t) => {
 	let elev = new Eleventy("./test/stubs-virtual-nowrite", "./test/stubs-virtual-nowrite/_site", {
-		config: function (eleventyConfig) {
-			eleventyConfig.addTemplate("virtual.md", `# Hello`)
+		config: function ($config) {
+			$config.addTemplate("virtual.md", `# Hello`)
 		},
 	});
 
@@ -23,8 +23,8 @@ test("Virtual templates, issue #1612", async (t) => {
 
 test("Virtual templates with front matter, issue #1612", async (t) => {
 	let elev = new Eleventy("./test/stubs-virtual-nowrite", "./test/stubs-virtual-nowrite/_site", {
-		config: function (eleventyConfig) {
-			eleventyConfig.addTemplate("./virtual.md", `---
+		config: function ($config) {
+			$config.addTemplate("./virtual.md", `---
 myKey: myValue
 ---
 # {{ myKey }}`)
@@ -40,8 +40,8 @@ myKey: myValue
 
 test("Virtual templates with supplemental data, issue #1612", async (t) => {
 	let elev = new Eleventy("./test/stubs-virtual-nowrite", "./test/stubs-virtual-nowrite/_site", {
-		config: function (eleventyConfig) {
-			eleventyConfig.addTemplate("virtual.md", `# {{ myKey }}`, { myKey: "myValue" })
+		config: function ($config) {
+			$config.addTemplate("virtual.md", `# {{ myKey }}`, { myKey: "myValue" })
 		},
 	});
 
@@ -55,8 +55,8 @@ test("Virtual templates with supplemental data, issue #1612", async (t) => {
 // Supplemental data overrides front matter.
 test("Virtual templates with front matter and supplemental data, issue #1612", async (t) => {
 	let elev = new Eleventy("./test/stubs-virtual-nowrite", "./test/stubs-virtual-nowrite/_site", {
-		config: function (eleventyConfig) {
-			eleventyConfig.addTemplate("virtual.md", `---
+		config: function ($config) {
+			$config.addTemplate("virtual.md", `---
 myKey1: myValue1
 myKey3: myValueFm
 ---
@@ -73,8 +73,8 @@ myKey3: myValueFm
 
 test("Virtual template conflicts with file on file system, issue #1612", async (t) => {
 	let elev = new Eleventy("./test/stubs/stubs-virtual-conflict", "./test/stubs/stubs-virtual-conflict/_site", {
-		config: function (eleventyConfig) {
-			eleventyConfig.addTemplate("virtual.md", `# Virtual template`)
+		config: function ($config) {
+			$config.addTemplate("virtual.md", `# Virtual template`)
 		},
 	});
 	elev.disableLogger();
@@ -86,11 +86,11 @@ test("Virtual template conflicts with file on file system, issue #1612", async (
 
 test("Virtual templates try to output to the same file, issue #1612", async (t) => {
 	let elev = new Eleventy("./test/stubs-virtual-nowrite", "./test/stubs-virtual-nowrite/_site", {
-		config: function (eleventyConfig) {
-			eleventyConfig.addTemplate("virtual-one.md", "", {
+		config: function ($config) {
+			$config.addTemplate("virtual-one.md", "", {
 				permalink: "/output.html"
 			})
-			eleventyConfig.addTemplate("virtual-two.md", "", {
+			$config.addTemplate("virtual-two.md", "", {
 				permalink: "/output.html"
 			})
 		},
@@ -105,8 +105,8 @@ test("Virtual templates try to output to the same file, issue #1612", async (t) 
 // Warning: this test writes to the file system
 test("Virtual template writes to file system, issue #1612", async (t) => {
 	let elev = new Eleventy("./test/stubs-virtual", "./test/stubs-virtual/_site", {
-		config: function (eleventyConfig) {
-			eleventyConfig.addTemplate("virtual.md", `# Hello`)
+		config: function ($config) {
+			$config.addTemplate("virtual.md", `# Hello`)
 		},
 	});
 	elev.disableLogger();
@@ -123,9 +123,9 @@ test("Virtual template writes to file system, issue #1612", async (t) => {
 
 test("Virtual templates conflict", async (t) => {
 	let elev = new Eleventy("./test/stubs-virtual-nowrite", "./test/stubs-virtual-nowrite/_site", {
-		config: function (eleventyConfig) {
-			eleventyConfig.addTemplate("virtual.md", `# Hello`);
-			eleventyConfig.addTemplate("virtual.md", `# Hello`);
+		config: function ($config) {
+			$config.addTemplate("virtual.md", `# Hello`);
+			$config.addTemplate("virtual.md", `# Hello`);
 		},
 	});
 
@@ -139,10 +139,10 @@ test("Virtual templates conflict", async (t) => {
 // https://github.com/11ty/eleventy-plugin-rss/issues/50
 test("RSS virtual templates plugin", async (t) => {
 	let elev = new Eleventy("./test/stubs-virtual-nowrite", "./test/stubs-virtual-nowrite/_site", {
-		config: function (eleventyConfig) {
-			eleventyConfig.addTemplate("virtual.md", `# Hello`, { tag: "posts" })
+		config: function ($config) {
+			$config.addTemplate("virtual.md", `# Hello`, { tag: "posts" })
 
-			eleventyConfig.addPlugin(feedPlugin, {
+			$config.addPlugin(feedPlugin, {
 				type: "atom", // or "rss", "json"
 				outputPath: "/feed.xml",
 				collection: {
@@ -162,13 +162,13 @@ test("RSS virtual templates plugin", async (t) => {
 
 test("Virtual templates as layouts, issue #2307", async (t) => {
 	let elev = new Eleventy("./test/stubs-virtual-nowrite", "./test/stubs-virtual-nowrite/_site", {
-		config: function (eleventyConfig) {
-			eleventyConfig.addTemplate("virtual.md", `# Hello`, {
+		config: function ($config) {
+			$config.addTemplate("virtual.md", `# Hello`, {
 				layout: "virtual.html"
 			});
 
-			let layoutPath = eleventyConfig.directories.getLayoutPathRelativeToInputDirectory("virtual.html");
-			eleventyConfig.addTemplate(layoutPath, `<!-- Layout -->{{ content }}`);
+			let layoutPath = $config.directories.getLayoutPathRelativeToInputDirectory("virtual.html");
+			$config.addTemplate(layoutPath, `<!-- Layout -->{{ content }}`);
 		},
 	});
 
@@ -190,8 +190,8 @@ test("11ty.js Virtual Templates (object), issue #3347", async (t) => {
   };
 
 	let elev = new Eleventy("./test/stubs-virtual-nowrite", "./test/stubs-virtual-nowrite/_site", {
-		config: function (eleventyConfig) {
-			eleventyConfig.addTemplate("virtual.11ty.js", templateDefinition);
+		config: function ($config) {
+			$config.addTemplate("virtual.11ty.js", templateDefinition);
     }
 	});
 
@@ -210,8 +210,8 @@ test("11ty.js Virtual Templates (function), issue #3347", async (t) => {
   };
 
 	let elev = new Eleventy("./test/stubs-virtual-nowrite", "./test/stubs-virtual-nowrite/_site", {
-		config: function (eleventyConfig) {
-			eleventyConfig.addTemplate("virtual.11ty.js", templateDefinition);
+		config: function ($config) {
+			$config.addTemplate("virtual.11ty.js", templateDefinition);
     }
 	});
 
@@ -226,8 +226,8 @@ test("11ty.js Virtual Templates (function), issue #3347", async (t) => {
 
 test("11ty.js class templates with invalid signature, issue #1645", async (t) => {
 	let elev = new Eleventy("./test/stubs-virtual-nowrite", "./test/stubs-virtual-nowrite/_site", {
-		config: function (eleventyConfig) {
-			eleventyConfig.addTemplate("virtual.11ty.js", class {});
+		config: function ($config) {
+			$config.addTemplate("virtual.11ty.js", class {});
     }
 	});
   elev.disableLogger();
@@ -239,8 +239,8 @@ test("11ty.js class templates with invalid signature, issue #1645", async (t) =>
 
 test("11ty.js class templates with instance properties (data), issue #1645", async (t) => {
 	let elev = new Eleventy("./test/stubs-virtual-nowrite", "./test/stubs-virtual-nowrite/_site", {
-		config: function (eleventyConfig) {
-			eleventyConfig.addTemplate("virtual.11ty.js", class { data() { return {} } });
+		config: function ($config) {
+			$config.addTemplate("virtual.11ty.js", class { data() { return {} } });
     }
 	});
 
@@ -252,8 +252,8 @@ test("11ty.js class templates with instance properties (data), issue #1645", asy
 
 test("11ty.js class templates with instance properties (render), issue #1645", async (t) => {
 	let elev = new Eleventy("./test/stubs-virtual-nowrite", "./test/stubs-virtual-nowrite/_site", {
-		config: function (eleventyConfig) {
-			eleventyConfig.addTemplate("virtual.11ty.js", class { render() { return "Hello!" } });
+		config: function ($config) {
+			$config.addTemplate("virtual.11ty.js", class { render() { return "Hello!" } });
     }
 	});
 
@@ -265,8 +265,8 @@ test("11ty.js class templates with instance properties (render), issue #1645", a
 
 test("11ty.js class templates with instance properties (data and render), issue #1645", async (t) => {
 	let elev = new Eleventy("./test/stubs-virtual-nowrite", "./test/stubs-virtual-nowrite/_site", {
-		config: function (eleventyConfig) {
-			eleventyConfig.addTemplate("virtual.11ty.js", class {
+		config: function ($config) {
+			$config.addTemplate("virtual.11ty.js", class {
         data() { return { key: "world" }; }
         render(data) { return `Hello ${data.key}!` }
       });
@@ -281,8 +281,8 @@ test("11ty.js class templates with instance properties (data and render), issue 
 
 test("11ty.js class templates with instance properties (data and render arrows), issue #1645", async (t) => {
 	let elev = new Eleventy("./test/stubs-virtual-nowrite", "./test/stubs-virtual-nowrite/_site", {
-		config: function (eleventyConfig) {
-			eleventyConfig.addTemplate("virtual.11ty.js", class {
+		config: function ($config) {
+			$config.addTemplate("virtual.11ty.js", class {
         data = () => { return { key: "world" }; }
         render = (data) => { return `Hello ${data.key}!` }
       });
@@ -297,8 +297,8 @@ test("11ty.js class templates with instance properties (data and render arrows),
 
 test("11ty.js class templates with instance properties (data and render arrows, new), issue #1645", async (t) => {
 	let elev = new Eleventy("./test/stubs-virtual-nowrite", "./test/stubs-virtual-nowrite/_site", {
-		config: function (eleventyConfig) {
-			eleventyConfig.addTemplate("virtual.11ty.js", new class {
+		config: function ($config) {
+			$config.addTemplate("virtual.11ty.js", new class {
         data = () => { return { key: "world" }; }
         render = (data) => { return `Hello ${data.key}!` }
       });
@@ -322,8 +322,8 @@ test("server.js Virtual Templates (object)", async (t) => {
   };
 
 	let elev = new Eleventy("./test/stubs-virtual-nowrite", "./test/stubs-virtual-nowrite/_site", {
-		config: function (eleventyConfig) {
-			eleventyConfig.addTemplate("virtual.server.js", templateDefinition);
+		config: function ($config) {
+			$config.addTemplate("virtual.server.js", templateDefinition);
     }
 	});
 

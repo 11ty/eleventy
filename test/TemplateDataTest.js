@@ -562,32 +562,26 @@ test("getLocalDataPaths (with setDataFileSuffixes and setDataFileBaseName #1699)
     "./test/stubs/index.howdy.mjs",
     "./test/stubs/index.howdy.cjs",
     "./test/stubs/index.howdy.js",
-    ...(isTypeScriptSupported() ? [
-      "./test/stubs/index.howdy.mts",
-      "./test/stubs/index.howdy.cts",
-      "./test/stubs/index.howdy.ts",
-    ] : []),
+    "./test/stubs/index.howdy.mts",
+    "./test/stubs/index.howdy.cts",
+    "./test/stubs/index.howdy.ts",
 
     "./test/stubs/component/index.howdy.json",
     "./test/stubs/component/index.howdy.mjs",
     "./test/stubs/component/index.howdy.cjs",
     "./test/stubs/component/index.howdy.js",
-    ...(isTypeScriptSupported() ? [
-      "./test/stubs/component/index.howdy.mts",
-      "./test/stubs/component/index.howdy.cts",
-      "./test/stubs/component/index.howdy.ts",
-    ] : []),
+    "./test/stubs/component/index.howdy.mts",
+    "./test/stubs/component/index.howdy.cts",
+    "./test/stubs/component/index.howdy.ts",
 
     "./test/stubs/component/component.json",
     "./test/stubs/component/component.howdy.json",
     "./test/stubs/component/component.howdy.mjs",
     "./test/stubs/component/component.howdy.cjs",
     "./test/stubs/component/component.howdy.js",
-    ...(isTypeScriptSupported() ? [
-      "./test/stubs/component/component.howdy.mts",
-      "./test/stubs/component/component.howdy.cts",
-      "./test/stubs/component/component.howdy.ts",
-    ] : []),
+    "./test/stubs/component/component.howdy.mts",
+    "./test/stubs/component/component.howdy.cts",
+    "./test/stubs/component/component.howdy.ts",
   ]);
 });
 

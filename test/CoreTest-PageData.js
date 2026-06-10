@@ -3,8 +3,8 @@ import Eleventy from "../src/Core.js";
 
 test.skip("#3794: page.inputPathDir and page.dir", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: function(eleventyConfig) {
-      eleventyConfig.addTemplate("test.njk", `{{ page.inputPathDir }} and {{ page.dir }}`, {});
+    config: function($config) {
+      $config.addTemplate("test.njk", `{{ page.inputPathDir }} and {{ page.dir }}`, {});
     }
   });
 
@@ -14,8 +14,8 @@ test.skip("#3794: page.inputPathDir and page.dir", async (t) => {
 
 test.skip("#3794: page.inputPathDir and page.dir (index file)", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: function(eleventyConfig) {
-      eleventyConfig.addTemplate("index.njk", `{{ page.inputPathDir }} and {{ page.dir }}`, {});
+    config: function($config) {
+      $config.addTemplate("index.njk", `{{ page.inputPathDir }} and {{ page.dir }}`, {});
     }
   });
 
@@ -25,8 +25,8 @@ test.skip("#3794: page.inputPathDir and page.dir (index file)", async (t) => {
 
 test.skip("#3794: page.inputPathDir and page.dir (paginated)", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: function(eleventyConfig) {
-      eleventyConfig.addTemplate("index.njk", `{{ page.inputPathDir }} and {{ page.dir }}`, {
+    config: function($config) {
+      $config.addTemplate("index.njk", `{{ page.inputPathDir }} and {{ page.dir }}`, {
         data: [1,2,3],
         pagination: {
           data: "data",
@@ -47,8 +47,8 @@ test.skip("#3794: page.inputPathDir and page.dir (paginated)", async (t) => {
 
 test.skip("#3794: page.inputPathDir and page.dir (with file slug and index)", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: function(eleventyConfig) {
-      eleventyConfig.addTemplate("yawn/index.njk", `{{ page.inputPathDir }} and {{ page.dir }}`, {
+    config: function($config) {
+      $config.addTemplate("yawn/index.njk", `{{ page.inputPathDir }} and {{ page.dir }}`, {
         permalink: "{{ page.filePathStem }}.{{ page.outputFileExtension }}"
       });
     }
@@ -63,8 +63,8 @@ test.skip("#3794: page.inputPathDir and page.dir (with file slug and index)", as
 
 test.skip("#3794: page.inputPathDir and page.dir (with file slug and not-index)", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: function(eleventyConfig) {
-      eleventyConfig.addTemplate("yawn/test.njk", `{{ page.inputPathDir }} and {{ page.dir }}`, {
+    config: function($config) {
+      $config.addTemplate("yawn/test.njk", `{{ page.inputPathDir }} and {{ page.dir }}`, {
         permalink: "{{ page.filePathStem }}.{{ page.outputFileExtension }}"
       });
     }
@@ -79,8 +79,8 @@ test.skip("#3794: page.inputPathDir and page.dir (with file slug and not-index)"
 
 test.skip("#3794: page.inputPathDir and page.dir (paginated with file slug and not-index)", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: function(eleventyConfig) {
-      eleventyConfig.addTemplate("yawn/test.njk", `{{ page.inputPathDir }} and {{ page.dir }}`, {
+    config: function($config) {
+      $config.addTemplate("yawn/test.njk", `{{ page.inputPathDir }} and {{ page.dir }}`, {
         data: [1,2,3],
         pagination: {
           data: "data",
@@ -102,8 +102,8 @@ test.skip("#3794: page.inputPathDir and page.dir (paginated with file slug and n
 
 test.skip("#3794: page.inputPathDir and page.dir (permalink: false)", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: function(eleventyConfig) {
-      eleventyConfig.addTemplate("index.njk", `{{ page.inputPathDir }} and {{ page.dir }}`, { permalink: false });
+    config: function($config) {
+      $config.addTemplate("index.njk", `{{ page.inputPathDir }} and {{ page.dir }}`, { permalink: false });
     }
   });
 

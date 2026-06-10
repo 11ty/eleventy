@@ -159,17 +159,17 @@ async function renderShortcodeFn(fn, data) {
  * string (or file) inside of another template. {@link https://v3.11ty.dev/docs/plugins/render/}
  *
  * @since 1.0.0
- * @param {module:11ty/eleventy/UserConfig} eleventyConfig - User-land configuration instance.
+ * @param {module:11ty/eleventy/UserConfig} $config - User-land configuration instance.
  * @param {object} options - Plugin options
  */
-function RenderPlugin(eleventyConfig, options = {}) {
+function RenderPlugin($config, options = {}) {
 	let templateConfig;
-	eleventyConfig.on("buildawesome.config", (tmplConfigInstance) => {
+	$config.on("buildawesome.config", (tmplConfigInstance) => {
 		templateConfig = tmplConfigInstance;
 	});
 
 	let extensionMap;
-	eleventyConfig.on("buildawesome.extensionmap", (map) => {
+	$config.on("buildawesome.extensionmap", (map) => {
 		extensionMap = map;
 	});
 
@@ -194,7 +194,7 @@ function RenderPlugin(eleventyConfig, options = {}) {
 			parse: function (tagToken, remainTokens) {
 				this.name = tagToken.name;
 
-				if (eleventyConfig.liquid.parameterParsing === "builtin") {
+				if ($config.liquid.parameterParsing === "builtin") {
 					this.orderedArgs = Liquid.parseArgumentsBuiltin(tagToken.args);
 					// note that Liquid does have a Hash class for name-based argument parsing but offers no easy to support both modes in one class
 				} else {
@@ -389,26 +389,26 @@ function RenderPlugin(eleventyConfig, options = {}) {
 	// Render strings
 	if (options.tagName) {
 		// use falsy to opt-out
-		eleventyConfig.addJavaScriptFunction(options.tagName, _renderStringShortcodeFn);
+		$config.addJavaScriptFunction(options.tagName, _renderStringShortcodeFn);
 
-		eleventyConfig.addLiquidTag(options.tagName, function (liquidEngine, extras) {
+		$config.addLiquidTag(options.tagName, function (liquidEngine, extras) {
 			return liquidTemplateTag(liquidEngine, options.tagName, extras);
 		});
 
-		eleventyConfig.addNunjucksTag(options.tagName, function (nunjucksLib) {
+		$config.addNunjucksTag(options.tagName, function (nunjucksLib) {
 			return nunjucksTemplateTag(nunjucksLib, options.tagName);
 		});
 	}
 
 	// Filter for rendering strings
 	if (options.filterName) {
-		eleventyConfig.addAsyncFilter(options.filterName, _renderStringShortcodeFn);
+		$config.addAsyncFilter(options.filterName, _renderStringShortcodeFn);
 	}
 
 	// Render File
 	// use `false` to opt-out
 	if (options.tagNameFile) {
-		eleventyConfig.addAsyncShortcode(options.tagNameFile, _renderFileShortcodeFn);
+		$config.addAsyncShortcode(options.tagNameFile, _renderFileShortcodeFn);
 	}
 }
 
@@ -460,7 +460,7 @@ class RenderManager {
 
 	// `callback` is async-friendly but requires await upstream
 	config(callback) {
-		// run an extra `function(eleventyConfig)` configuration callbacks
+		// run an extra `function($config)` configuration callbacks
 		if (callback && typeof callback === "function") {
 			return callback(this.templateConfig.userConfig);
 		}

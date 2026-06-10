@@ -32,8 +32,8 @@ test("#3807 Nunjucks cacheable should be reused when Nunjucks is the preprocesso
   let index = 0;
   let elev = new Eleventy("test/stubs-3807/", "test/stubs-3807/_site", {
     configPath: "test/stubs-3807/eleventy.config.js",
-    config(eleventyConfig) {
-      eleventyConfig.on("buildawesome.afterwatch", () => {
+    config($config) {
+      $config.on("buildawesome.afterwatch", () => {
         let {resolve} = runs[index];
         index++;
         resolve();

@@ -3,9 +3,9 @@ import Eleventy from "../src/Core.js";
 
 test("#3831 Computed Data regression", async (t) => {
   let elev = new Eleventy("test/noop", false, {
-    config(eleventyConfig) {
+    config($config) {
 
-      eleventyConfig.addTemplate("index.njk", `---
+      $config.addTemplate("index.njk", `---
 date:
   - April 1, 2025
 ---`);

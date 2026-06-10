@@ -8,10 +8,10 @@ test("#3816 amendLibrary and setLibrary together", async (t) => {
   t.plan(1);
 
   let elev = new Eleventy("test/noop", false, {
-    config(eleventyConfig) {
-      eleventyConfig.addTemplate("index.md", "# Heading");
-      eleventyConfig.setLibrary("md", markdownIt());
-      eleventyConfig.amendLibrary("md", (mdLib) => {
+    config($config) {
+      $config.addTemplate("index.md", "# Heading");
+      $config.setLibrary("md", markdownIt());
+      $config.amendLibrary("md", (mdLib) => {
         // this will only run once, t.plan is important!
         let before = mdLib.core.ruler.getRules("").length;
         mdLib.use(markdownItAbbr);

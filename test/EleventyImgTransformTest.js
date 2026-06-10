@@ -5,8 +5,8 @@ import { normalizeNewLines } from "./Util/normalizeNewLines.js";
 
 test("Default image transform with a single image", async (t) => {
   let elev = new Eleventy("./test/stubs-img-transform/single.md", "./test/stubs-img-transform/_site", {
-    config: eleventyConfig => {
-      eleventyConfig.addPlugin(eleventyImageTransformPlugin, {
+    config: $config => {
+      $config.addPlugin(eleventyImageTransformPlugin, {
 				extensions: "html",
 				dryRun: true,
 				formats: ["auto"],
@@ -24,8 +24,8 @@ test("Default image transform with a single image", async (t) => {
 
 test("Default image transform with multiple images", async (t) => {
   let elev = new Eleventy("./test/stubs-img-transform/multiple.md", "./test/stubs-img-transform/_site", {
-    config: eleventyConfig => {
-      eleventyConfig.addPlugin(eleventyImageTransformPlugin, {
+    config: $config => {
+      $config.addPlugin(eleventyImageTransformPlugin, {
 				extensions: "html",
 				dryRun: true,
 				formats: ["auto"],
@@ -44,8 +44,8 @@ test("Default image transform with multiple images", async (t) => {
 
 test("Default image transform with an ignored image", async (t) => {
   let elev = new Eleventy("./test/stubs-img-transform/ignored.md", "./test/stubs-img-transform/_site", {
-    config: eleventyConfig => {
-      eleventyConfig.addPlugin(eleventyImageTransformPlugin, {
+    config: $config => {
+      $config.addPlugin(eleventyImageTransformPlugin, {
 				extensions: "html",
 				dryRun: true,
 				formats: ["auto"],
@@ -63,8 +63,8 @@ test("Default image transform with an ignored image", async (t) => {
 
 test("Missing alt", async (t) => {
   let elev = new Eleventy("./test/stubs-img-transform/missing-alt.md", "./test/stubs-img-transform/_site", {
-    config: eleventyConfig => {
-      eleventyConfig.addPlugin(eleventyImageTransformPlugin, {
+    config: $config => {
+      $config.addPlugin(eleventyImageTransformPlugin, {
 				extensions: "html",
 				dryRun: true,
 				formats: ["auto"],

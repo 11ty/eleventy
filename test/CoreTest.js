@@ -23,11 +23,11 @@ const lodashGet = lodash.get;
 test("Eleventy, defaults inherit from config", async (t) => {
   let elev = new Eleventy();
 
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
+  let $config = new TemplateConfig();
+  await $config.init();
 
   await elev.initializeConfig();
-  let config = eleventyConfig.getConfig();
+  let config = $config.getConfig();
 
   t.truthy(elev.input);
   t.truthy(elev.outputDir);
@@ -40,11 +40,11 @@ test("Eleventy, defaults inherit from config", async (t) => {
 test("Eleventy, null output directory should default to _site", async (t) => {
   let elev = new Eleventy(".", null);
 
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
+  let $config = new TemplateConfig();
+  await $config.init();
 
   await elev.initializeConfig();
-  let config = eleventyConfig.getConfig();
+  let config = $config.getConfig();
 
   t.is(config.dir.input, ".");
   t.is(elev.input, "./");
@@ -172,8 +172,8 @@ test("Eleventy file watching (don’t watch deps of passthrough copy .js files)"
 
 test("Eleventy file watching (no JS dependencies)", async (t) => {
   let elev = new Eleventy("./test/stubs", "./test/stubs/_site", {
-    config: eleventyConfig => {
-      eleventyConfig.setWatchJavaScriptDependencies(false);
+    config: $config => {
+      $config.setWatchJavaScriptDependencies(false);
     }
   });
   elev.setFormats("njk");
@@ -463,8 +463,8 @@ test("Pagination over collection using eleventyComputed (liquid)", async (t) => 
     "./test/stubs-pagination-computed-quotes/",
     "./test/stubs-pagination-computed-quotes/_site",
     {
-      config: function (eleventyConfig) {
-        eleventyConfig.addFilter("selectRandomFromArray", (arr) => {
+      config: function ($config) {
+        $config.addFilter("selectRandomFromArray", (arr) => {
           t.true(Array.isArray(arr));
           t.deepEqual(arr, ["The person that shared this is awesome"]);
           return arr[0];
@@ -486,8 +486,8 @@ test("Pagination over collection using eleventyComputed (njk)", async (t) => {
     "./test/stubs-pagination-computed-quotes-njk/",
     "./test/stubs-pagination-computed-quotes-njk/_site",
     {
-      config: function (eleventyConfig) {
-        eleventyConfig.addFilter("selectRandomFromArray", (arr) => {
+      config: function ($config) {
+        $config.addFilter("selectRandomFromArray", (arr) => {
           t.true(Array.isArray(arr));
           t.deepEqual(arr, ["The person that shared this is awesome"]);
           return arr[0];
@@ -508,7 +508,7 @@ test("Paginated template uses proxy and global data", async (t) => {
     "./test/proxy-pagination-globaldata/",
     "./test/proxy-pagination-globaldata/_site",
     {
-      config: function (eleventyConfig) {},
+      config: function ($config) {},
     }
   );
 
@@ -523,8 +523,8 @@ test("Liquid shortcode with multiple arguments(issue #2348)", async (t) => {
   // NOTE issue #2348 was only active when you were processing multiple templates at the same time.
 
   let elev = new Eleventy("./test/stubs-2367/", "./test/stubs-2367/_site", {
-    config: function (eleventyConfig) {
-      eleventyConfig.addShortcode("simplelink", function (...args) {
+    config: function ($config) {
+      $config.addShortcode("simplelink", function (...args) {
         return JSON.stringify(args);
       });
     },
@@ -559,7 +559,7 @@ test("git getCreatedTimestamp returns undefined on nonexistent path", async (t) 
 
 test("Does pathPrefix affect page URLs", async (t) => {
   let elev = new Eleventy("./README.md", "./_site", {
-    config: function (eleventyConfig) {
+    config: function ($config) {
       return {
         pathPrefix: "/testdirectory/",
       };
@@ -669,8 +669,8 @@ test("Lodash get (for pagination data target) object key with spaces, issue #285
 
 test("Eleventy tag collection with spaces in the tag name, issue #2851", async (t) => {
   let elev = new Eleventy("./test/stubs-2851", "./test/stubs-2851/_site", {
-    config: function (eleventyConfig) {
-      eleventyConfig.dataFilterSelectors.add("collections");
+    config: function ($config) {
+      $config.dataFilterSelectors.add("collections");
     },
   });
   elev.setIsVerbose(false);
@@ -685,8 +685,8 @@ test("this.eleventy on JavaScript template functions, issue #2790", async (t) =>
   t.plan(3);
 
   let elev = new Eleventy("./test/stubs-2790", "./test/stubs-2790/_site", {
-    config: function (eleventyConfig) {
-      eleventyConfig.addJavaScriptFunction("jsfunction", function () {
+    config: function ($config) {
+      $config.addJavaScriptFunction("jsfunction", function () {
         t.truthy(this.eleventy);
         return this.eleventy.generator.split(" ")[0];
       });
@@ -699,7 +699,7 @@ test("this.eleventy on JavaScript template functions, issue #2790", async (t) =>
 
 test("Global data JS files should only execute once, issue #2753", async (t) => {
   let elev = new Eleventy("./test/stubs-2753", "./test/stubs-2753/_site", {
-    config: function (eleventyConfig) {},
+    config: function ($config) {},
   });
   let result = await elev.toJSON();
   t.deepEqual(result.length, 2);
@@ -721,7 +721,7 @@ function sortResultsBy(results, key = "content") {
 
 test("Access to raw input of file (toJSON), issue #1206", async (t) => {
   let elev = new Eleventy("./test/stubs-1206", "./test/stubs-1206/_site", {
-    config: function (eleventyConfig) {},
+    config: function ($config) {},
   });
   let results = await elev.toJSON();
   sortResultsBy(results, "content");
@@ -736,7 +736,7 @@ test("Access to raw input of file (toJSON), issue #1206", async (t) => {
 // Warning: this test writes to the file system
 test("Access to raw input of file (dryRun), issue #1206", async (t) => {
   let elev = new Eleventy("./test/stubs-1206", "./test/stubs-1206/_site", {
-    config: function (eleventyConfig) {},
+    config: function ($config) {},
   });
   elev.disableLogger();
 
@@ -755,23 +755,23 @@ test("Access to raw input of file (dryRun), issue #1206", async (t) => {
 test("{eleventy,buildawesome}.before and {eleventy,buildawesome}.after Event Arguments, directories", async (t) => {
   t.plan(12);
   let elev = new Eleventy("./test/noop/", "./test/noop/_site", {
-    config: function (eleventyConfig) {
-      eleventyConfig.on("eleventy.before", arg => {
+    config: function ($config) {
+      $config.on("eleventy.before", arg => {
         t.is(arg.inputDir, "./test/noop/");
         t.is(arg.directories.input, "./test/noop/");
         t.is(arg.directories.includes, "./test/noop/_includes/");
       })
-      eleventyConfig.on("buildawesome.before", arg => {
+      $config.on("buildawesome.before", arg => {
         t.is(arg.inputDir, "./test/noop/");
         t.is(arg.directories.input, "./test/noop/");
         t.is(arg.directories.includes, "./test/noop/_includes/");
       })
-      eleventyConfig.on("eleventy.after", arg => {
+      $config.on("eleventy.after", arg => {
         t.is(arg.inputDir, "./test/noop/");
         t.is(arg.directories.input, "./test/noop/");
         t.is(arg.directories.includes, "./test/noop/_includes/");
       })
-      eleventyConfig.on("buildawesome.after", arg => {
+      $config.on("buildawesome.after", arg => {
         t.is(arg.inputDir, "./test/noop/");
         t.is(arg.directories.input, "./test/noop/");
         t.is(arg.directories.includes, "./test/noop/_includes/");
@@ -812,10 +812,10 @@ test("buildawesome.after fires sequentially setting eventEmitterMode 'sequential
 test("setInputDirectory config method #1503", async (t) => {
   t.plan(5);
   let elev = new Eleventy("./test/noop/", "./test/noop/_site", {
-    config: function (eleventyConfig) {
-      eleventyConfig.setInputDirectory("./test/noop2/");
+    config: function ($config) {
+      $config.setInputDirectory("./test/noop2/");
 
-      eleventyConfig.on("buildawesome.before", arg => {
+      $config.on("buildawesome.before", arg => {
         t.is(arg.directories.input, "./test/noop2/");
         t.is(arg.directories.includes, "./test/noop2/_includes/");
         t.is(arg.directories.data, "./test/noop2/_data/");
@@ -831,10 +831,10 @@ test("setInputDirectory config method #1503", async (t) => {
 test("setIncludesDirectory config method #1503", async (t) => {
   t.plan(5);
   let elev = new Eleventy("./test/noop/", "./test/noop/_site", {
-    config: function (eleventyConfig) {
-      eleventyConfig.setIncludesDirectory("myincludes");
+    config: function ($config) {
+      $config.setIncludesDirectory("myincludes");
 
-      eleventyConfig.on("buildawesome.before", arg => {
+      $config.on("buildawesome.before", arg => {
         t.is(arg.directories.input, "./test/noop/");
         t.is(arg.directories.includes, "./test/noop/myincludes/");
         t.is(arg.directories.data, "./test/noop/_data/");
@@ -850,10 +850,10 @@ test("setIncludesDirectory config method #1503", async (t) => {
 test("setDataDirectory config method #1503", async (t) => {
   t.plan(5);
   let elev = new Eleventy("./test/noop/", "./test/noop/_site", {
-    config: function (eleventyConfig) {
-      eleventyConfig.setDataDirectory("data");
+    config: function ($config) {
+      $config.setDataDirectory("data");
 
-      eleventyConfig.on("buildawesome.before", arg => {
+      $config.on("buildawesome.before", arg => {
         t.is(arg.directories.input, "./test/noop/");
         t.is(arg.directories.includes, "./test/noop/_includes/");
         t.is(arg.directories.data, "./test/noop/data/");
@@ -869,10 +869,10 @@ test("setDataDirectory config method #1503", async (t) => {
 test("setLayoutsDirectory config method #1503", async (t) => {
   t.plan(5);
   let elev = new Eleventy("./test/noop/", "./test/noop/_site", {
-    config: function (eleventyConfig) {
-      eleventyConfig.setLayoutsDirectory("layouts");
+    config: function ($config) {
+      $config.setLayoutsDirectory("layouts");
 
-      eleventyConfig.on("buildawesome.before", arg => {
+      $config.on("buildawesome.before", arg => {
         t.is(arg.directories.input, "./test/noop/");
         t.is(arg.directories.includes, "./test/noop/_includes/");
         t.is(arg.directories.data, "./test/noop/_data/");
@@ -887,9 +887,9 @@ test("setLayoutsDirectory config method #1503", async (t) => {
 
 test("setInputDirectory config method #1503 in a plugin throws error", async (t) => {
   let elev = new Eleventy("./test/noop/", "./test/noop/_site", {
-    config: function (eleventyConfig) {
-      eleventyConfig.addPlugin(() => {
-        eleventyConfig.setInputDirectory("./test/noop2/");
+    config: function ($config) {
+      $config.addPlugin(() => {
+        $config.setInputDirectory("./test/noop2/");
       });
     },
   });
@@ -929,8 +929,8 @@ test("Accepts absolute paths urls for input and output and a virtual template, r
   let input = path.resolve("./test/noop/");
   let output = path.resolve("./test/noop/_site");
   let elev = new Eleventy(input, output, {
-    config: eleventyConfig => {
-      eleventyConfig.addTemplate("index.md", `# Title`)
+    config: $config => {
+      $config.addTemplate("index.md", `# Title`)
     }
   });
 
@@ -1443,16 +1443,16 @@ test("Custom Nunjucks syntax has shortcode with access to `this`, Issue #3310", 
 
 test("Related to issue 3206: Does Nunjucks throwOnUndefined variables require normalizeContext to be a lazy get", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addShortcode("customized", function(argString) {
+    config: $config => {
+      $config.addShortcode("customized", function(argString) {
         return `${this.page.url}:Custom Shortcode`;
       });
 
-      eleventyConfig.setNunjucksEnvironmentOptions({
+      $config.setNunjucksEnvironmentOptions({
         throwOnUndefined: true,
       });
 
-      eleventyConfig.addTemplate("index.html", `HELLO{% customized %}:{{ page.url }}`);
+      $config.addTemplate("index.html", `HELLO{% customized %}:{{ page.url }}`);
     }
   });
 
@@ -1463,8 +1463,8 @@ test("Related to issue 3206: Does Nunjucks throwOnUndefined variables require no
 
 test("#727: Error messaging when trying to use a missing layout", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addTemplate("index.html", `HELLO {{ page.url }}`, {
+    config: $config => {
+      $config.addTemplate("index.html", `HELLO {{ page.url }}`, {
         layout: "does-not-exist.html",
       });
     }
@@ -1478,9 +1478,9 @@ test("#727: Error messaging when trying to use a missing layout", async (t) => {
 
 test("#1419: Shortcode in a permalink", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: eleventyConfig => {
-      eleventyConfig.addShortcode("shortcode", () => "url-slug");
-      eleventyConfig.addTemplate("index.njk", "", {
+    config: $config => {
+      $config.addShortcode("shortcode", () => "url-slug");
+      $config.addTemplate("index.njk", "", {
         permalink: "/{% shortcode %}/",
       });
     }
@@ -1518,9 +1518,9 @@ test("Eleventy loader can force CommonJS mode", async (t) => {
 
 test("Truthy outputPath without a file extension now throws an error, issue #3399", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: function (eleventyConfig) {
-      // eleventyConfig.configureErrorReporting({ allowMissingExtensions: true });
-      eleventyConfig.addTemplate("index.html", "", { permalink: "foo" })
+    config: function ($config) {
+      // $config.configureErrorReporting({ allowMissingExtensions: true });
+      $config.addTemplate("index.html", "", { permalink: "foo" })
     },
   });
   elev.disableLogger();
@@ -1533,15 +1533,15 @@ You *probably* want to add a file extension to your permalink so that hosts will
 
 Learn more: https://v3.11ty.dev/docs/permalinks/#trailing-slashes
 
-This is usually but not *always* an error so if you’d like to disable this error message, add \`eleventyAllowMissingExtension: true\` somewhere in the data cascade for this template or use \`eleventyConfig.configureErrorReporting({ allowMissingExtensions: true });\` to disable this feature globally.`
+This is usually but not *always* an error so if you’d like to disable this error message, add \`eleventyAllowMissingExtension: true\` somewhere in the data cascade for this template or use \`$config.configureErrorReporting({ allowMissingExtensions: true });\` to disable this feature globally.`
   });
 });
 
 test("Truthy outputPath without a file extension can be ignored, issue #3399", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: function (eleventyConfig) {
-      // eleventyConfig.configureErrorReporting({ allowMissingExtensions: true });
-      eleventyConfig.addTemplate("index.html", "", { permalink: "foo", eleventyAllowMissingExtension: true })
+    config: function ($config) {
+      // $config.configureErrorReporting({ allowMissingExtensions: true });
+      $config.addTemplate("index.html", "", { permalink: "foo", eleventyAllowMissingExtension: true })
     },
   });
   elev.disableLogger();
@@ -1554,8 +1554,8 @@ test("Truthy outputPath without a file extension can be ignored, issue #3399", a
 
 test("Allow list for some file types without a file extension, issue #3399", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: function (eleventyConfig) {
-      eleventyConfig.addTemplate("index.html", "", { permalink: "/test/_redirects" })
+    config: function ($config) {
+      $config.addTemplate("index.html", "", { permalink: "/test/_redirects" })
     },
   });
   elev.disableLogger();
@@ -1567,9 +1567,9 @@ test("Allow list for some file types without a file extension, issue #3399", asy
 
 test("Truthy outputPath without a file extension error message is disabled, issue #3399", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: function (eleventyConfig) {
-      eleventyConfig.configureErrorReporting({ allowMissingExtensions: true });
-      eleventyConfig.addTemplate("index.html", "", { permalink: "foo" })
+    config: function ($config) {
+      $config.configureErrorReporting({ allowMissingExtensions: true });
+      $config.addTemplate("index.html", "", { permalink: "foo" })
     },
   });
   elev.disableLogger();
@@ -1580,8 +1580,8 @@ test("Truthy outputPath without a file extension error message is disabled, issu
 
 test("permalink: false outputPath new error message won’t throw an error, issue #3399", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: function (eleventyConfig) {
-      eleventyConfig.addTemplate("index.html", "", { permalink: false })
+    config: function ($config) {
+      $config.addTemplate("index.html", "", { permalink: false })
     },
   });
   elev.disableLogger();
@@ -1592,15 +1592,15 @@ test("permalink: false outputPath new error message won’t throw an error, issu
 
 test("permalink on custom template lang, issue #3619", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: function (eleventyConfig) {
-      eleventyConfig.addGlobalData("permalink", () => {
+    config: function ($config) {
+      $config.addGlobalData("permalink", () => {
         return (data) =>
           `/rewrite/${data.page.filePathStem}.${data.page.outputFileExtension}`;
       });
 
-      eleventyConfig.addTemplateFormats("scss");
+      $config.addTemplateFormats("scss");
 
-      eleventyConfig.addExtension("scss", {
+      $config.addExtension("scss", {
         outputFileExtension: "css",
         compileOptions: {
     			permalink(inputContent, inputPath) {
@@ -1631,7 +1631,7 @@ test("permalink on custom template lang, issue #3619", async (t) => {
         },
       });
 
-      eleventyConfig.addTemplate("index.scss", `html {
+      $config.addTemplate("index.scss", `html {
   color: red;
 }`)
     },
@@ -1647,8 +1647,8 @@ test("permalink on custom template lang, issue #3619", async (t) => {
 
 test("Template data throws error when tags is not an Array or String #1791", async (t) => {
   let elev = new Eleventy("./test/noop/", "./test/noop/_site", {
-    config: function (eleventyConfig) {
-      eleventyConfig.addTemplate("index.html", "", {
+    config: function ($config) {
+      $config.addTemplate("index.html", "", {
         tags: {"one": 1, "two": 2}
       });
     },
@@ -1663,10 +1663,10 @@ test("Template data throws error when tags is not an Array or String #1791", asy
 
 test("sass docs on 11ty.dev, issue #408", async (t) => {
   let elev = new Eleventy("./test/stubs-408-sass/", undefined, {
-    config: function (eleventyConfig) {
-      eleventyConfig.addTemplateFormats("scss");
+    config: function ($config) {
+      $config.addTemplateFormats("scss");
 
-      eleventyConfig.addExtension("scss", {
+      $config.addExtension("scss", {
         outputFileExtension: "css",
 
         // opt-out of Eleventy Layouts
@@ -1717,9 +1717,9 @@ test("sass docs on 11ty.dev, issue #408", async (t) => {
 
 test("Use a date object for `date`, issue #3022", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: function (eleventyConfig) {
-      eleventyConfig.dataFilterSelectors.add("page.date");
-      eleventyConfig.addTemplate("index.html", "", { date: new Date() })
+    config: function ($config) {
+      $config.dataFilterSelectors.add("page.date");
+      $config.addTemplate("index.html", "", { date: new Date() })
     },
   });
   elev.disableLogger();
@@ -1731,9 +1731,9 @@ test("Use a date object for `date`, issue #3022", async (t) => {
 
 test("Use a date object for `date` (js object front matter), issue #3022", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: function (eleventyConfig) {
-      eleventyConfig.dataFilterSelectors.add("page.date");
-      eleventyConfig.addTemplate("index.html", `---js
+    config: function ($config) {
+      $config.dataFilterSelectors.add("page.date");
+      $config.addTemplate("index.html", `---js
 {
   date: new Date(),
 }
@@ -1749,9 +1749,9 @@ test("Use a date object for `date` (js object front matter), issue #3022", async
 
 test("Use a date object for `date` (js front matter), issue #3022", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    config: function (eleventyConfig) {
-      eleventyConfig.dataFilterSelectors.add("page.date");
-      eleventyConfig.addTemplate("index.html", `---js
+    config: function ($config) {
+      $config.dataFilterSelectors.add("page.date");
+      $config.addTemplate("index.html", `---js
 let date = new Date();
 ---`);
     },
@@ -1766,8 +1766,8 @@ let date = new Date();
 test("Cleaner constructor args #3880", async (t) => {
   let elev = new Eleventy({
     input: "./test/stubs-virtual/",
-    config: eleventyConfig => {
-      eleventyConfig.addTemplate("index.md", `# Title`)
+    config: $config => {
+      $config.addTemplate("index.md", `# Title`)
     }
   });
 

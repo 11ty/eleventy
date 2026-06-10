@@ -11,19 +11,19 @@ import TemplateEngineManager from "../src/Engines/TemplateEngineManager.js";
 import TemplateData from "../src/Data/TemplateData.js";
 
 export async function getTemplateConfigInstance(configObj, dirs, configObjOverride = undefined) {
-	let eleventyConfig;
+	let $config;
 	if(configObj instanceof TemplateConfig) {
-		eleventyConfig = configObj;
+		$config = configObj;
 		configObj = undefined;
 
 		if(!(dirs instanceof ProjectDirectories)) {
 			throw new Error("Testing error: second argument to getTemplateConfigInstance must be a ProjectDirectories instance when the first argument is a TemplateConfig instance.")
 		}
 	} else {
-		eleventyConfig = new TemplateConfig();
+		$config = new TemplateConfig();
 	}
 
-	eleventyConfig.setProjectUsingEsm(true);
+	$config.setProjectUsingEsm(true);
 
 	if(!(dirs instanceof ProjectDirectories)) {
 		dirs = new ProjectDirectories();
@@ -33,11 +33,11 @@ export async function getTemplateConfigInstance(configObj, dirs, configObjOverri
 		dirs.setViaConfigObject(configObj?.dir || {});
 	}
 
-	eleventyConfig.setDirectories(dirs);
+	$config.setDirectories(dirs);
 
-	await eleventyConfig.init(configObjOverride || configObj); // overrides
+	await $config.init(configObjOverride || configObj); // overrides
 
-	return eleventyConfig;
+	return $config;
 }
 
 export async function getTemplateConfigInstanceCustomCallback(dirObject, configCallback) {
@@ -48,10 +48,10 @@ export async function getTemplateConfigInstanceCustomCallback(dirObject, configC
 	let dirs = new ProjectDirectories();
 	dirs.setViaConfigObject(dirObject);
 
-	let eleventyConfig = await getTemplateConfigInstance(tmplCfg, dirs, {
+	let $config = await getTemplateConfigInstance(tmplCfg, dirs, {
 		dir: dirObject
 	});
-	return eleventyConfig;
+	return $config;
 }
 
 export function getTemplateWriterInstance(formats, templateConfig) {

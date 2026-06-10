@@ -6,14 +6,14 @@ import { getTemplateConfigInstance, getTemplateConfigInstanceCustomCallback, get
 /* .eleventyignore and .gitignore combos */
 
 test("Get ignores (no .eleventyignore no .gitignore)", async (t) => {
-  let eleventyConfig = await getTemplateConfigInstance({
+  let $config = await getTemplateConfigInstance({
     dir: {
       input: "test/stubs/ignore1",
       output: "test/stubs/ignore1/_site"
     }
   });
 
-  let { eleventyFiles: evf } = getEleventyFilesInstance([], eleventyConfig);
+  let { eleventyFiles: evf } = getEleventyFilesInstance([], $config);
   evf._setLocalPathRoot("./test/stubs/ignorelocalroot");
 
   t.deepEqual(evf.getIgnores(), [
@@ -28,14 +28,14 @@ test("Get ignores (no .eleventyignore no .gitignore)", async (t) => {
 });
 
 test("Get ignores (no .eleventyignore)", async (t) => {
-  let eleventyConfig = await getTemplateConfigInstance({
+  let $config = await getTemplateConfigInstance({
     dir: {
       input: "test/stubs/ignore2",
       output: "test/stubs/ignore2/_site"
     }
   });
 
-  let { eleventyFiles: evf } = getEleventyFilesInstance([], eleventyConfig);
+  let { eleventyFiles: evf } = getEleventyFilesInstance([], $config);
   evf._setLocalPathRoot("./test/stubs/ignorelocalrootgitignore");
 
   t.deepEqual(evf.getIgnores(), [
@@ -51,14 +51,14 @@ test("Get ignores (no .eleventyignore)", async (t) => {
 });
 
 test("Get ignores (no .eleventyignore, using setUseGitIgnore(false))", async (t) => {
-  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+  let $config = await getTemplateConfigInstanceCustomCallback({
     input: "test/stubs/ignore2",
     output: "test/stubs/ignore2/_site",
-  }, function(eleventyConfig) {
-    eleventyConfig.setUseGitIgnore(false);
+  }, function($config) {
+    $config.setUseGitIgnore(false);
   });
 
-  let { eleventyFiles: evf } = getEleventyFilesInstance([], eleventyConfig);
+  let { eleventyFiles: evf } = getEleventyFilesInstance([], $config);
   evf._setLocalPathRoot("./test/stubs/ignorelocalroot");
 
   t.deepEqual(evf.getIgnores(), [
@@ -73,14 +73,14 @@ test("Get ignores (no .eleventyignore, using setUseGitIgnore(false))", async (t)
 });
 
 test("Get ignores (no .gitignore)", async (t) => {
-  let eleventyConfig = await getTemplateConfigInstance({
+  let $config = await getTemplateConfigInstance({
     dir: {
       input: "test/stubs/ignore3",
       output: "test/stubs/ignore3/_site"
     }
   });
 
-  let { eleventyFiles: evf } = getEleventyFilesInstance([], eleventyConfig);
+  let { eleventyFiles: evf } = getEleventyFilesInstance([], $config);
   evf._setLocalPathRoot("./test/stubs/ignorelocalroot");
 
   t.deepEqual(evf.getIgnores(), [
@@ -97,14 +97,14 @@ test("Get ignores (no .gitignore)", async (t) => {
 });
 
 test("Get ignores (project .eleventyignore and root .gitignore)", async (t) => {
-  let eleventyConfig = await getTemplateConfigInstance({
+  let $config = await getTemplateConfigInstance({
     dir: {
       input: "test/stubs/ignore4",
       output: "test/stubs/ignore4/_site"
     }
   });
 
-  let { eleventyFiles: evf } = getEleventyFilesInstance([], eleventyConfig);
+  let { eleventyFiles: evf } = getEleventyFilesInstance([], $config);
   evf._setLocalPathRoot("./test/stubs/ignorelocalrootgitignore");
 
   t.deepEqual(evf.getIgnores(), [
@@ -122,14 +122,14 @@ test("Get ignores (project .eleventyignore and root .gitignore)", async (t) => {
 });
 
 test("Get ignores (project .eleventyignore and root .gitignore, using setUseGitIgnore(false))", async (t) => {
-	let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+	let $config = await getTemplateConfigInstanceCustomCallback({
 		input: "test/stubs/ignore4",
 		output: "test/stubs/ignore4/_site",
-  }, function(eleventyConfig) {
-    eleventyConfig.setUseGitIgnore(false);
+  }, function($config) {
+    $config.setUseGitIgnore(false);
   });
 
-  let { eleventyFiles: evf } = getEleventyFilesInstance([], eleventyConfig);
+  let { eleventyFiles: evf } = getEleventyFilesInstance([], $config);
 
   evf._setLocalPathRoot("./test/stubs/ignorelocalrootgitignore");
 
@@ -147,14 +147,14 @@ test("Get ignores (project .eleventyignore and root .gitignore, using setUseGitI
 });
 
 test("Get ignores (no .eleventyignore  .gitignore exists but empty)", async (t) => {
-  let eleventyConfig = await getTemplateConfigInstance({
+  let $config = await getTemplateConfigInstance({
     dir: {
       input: "test/stubs/ignore5",
       output: "test/stubs/ignore5/_site"
     }
   });
 
-  let { eleventyFiles: evf } = getEleventyFilesInstance([], eleventyConfig);
+  let { eleventyFiles: evf } = getEleventyFilesInstance([], $config);
 
   evf._setLocalPathRoot("./test/stubs/ignorelocalroot");
 
@@ -170,14 +170,14 @@ test("Get ignores (no .eleventyignore  .gitignore exists but empty)", async (t) 
 });
 
 test("Get ignores (both .eleventyignore and .gitignore exists, but .gitignore is empty)", async (t) => {
-  let eleventyConfig = await getTemplateConfigInstance({
+  let $config = await getTemplateConfigInstance({
     dir: {
       input: "test/stubs/ignore6",
       output: "test/stubs/ignore6/_site"
     }
   });
 
-  let { eleventyFiles: evf } = getEleventyFilesInstance([], eleventyConfig);
+  let { eleventyFiles: evf } = getEleventyFilesInstance([], $config);
   evf._setLocalPathRoot("./test/stubs/ignorelocalroot");
 
   t.deepEqual(evf.getIgnores(), [
@@ -194,16 +194,16 @@ test("Get ignores (both .eleventyignore and .gitignore exists, but .gitignore is
 });
 
 test("Bad expected output, this indicates a bug upstream in a dependency (update, was fixed in fast-glob@3.3.3).  Input to 'src' and empty includes dir (issue #403, full paths in eleventyignore)", async (t) => {
-	let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+	let $config = await getTemplateConfigInstanceCustomCallback({
 		input: "test/stubs-403",
 		output: "_site",
 		includes: "",
 		data: false,
-  }, function(eleventyConfig) {
-    eleventyConfig.setUseGitIgnore(false);
+  }, function($config) {
+    $config.setUseGitIgnore(false);
   });
 
-  let { eleventyFiles: evf } = getEleventyFilesInstance(["liquid"], eleventyConfig);
+  let { eleventyFiles: evf } = getEleventyFilesInstance(["liquid"], $config);
   evf._setEleventyIgnoreContent(TemplatePath.absolutePath("test/stubs-403/_includes") + "/**");
   evf.init(); // duplicate init
 
@@ -216,16 +216,16 @@ test("Bad expected output, this indicates a bug upstream in a dependency (update
 });
 
 test("Workaround for Bad expected output, this indicates a bug upstream in a dependency.  Input to 'src' and empty includes dir (issue #403, full paths in eleventyignore)", async (t) => {
-	let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+	let $config = await getTemplateConfigInstanceCustomCallback({
 		input: "test/stubs-403",
 		output: "_site",
 		includes: "",
 		data: false,
-  }, function(eleventyConfig) {
-    eleventyConfig.setUseGitIgnore(false);
+  }, function($config) {
+    $config.setUseGitIgnore(false);
   });
 
-  let { eleventyFiles: evf } = getEleventyFilesInstance(["liquid"], eleventyConfig);
+  let { eleventyFiles: evf } = getEleventyFilesInstance(["liquid"], $config);
   evf._setEleventyIgnoreContent("./test/stubs-403/_includes/**");
   evf.init(); // duplicate init
 
@@ -233,16 +233,16 @@ test("Workaround for Bad expected output, this indicates a bug upstream in a dep
 });
 
 test("Issue #403: all .eleventyignores should be relative paths not absolute paths", async (t) => {
-	let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+	let $config = await getTemplateConfigInstanceCustomCallback({
 		input: "test/stubs-403",
 		output: "_site",
 		includes: "",
 		data: false,
-  }, function(eleventyConfig) {
-    eleventyConfig.setUseGitIgnore(false);
+  }, function($config) {
+    $config.setUseGitIgnore(false);
   });
 
-  let { eleventyFiles: evf } = getEleventyFilesInstance(["liquid"], eleventyConfig);
+  let { eleventyFiles: evf } = getEleventyFilesInstance(["liquid"], $config);
 
   let globs = await evf.getFileGlobs();
   t.is(
@@ -254,14 +254,14 @@ test("Issue #403: all .eleventyignores should be relative paths not absolute pat
 });
 
 test("Same input and output directories, issues #186 and #1129", async (t) => {
-	let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+	let $config = await getTemplateConfigInstanceCustomCallback({
 		input: "test/stubs",
 		output: "",
-  }, function(eleventyConfig) {
-    eleventyConfig.setUseGitIgnore(false);
+  }, function($config) {
+    $config.setUseGitIgnore(false);
   });
 
-  let { eleventyFiles: evf } = getEleventyFilesInstance([], eleventyConfig);
+  let { eleventyFiles: evf } = getEleventyFilesInstance([], $config);
 
   t.deepEqual(
     evf.getIgnores().filter((entry) => entry.indexOf("_site") > -1),
@@ -270,15 +270,15 @@ test("Same input and output directories, issues #186 and #1129", async (t) => {
 });
 
 test("Single input file is in the output directory, issues #186", async (t) => {
-  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+  let $config = await getTemplateConfigInstanceCustomCallback({
     input: "test/stubs",
     output: "",
     includes: "",
-  }, function(eleventyConfig) {
-    eleventyConfig.setUseGitIgnore(false);
+  }, function($config) {
+    $config.setUseGitIgnore(false);
   });
 
-  let { eleventyFiles: evf } = getEleventyFilesInstance(["njk"], eleventyConfig);
+  let { eleventyFiles: evf } = getEleventyFilesInstance(["njk"], $config);
 
   t.deepEqual(
     evf.getIgnores().filter((entry) => entry.indexOf("_site") > -1),
@@ -287,14 +287,14 @@ test("Single input file is in the output directory, issues #186", async (t) => {
 });
 
 test("De-duplicated ignores", async (t) => {
-  let eleventyConfig = await getTemplateConfigInstance({
+  let $config = await getTemplateConfigInstance({
     dir: {
       input: "test/stubs/ignore-dedupe",
       output: "test/stubs/ignore-dedupe/_site"
     }
   });
 
-  let { eleventyFiles: evf } = getEleventyFilesInstance([], eleventyConfig);
+  let { eleventyFiles: evf } = getEleventyFilesInstance([], $config);
 
   evf._setLocalPathRoot("./test/stubs/ignore-dedupe");
 
