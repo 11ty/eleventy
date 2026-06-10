@@ -403,17 +403,17 @@ export class Files {
 	}
 
 	/* For `eleventy --watch` */
-	async getGlobWatcherTemplateDataFiles() {
-		let templateData = this.templateData;
-		return await templateData.getTemplateDataFileGlob();
+	getGlobWatcherTemplateDataFiles() {
+		return this.templateData.getTemplateDataFileGlob();
 	}
 
 	/* For `eleventy --watch` */
-	// TODO this isn’t great but reduces complexity avoiding using TemplateData:getLocalDataPaths for each template in the cache
+	// Improvement: Move this up the pipeline and feed into the ExistsCache to alleviate TemplateData checks
 	async getWatcherTemplateJavaScriptDataFiles() {
 		let globs = this.templateData.getTemplateJavaScriptDataFileGlob();
 		let bench = this.aggregateBench.get("Searching the file system (watching)");
 		bench.before();
+
 		let results = TemplatePath.addLeadingDotSlashArray(
 			await this.fileSystemSearch.search("js-dependencies", globs, {
 				ignore: [
@@ -425,6 +425,7 @@ export class Files {
 			}),
 		);
 		bench.after();
+
 		return results;
 	}
 

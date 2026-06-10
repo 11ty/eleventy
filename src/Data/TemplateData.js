@@ -33,7 +33,7 @@ class TemplateData {
 	// Would be nice if the priorities here matched (see also FilePathUtil used by config file paths)
 
 	// (json not included) priority is reverse order
-	#eligiblePrioritizedExtensions = [
+	#eligibleJavaScriptExtensions = [
 		...(isTypeScriptSupported() ? ["ts", "cts", "mts"] : []),
 		"js",
 		"cjs",
@@ -195,7 +195,7 @@ class TemplateData {
 	}
 
 	// This is a backwards compatibility helper with the old `jsDataFileSuffix` configuration API
-	getDataFileSuffixes() {
+	getConfigurationDataFileSuffixes() {
 		// New API
 		if (Array.isArray(this.config.dataFileSuffixes)) {
 			return this.config.dataFileSuffixes;
@@ -212,11 +212,10 @@ class TemplateData {
 		return []; // if both of these entries are set to false, use no files
 	}
 
-	// This is used exclusively for --watch and --serve chokidar targets
-	async getTemplateDataFileGlob() {
-		let suffixes = this.getDataFileSuffixes();
-		let globSuffixes = new Set();
-		globSuffixes.add("json"); // covers .data.json too
+	getAllDataFileSuffixes() {
+		let suffixes = this.getConfigurationDataFileSuffixes();
+		let suffixesWithExtensions = new Set();
+		suffixesWithExtensions.add("json"); // covers .data.json too
 
 		// Typically using [ '.data', '' ] suffixes to find data files
 		for (let suffix of suffixes) {
@@ -229,14 +228,14 @@ class TemplateData {
 				suffix = suffix.slice(1);
 			}
 
-			globSuffixes.add(`${suffix || ""}.mjs`);
-			globSuffixes.add(`${suffix || ""}.cjs`);
-			globSuffixes.add(`${suffix || ""}.js`);
+			suffixesWithExtensions.add(`${suffix || ""}.mjs`);
+			suffixesWithExtensions.add(`${suffix || ""}.cjs`);
+			suffixesWithExtensions.add(`${suffix || ""}.js`);
 
 			if (isTypeScriptSupported()) {
-				globSuffixes.add(`${suffix || ""}.mts`);
-				globSuffixes.add(`${suffix || ""}.cts`);
-				globSuffixes.add(`${suffix || ""}.ts`);
+				suffixesWithExtensions.add(`${suffix || ""}.mts`);
+				suffixesWithExtensions.add(`${suffix || ""}.cts`);
+				suffixesWithExtensions.add(`${suffix || ""}.ts`);
 			}
 		}
 
@@ -247,29 +246,40 @@ class TemplateData {
 					extension = extension.slice(1);
 				}
 
-				globSuffixes.add(extension); // covers .data.{extension} too
+				suffixesWithExtensions.add(extension); // covers .data.{extension} too
 			}
 		}
 
+		return suffixesWithExtensions;
+	}
+
+	// This is used exclusively for --watch and --serve chokidar targets
+	getTemplateDataFileGlob() {
+		let suffixesSet = this.getAllDataFileSuffixes();
+
 		let paths = [];
-		if (globSuffixes.size > 0) {
-			paths.push(`${this.inputDir}**/*.{${Array.from(globSuffixes).join(",")}}`);
+		if (suffixesSet.size > 0) {
+			paths.push(`${this.inputDir}**/*.{${Array.from(suffixesSet).join(",")}}`);
 		}
 
 		return TemplatePath.addLeadingDotSlashArray(paths);
 	}
 
 	// For spidering dependencies
-	// TODO Can we reuse getTemplateDataFileGlob instead? Maybe just filter off the .json files before scanning for dependencies
 	getTemplateJavaScriptDataFileGlob() {
-		let paths = [];
-		let suffixes = this.getDataFileSuffixes();
-		for (let suffix of suffixes) {
-			if (suffix) {
-				// TODO this check is purely for backwards compat and I kinda feel like it shouldn’t be here
-				// paths.push(`${this.inputDir}/**/*${suffix || ""}.cjs`); // Same as above
-				paths.push(`${this.inputDir}**/*${suffix || ""}.js`); // TODO typescript?
+		let suffixes = Array.from(this.getAllDataFileSuffixes()).filter((entry) => {
+			let lastDotIndex = entry.lastIndexOf(".");
+			if (lastDotIndex === -1) {
+				return false;
 			}
+			let ext = entry.slice(lastDotIndex + 1);
+			// prune out any non-JS extensions
+			return this.#eligibleJavaScriptExtensions.includes(ext);
+		});
+
+		let paths = [];
+		if (suffixes.length > 0) {
+			paths.push(`${this.inputDir}**/*.{${suffixes.join(",")}}`);
 		}
 
 		return TemplatePath.addLeadingDotSlashArray(paths);
@@ -464,6 +474,7 @@ class TemplateData {
 		}
 
 		// Filter out files we know don't exist to avoid overhead for checking
+		// June 2026 tested improvement from short-circuiting first match for any file filename.11tydata.cjs would skip remaining filename.11tydata.*
 		localDataPaths = localDataPaths.filter((path) => {
 			return this.exists(path);
 		});
@@ -591,7 +602,7 @@ class TemplateData {
 	async getDataValue(path) {
 		let extension = TemplatePath.getExtension(path);
 
-		if (this.#eligiblePrioritizedExtensions.includes(extension)) {
+		if (this.#eligibleJavaScriptExtensions.includes(extension)) {
 			// JS data file or require’d JSON (no preprocessing needed)
 			if (!this.exists(path)) {
 				return {};
@@ -661,7 +672,7 @@ class TemplateData {
 	}
 
 	_addBaseToPaths(paths, base, extensions, nonEmptySuffixesOnly = false) {
-		let suffixes = this.getDataFileSuffixes();
+		let suffixes = this.getConfigurationDataFileSuffixes();
 
 		for (let suffix of suffixes) {
 			suffix = suffix || "";
@@ -672,7 +683,7 @@ class TemplateData {
 
 			// data suffix
 			if (suffix) {
-				for (let extension of this.#eligiblePrioritizedExtensions) {
+				for (let extension of this.#eligibleJavaScriptExtensions) {
 					paths.push(base + suffix + "." + extension);
 				}
 			}
@@ -694,7 +705,7 @@ class TemplateData {
 			let fileNameNoExt = this.extensionMap.removeTemplateExtension(parsed.base);
 
 			// default dataSuffix: .data, is appended in _addBaseToPaths
-			debug("Using %o suffixes to find data files.", this.getDataFileSuffixes());
+			debug("Using %o suffixes to find data files.", this.getConfigurationDataFileSuffixes());
 
 			// Template data file paths
 			let filePathNoExt = parsed.dir + "/" + fileNameNoExt;

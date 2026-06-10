@@ -326,7 +326,7 @@ export default class Core extends CoreFs {
 		this.watchTargets.add(this.eleventyConfig.getActiveConfigPath());
 
 		// Template and Directory Data Files
-		this.watchTargets.add(await this.eleventyFiles.getGlobWatcherTemplateDataFiles());
+		this.watchTargets.add(this.eleventyFiles.getGlobWatcherTemplateDataFiles());
 
 		let benchmark = this.watcherBench.get(
 			"Watching JavaScript Dependencies (disable with `eleventyConfig.setWatchJavaScriptDependencies(false)`)",
