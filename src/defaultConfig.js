@@ -80,7 +80,7 @@ export default function (config) {
 
 		// Renamed from `jsDataFileSuffix` in 2.0 (and swapped to an Array)
 		// If you remove "" we won’t look for dir/dir.json or file.json
-		dataFileSuffixes: [".data", ""],
+		dataFileSuffixes: [".data", ".11tydata", ""],
 
 		// "index" will look for `directory/index.*` directory data files instead of `directory/directory.*`
 		dataFileDirBaseNameOverride: false,

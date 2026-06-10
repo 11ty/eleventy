@@ -473,6 +473,15 @@ test("Local template data file import (without a global data json)", async (t) =
   let data = await tmpl.getData();
   t.deepEqual(await dataObj.getLocalDataPaths(tmpl.getInputPath()), [
     "./test/stubs/stubs.json",
+
+    "./test/stubs/stubs.11tydata.json",
+    "./test/stubs/stubs.11tydata.mjs",
+    "./test/stubs/stubs.11tydata.cjs",
+    "./test/stubs/stubs.11tydata.js",
+    "./test/stubs/stubs.11tydata.mts",
+    "./test/stubs/stubs.11tydata.cts",
+    "./test/stubs/stubs.11tydata.ts",
+
     "./test/stubs/stubs.data.json",
     "./test/stubs/stubs.data.mjs",
     "./test/stubs/stubs.data.cjs",
@@ -482,6 +491,15 @@ test("Local template data file import (without a global data json)", async (t) =
     "./test/stubs/stubs.data.ts",
 
     "./test/stubs/component/component.json",
+
+    "./test/stubs/component/component.11tydata.json",
+    "./test/stubs/component/component.11tydata.mjs",
+    "./test/stubs/component/component.11tydata.cjs",
+    "./test/stubs/component/component.11tydata.js",
+    "./test/stubs/component/component.11tydata.mts",
+    "./test/stubs/component/component.11tydata.cts",
+    "./test/stubs/component/component.11tydata.ts",
+
     "./test/stubs/component/component.data.json",
     "./test/stubs/component/component.data.mjs",
     "./test/stubs/component/component.data.cjs",
@@ -517,6 +535,15 @@ test("Local template data file import (two subdirectories deep)", async (t) => {
 
   t.deepEqual(await dataObj.getLocalDataPaths(tmpl.getInputPath()), [
     "./test/stubs/stubs.json",
+
+    "./test/stubs/stubs.11tydata.json",
+    "./test/stubs/stubs.11tydata.mjs",
+    "./test/stubs/stubs.11tydata.cjs",
+    "./test/stubs/stubs.11tydata.js",
+    "./test/stubs/stubs.11tydata.mts",
+    "./test/stubs/stubs.11tydata.cts",
+    "./test/stubs/stubs.11tydata.ts",
+
     "./test/stubs/stubs.data.json",
     "./test/stubs/stubs.data.mjs",
     "./test/stubs/stubs.data.cjs",
@@ -526,6 +553,15 @@ test("Local template data file import (two subdirectories deep)", async (t) => {
     "./test/stubs/stubs.data.ts",
 
     "./test/stubs/firstdir/firstdir.json",
+
+    "./test/stubs/firstdir/firstdir.11tydata.json",
+    "./test/stubs/firstdir/firstdir.11tydata.mjs",
+    "./test/stubs/firstdir/firstdir.11tydata.cjs",
+    "./test/stubs/firstdir/firstdir.11tydata.js",
+    "./test/stubs/firstdir/firstdir.11tydata.mts",
+    "./test/stubs/firstdir/firstdir.11tydata.cts",
+    "./test/stubs/firstdir/firstdir.11tydata.ts",
+
     "./test/stubs/firstdir/firstdir.data.json",
     "./test/stubs/firstdir/firstdir.data.mjs",
     "./test/stubs/firstdir/firstdir.data.cjs",
@@ -535,6 +571,15 @@ test("Local template data file import (two subdirectories deep)", async (t) => {
     "./test/stubs/firstdir/firstdir.data.ts",
 
     "./test/stubs/firstdir/seconddir/seconddir.json",
+
+    "./test/stubs/firstdir/seconddir/seconddir.11tydata.json",
+    "./test/stubs/firstdir/seconddir/seconddir.11tydata.mjs",
+    "./test/stubs/firstdir/seconddir/seconddir.11tydata.cjs",
+    "./test/stubs/firstdir/seconddir/seconddir.11tydata.js",
+    "./test/stubs/firstdir/seconddir/seconddir.11tydata.mts",
+    "./test/stubs/firstdir/seconddir/seconddir.11tydata.cts",
+    "./test/stubs/firstdir/seconddir/seconddir.11tydata.ts",
+
     "./test/stubs/firstdir/seconddir/seconddir.data.json",
     "./test/stubs/firstdir/seconddir/seconddir.data.mjs",
     "./test/stubs/firstdir/seconddir/seconddir.data.cjs",
@@ -544,6 +589,15 @@ test("Local template data file import (two subdirectories deep)", async (t) => {
     "./test/stubs/firstdir/seconddir/seconddir.data.ts",
 
     "./test/stubs/firstdir/seconddir/component.json",
+
+    "./test/stubs/firstdir/seconddir/component.11tydata.json",
+    "./test/stubs/firstdir/seconddir/component.11tydata.mjs",
+    "./test/stubs/firstdir/seconddir/component.11tydata.cjs",
+    "./test/stubs/firstdir/seconddir/component.11tydata.js",
+    "./test/stubs/firstdir/seconddir/component.11tydata.mts",
+    "./test/stubs/firstdir/seconddir/component.11tydata.cts",
+    "./test/stubs/firstdir/seconddir/component.11tydata.ts",
+
     "./test/stubs/firstdir/seconddir/component.data.json",
     "./test/stubs/firstdir/seconddir/component.data.mjs",
     "./test/stubs/firstdir/seconddir/component.data.cjs",
@@ -578,6 +632,15 @@ test("Posts inherits local JSON, layouts", async (t) => {
   let localDataPaths = await dataObj.getLocalDataPaths(tmpl.getInputPath());
   t.deepEqual(localDataPaths, [
     "./test/stubs/stubs.json",
+
+    "./test/stubs/stubs.11tydata.json",
+    "./test/stubs/stubs.11tydata.mjs",
+    "./test/stubs/stubs.11tydata.cjs",
+    "./test/stubs/stubs.11tydata.js",
+    "./test/stubs/stubs.11tydata.mts",
+    "./test/stubs/stubs.11tydata.cts",
+    "./test/stubs/stubs.11tydata.ts",
+
     "./test/stubs/stubs.data.json",
     "./test/stubs/stubs.data.mjs",
     "./test/stubs/stubs.data.cjs",
@@ -587,6 +650,15 @@ test("Posts inherits local JSON, layouts", async (t) => {
     "./test/stubs/stubs.data.ts",
 
     "./test/stubs/posts/posts.json",
+
+    "./test/stubs/posts/posts.11tydata.json",
+    "./test/stubs/posts/posts.11tydata.mjs",
+    "./test/stubs/posts/posts.11tydata.cjs",
+    "./test/stubs/posts/posts.11tydata.js",
+    "./test/stubs/posts/posts.11tydata.mts",
+    "./test/stubs/posts/posts.11tydata.cts",
+    "./test/stubs/posts/posts.11tydata.ts",
+
     "./test/stubs/posts/posts.data.json",
     "./test/stubs/posts/posts.data.mjs",
     "./test/stubs/posts/posts.data.cjs",
@@ -596,6 +668,15 @@ test("Posts inherits local JSON, layouts", async (t) => {
     "./test/stubs/posts/posts.data.ts",
 
     "./test/stubs/posts/post1.json",
+
+    "./test/stubs/posts/post1.11tydata.json",
+    "./test/stubs/posts/post1.11tydata.mjs",
+    "./test/stubs/posts/post1.11tydata.cjs",
+    "./test/stubs/posts/post1.11tydata.js",
+    "./test/stubs/posts/post1.11tydata.mts",
+    "./test/stubs/posts/post1.11tydata.cts",
+    "./test/stubs/posts/post1.11tydata.ts",
+
     "./test/stubs/posts/post1.data.json",
     "./test/stubs/posts/post1.data.mjs",
     "./test/stubs/posts/post1.data.cjs",
@@ -645,6 +726,15 @@ test("Template and folder name are the same, make sure data imports work ok", as
   let localDataPaths = await dataObj.getLocalDataPaths(tmpl.getInputPath());
   t.deepEqual(localDataPaths, [
     "./test/stubs/stubs.json",
+
+    "./test/stubs/stubs.11tydata.json",
+    "./test/stubs/stubs.11tydata.mjs",
+    "./test/stubs/stubs.11tydata.cjs",
+    "./test/stubs/stubs.11tydata.js",
+    "./test/stubs/stubs.11tydata.mts",
+    "./test/stubs/stubs.11tydata.cts",
+    "./test/stubs/stubs.11tydata.ts",
+
     "./test/stubs/stubs.data.json",
     "./test/stubs/stubs.data.mjs",
     "./test/stubs/stubs.data.cjs",
@@ -654,6 +744,15 @@ test("Template and folder name are the same, make sure data imports work ok", as
     "./test/stubs/stubs.data.ts",
 
     "./test/stubs/posts/posts.json",
+
+    "./test/stubs/posts/posts.11tydata.json",
+    "./test/stubs/posts/posts.11tydata.mjs",
+    "./test/stubs/posts/posts.11tydata.cjs",
+    "./test/stubs/posts/posts.11tydata.js",
+    "./test/stubs/posts/posts.11tydata.mts",
+    "./test/stubs/posts/posts.11tydata.cts",
+    "./test/stubs/posts/posts.11tydata.ts",
+
     "./test/stubs/posts/posts.data.json",
     "./test/stubs/posts/posts.data.mjs",
     "./test/stubs/posts/posts.data.cjs",

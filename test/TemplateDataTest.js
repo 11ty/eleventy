@@ -141,8 +141,8 @@ test("Get local data async JS", async (t) => {
   let withLocalData = await testGetLocalData(dataObj, "./test/stubs/component-async/component.njk");
 
   // from the js file
-  t.is(withLocalData.localdatakeyfromjs, "howdydoody");
   t.is(withLocalData.localdatakeyfromcjs, "common-js-howdydoody");
+  t.is(withLocalData.localdatakeyfromjs, "howdydoody");
 });
 
 test("addLocalData() doesn’t exist but doesn’t fail (template file does exist)", async (t) => {
@@ -379,6 +379,15 @@ test("getLocalDataPaths", async (t) => {
 
   t.deepEqual(paths, [
     "./test/stubs/stubs.json",
+
+    "./test/stubs/stubs.11tydata.json",
+    "./test/stubs/stubs.11tydata.mjs",
+    "./test/stubs/stubs.11tydata.cjs",
+    "./test/stubs/stubs.11tydata.js",
+    "./test/stubs/stubs.11tydata.mts",
+    "./test/stubs/stubs.11tydata.cts",
+    "./test/stubs/stubs.11tydata.ts",
+
     "./test/stubs/stubs.data.json",
     "./test/stubs/stubs.data.mjs",
     "./test/stubs/stubs.data.cjs",
@@ -388,6 +397,15 @@ test("getLocalDataPaths", async (t) => {
     "./test/stubs/stubs.data.ts",
 
     "./test/stubs/component/component.json",
+
+    "./test/stubs/component/component.11tydata.json",
+    "./test/stubs/component/component.11tydata.mjs",
+    "./test/stubs/component/component.11tydata.cjs",
+    "./test/stubs/component/component.11tydata.js",
+    "./test/stubs/component/component.11tydata.mts",
+    "./test/stubs/component/component.11tydata.cts",
+    "./test/stubs/component/component.11tydata.ts",
+
     "./test/stubs/component/component.data.json",
     "./test/stubs/component/component.data.mjs",
     "./test/stubs/component/component.data.cjs",
@@ -411,6 +429,14 @@ test("getLocalDataPaths (with setDataFileBaseName #1699)", async (t) => {
   let paths = await dataObj.getLocalDataPaths("./test/stubs/component/component.liquid");
 
   t.deepEqual(paths, [
+    "./test/stubs/index.11tydata.json",
+    "./test/stubs/index.11tydata.mjs",
+    "./test/stubs/index.11tydata.cjs",
+    "./test/stubs/index.11tydata.js",
+    "./test/stubs/index.11tydata.mts",
+    "./test/stubs/index.11tydata.cts",
+    "./test/stubs/index.11tydata.ts",
+
     "./test/stubs/index.data.json",
     "./test/stubs/index.data.mjs",
     "./test/stubs/index.data.cjs",
@@ -418,6 +444,14 @@ test("getLocalDataPaths (with setDataFileBaseName #1699)", async (t) => {
     "./test/stubs/index.data.mts",
     "./test/stubs/index.data.cts",
     "./test/stubs/index.data.ts",
+
+    "./test/stubs/component/index.11tydata.json",
+    "./test/stubs/component/index.11tydata.mjs",
+    "./test/stubs/component/index.11tydata.cjs",
+    "./test/stubs/component/index.11tydata.js",
+    "./test/stubs/component/index.11tydata.mts",
+    "./test/stubs/component/index.11tydata.cts",
+    "./test/stubs/component/index.11tydata.ts",
 
     "./test/stubs/component/index.data.json",
     "./test/stubs/component/index.data.mjs",
@@ -428,6 +462,15 @@ test("getLocalDataPaths (with setDataFileBaseName #1699)", async (t) => {
     "./test/stubs/component/index.data.ts",
 
     "./test/stubs/component/component.json",
+
+    "./test/stubs/component/component.11tydata.json",
+    "./test/stubs/component/component.11tydata.mjs",
+    "./test/stubs/component/component.11tydata.cjs",
+    "./test/stubs/component/component.11tydata.js",
+    "./test/stubs/component/component.11tydata.mts",
+    "./test/stubs/component/component.11tydata.cts",
+    "./test/stubs/component/component.11tydata.ts",
+
     "./test/stubs/component/component.data.json",
     "./test/stubs/component/component.data.mjs",
     "./test/stubs/component/component.data.cjs",
@@ -595,6 +638,15 @@ test("Deeper getLocalDataPaths", async (t) => {
 
   t.deepEqual(paths, [
     "./test/test.json",
+
+    "./test/test.11tydata.json",
+    "./test/test.11tydata.mjs",
+    "./test/test.11tydata.cjs",
+    "./test/test.11tydata.js",
+    "./test/test.11tydata.mts",
+    "./test/test.11tydata.cts",
+    "./test/test.11tydata.ts",
+
     "./test/test.data.json",
     "./test/test.data.mjs",
     "./test/test.data.cjs",
@@ -604,6 +656,15 @@ test("Deeper getLocalDataPaths", async (t) => {
     "./test/test.data.ts",
 
     "./test/stubs/stubs.json",
+
+    "./test/stubs/stubs.11tydata.json",
+    "./test/stubs/stubs.11tydata.mjs",
+    "./test/stubs/stubs.11tydata.cjs",
+    "./test/stubs/stubs.11tydata.js",
+    "./test/stubs/stubs.11tydata.mts",
+    "./test/stubs/stubs.11tydata.cts",
+    "./test/stubs/stubs.11tydata.ts",
+
     "./test/stubs/stubs.data.json",
     "./test/stubs/stubs.data.mjs",
     "./test/stubs/stubs.data.cjs",
@@ -613,6 +674,15 @@ test("Deeper getLocalDataPaths", async (t) => {
     "./test/stubs/stubs.data.ts",
 
     "./test/stubs/component/component.json",
+
+    "./test/stubs/component/component.11tydata.json",
+    "./test/stubs/component/component.11tydata.mjs",
+    "./test/stubs/component/component.11tydata.cjs",
+    "./test/stubs/component/component.11tydata.js",
+    "./test/stubs/component/component.11tydata.mts",
+    "./test/stubs/component/component.11tydata.cts",
+    "./test/stubs/component/component.11tydata.ts",
+
     "./test/stubs/component/component.data.json",
     "./test/stubs/component/component.data.mjs",
     "./test/stubs/component/component.data.cjs",
@@ -637,6 +707,15 @@ test("getLocalDataPaths with an 11ty js template", async (t) => {
 
   t.deepEqual(paths, [
     "./test/stubs/stubs.json",
+
+    "./test/stubs/stubs.11tydata.json",
+    "./test/stubs/stubs.11tydata.mjs",
+    "./test/stubs/stubs.11tydata.cjs",
+    "./test/stubs/stubs.11tydata.js",
+    "./test/stubs/stubs.11tydata.mts",
+    "./test/stubs/stubs.11tydata.cts",
+    "./test/stubs/stubs.11tydata.ts",
+
     "./test/stubs/stubs.data.json",
     "./test/stubs/stubs.data.mjs",
     "./test/stubs/stubs.data.cjs",
@@ -646,6 +725,15 @@ test("getLocalDataPaths with an 11ty js template", async (t) => {
     "./test/stubs/stubs.data.ts",
 
     "./test/stubs/component/component.json",
+
+    "./test/stubs/component/component.11tydata.json",
+    "./test/stubs/component/component.11tydata.mjs",
+    "./test/stubs/component/component.11tydata.cjs",
+    "./test/stubs/component/component.11tydata.js",
+    "./test/stubs/component/component.11tydata.mts",
+    "./test/stubs/component/component.11tydata.cts",
+    "./test/stubs/component/component.11tydata.ts",
+
     "./test/stubs/component/component.data.json",
     "./test/stubs/component/component.data.mjs",
     "./test/stubs/component/component.data.cjs",
@@ -670,6 +758,15 @@ test("getLocalDataPaths with inputDir passed in (trailing slash)", async (t) => 
 
   t.deepEqual(paths, [
     "./test/stubs/stubs.json",
+
+    "./test/stubs/stubs.11tydata.json",
+    "./test/stubs/stubs.11tydata.mjs",
+    "./test/stubs/stubs.11tydata.cjs",
+    "./test/stubs/stubs.11tydata.js",
+    "./test/stubs/stubs.11tydata.mts",
+    "./test/stubs/stubs.11tydata.cts",
+    "./test/stubs/stubs.11tydata.ts",
+
     "./test/stubs/stubs.data.json",
     "./test/stubs/stubs.data.mjs",
     "./test/stubs/stubs.data.cjs",
@@ -679,6 +776,15 @@ test("getLocalDataPaths with inputDir passed in (trailing slash)", async (t) => 
     "./test/stubs/stubs.data.ts",
 
     "./test/stubs/component/component.json",
+
+    "./test/stubs/component/component.11tydata.json",
+    "./test/stubs/component/component.11tydata.mjs",
+    "./test/stubs/component/component.11tydata.cjs",
+    "./test/stubs/component/component.11tydata.js",
+    "./test/stubs/component/component.11tydata.mts",
+    "./test/stubs/component/component.11tydata.cts",
+    "./test/stubs/component/component.11tydata.ts",
+
     "./test/stubs/component/component.data.json",
     "./test/stubs/component/component.data.mjs",
     "./test/stubs/component/component.data.cjs",
@@ -703,6 +809,15 @@ test("getLocalDataPaths with inputDir passed in (no trailing slash)", async (t) 
 
   t.deepEqual(paths, [
     "./test/stubs/stubs.json",
+
+    "./test/stubs/stubs.11tydata.json",
+    "./test/stubs/stubs.11tydata.mjs",
+    "./test/stubs/stubs.11tydata.cjs",
+    "./test/stubs/stubs.11tydata.js",
+    "./test/stubs/stubs.11tydata.mts",
+    "./test/stubs/stubs.11tydata.cts",
+    "./test/stubs/stubs.11tydata.ts",
+
     "./test/stubs/stubs.data.json",
     "./test/stubs/stubs.data.mjs",
     "./test/stubs/stubs.data.cjs",
@@ -712,6 +827,15 @@ test("getLocalDataPaths with inputDir passed in (no trailing slash)", async (t) 
     "./test/stubs/stubs.data.ts",
 
     "./test/stubs/component/component.json",
+
+    "./test/stubs/component/component.11tydata.json",
+    "./test/stubs/component/component.11tydata.mjs",
+    "./test/stubs/component/component.11tydata.cjs",
+    "./test/stubs/component/component.11tydata.js",
+    "./test/stubs/component/component.11tydata.mts",
+    "./test/stubs/component/component.11tydata.cts",
+    "./test/stubs/component/component.11tydata.ts",
+
     "./test/stubs/component/component.data.json",
     "./test/stubs/component/component.data.mjs",
     "./test/stubs/component/component.data.cjs",
@@ -736,6 +860,15 @@ test("getLocalDataPaths with inputDir passed in (no leading slash)", async (t) =
 
   t.deepEqual(paths, [
     "./test/stubs/stubs.json",
+
+    "./test/stubs/stubs.11tydata.json",
+    "./test/stubs/stubs.11tydata.mjs",
+    "./test/stubs/stubs.11tydata.cjs",
+    "./test/stubs/stubs.11tydata.js",
+    "./test/stubs/stubs.11tydata.mts",
+    "./test/stubs/stubs.11tydata.cts",
+    "./test/stubs/stubs.11tydata.ts",
+
     "./test/stubs/stubs.data.json",
     "./test/stubs/stubs.data.mjs",
     "./test/stubs/stubs.data.cjs",
@@ -745,6 +878,14 @@ test("getLocalDataPaths with inputDir passed in (no leading slash)", async (t) =
     "./test/stubs/stubs.data.ts",
 
     "./test/stubs/component/component.json",
+    "./test/stubs/component/component.11tydata.json",
+    "./test/stubs/component/component.11tydata.mjs",
+    "./test/stubs/component/component.11tydata.cjs",
+    "./test/stubs/component/component.11tydata.js",
+    "./test/stubs/component/component.11tydata.mts",
+    "./test/stubs/component/component.11tydata.cts",
+    "./test/stubs/component/component.11tydata.ts",
+
     "./test/stubs/component/component.data.json",
     "./test/stubs/component/component.data.mjs",
     "./test/stubs/component/component.data.cjs",
@@ -779,7 +920,7 @@ test("getTemplateDataFileGlob", async (t) => {
   let tw = new TemplateData(eleventyConfig);
 
   t.deepEqual(await tw.getTemplateDataFileGlob(), [
-    `./test/stubs/**/*.{json,data.mjs,data.cjs,data.js,data.mts,data.cts,data.ts}`,
+    `./test/stubs/**/*.{json,data.mjs,data.cjs,data.js,data.mts,data.cts,data.ts,11tydata.mjs,11tydata.cjs,11tydata.js,11tydata.mts,11tydata.cts,11tydata.ts}`,
   ]);
 });
 
