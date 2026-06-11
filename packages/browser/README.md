@@ -6,7 +6,7 @@ The client (browser-friendly) version of `@11ty/eleventy` Eleventy, a simpler st
 
 ## ➡ [Documentation](https://www.11ty.dev/docs/)
 
-- Star [this repo on GitHub](https://github.com/11ty/build-awesome/)!
+- Star [this repo on GitHub](https://github.com/11ty/buildawesome/)!
 - Follow us [on Mastodon `@11ty@neighborhood.11ty.dev`](https://neighborhood.11ty.dev/@11ty)
 - Follow us [on Bluesky `@11ty.dev`](https://bsky.app/profile/11ty.dev)
 - Install [from npm](https://www.npmjs.com/org/11ty)

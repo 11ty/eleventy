@@ -29,7 +29,7 @@ async function exec() {
 	const { createDebug } = await import("obug");
 	const debug = createDebug("BuildAwesome:CLI");
 
-	// Notes about friendly error messaging with outdated Node versions: https://github.com/11ty/build-awesome/issues/3761
+	// Notes about friendly error messaging with outdated Node versions: https://github.com/11ty/buildawesome/issues/3761
 	const { ErrorHandler } = await import("./src/Errors/ErrorHandler.js");
 	const { getEnvValue } = await import("./src/Util/EnvironmentVars.cjs");
 	const { default: ConsoleLogger } = await import("./src/Util/ConsoleLogger.js");

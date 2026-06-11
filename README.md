@@ -8,7 +8,7 @@ Works with HTML, Markdown, JavaScript, Liquid, Nunjucks, with addons for WebC, S
 
 ## ➡ [Documentation](https://www.11ty.dev/docs/)
 
-- Star [this repo on GitHub](https://github.com/11ty/build-awesome/)!
+- Star [this repo on GitHub](https://github.com/11ty/buildawesome/)!
 - Follow us [on Mastodon `@11ty@neighborhood.11ty.dev`](https://neighborhood.11ty.dev/@11ty)
 - Follow us [on Bluesky `@11ty.dev`](https://bsky.app/profile/11ty.dev)
 - Install [from npm](https://www.npmjs.com/org/11ty)
@@ -39,17 +39,17 @@ We have a few test suites, for various reasons:
 - [ava JavaScript test runner](https://github.com/avajs/ava) ([assertions docs](https://github.com/avajs/ava/blob/main/docs/03-assertions.md)) (primary test suite in `test/`)
 - [Node.js Test runner](https://nodejs.org/api/test.html) (secondary test suite in `test_node/`)
 - [Vitest (in Browser Mode)](https://vitest.dev/guide/browser/) (browser tests in `packages/browser/test/`)
-- [Benchmark for Performance Regressions](https://github.com/11ty/build-benchmark)
+- [Benchmark for Performance Regressions](https://github.com/11ty/buildbenchmark)
 
 These run in various environments:
 
-- [Continuous Integration on GitHub Actions](https://github.com/11ty/build-awesome/actions/workflows/ci.yml)
-- [Code Coverage Statistics](https://github.com/11ty/build-awesome/blob/master/docs/coverage.md)
+- [Continuous Integration on GitHub Actions](https://github.com/11ty/buildawesome/actions/workflows/ci.yml)
+- [Code Coverage Statistics](https://github.com/11ty/buildawesome/blob/master/docs/coverage.md)
 
 ## Community Roadmap
 
-- [Top Feature Requests](https://github.com/11ty/build-awesome/discussions/categories/enhancement-queue?discussions_q=is%3Aopen+category%3A%22Enhancement+Queue%22+sort%3Atop) (Vote for your favorites!)
-- [Top Bugs 😱](https://github.com/11ty/build-awesome/issues?q=is%3Aissue+is%3Aopen+label%3Abug+sort%3Areactions) (Add your own votes using the 👍 reaction)
+- [Top Feature Requests](https://github.com/11ty/buildawesome/discussions/categories/enhancement-queue?discussions_q=is%3Aopen+category%3A%22Enhancement+Queue%22+sort%3Atop) (Vote for your favorites!)
+- [Top Bugs 😱](https://github.com/11ty/buildawesome/issues?q=is%3Aissue+is%3Aopen+label%3Abug+sort%3Areactions) (Add your own votes using the 👍 reaction)
 
 ## Plugins
 

@@ -229,7 +229,7 @@ export class Files {
 						);
 						debug(">>>", line);
 						debug(
-							"Follow along at https://github.com/11ty/build-awesome/issues/693 to track support.",
+							"Follow along at https://github.com/11ty/buildawesome/issues/693 to track support.",
 						);
 					}
 

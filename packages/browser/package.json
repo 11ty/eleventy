@@ -33,9 +33,9 @@
   "author": "Zach Leatherman <zachleatherman@gmail.com> (https://zachleat.com/)",
   "repository": {
     "type": "git",
-    "url": "git://github.com/11ty/build-awesome.git"
+    "url": "git://github.com/11ty/buildawesome.git"
   },
-  "bugs": "https://github.com/11ty/build-awesome/issues",
+  "bugs": "https://github.com/11ty/buildawesome/issues",
   "homepage": "https://www.11ty.dev/",
   "devDependencies": {
     "@11ty/package-bundler": "^0.5.6",

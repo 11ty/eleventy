@@ -900,7 +900,7 @@ Verbose Output: ${this.verboseMode}`;
 
 			debug(`
 Have a suggestion/feature request/feedback? Feeling frustrated? I want to hear it!
-Open an issue: https://github.com/11ty/build-awesome/issues/new`);
+Open an issue: https://github.com/11ty/buildawesome/issues/new`);
 		}
 
 		return returnObj;
