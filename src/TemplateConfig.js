@@ -76,7 +76,7 @@ class TemplateConfig {
 		} else {
 			this.projectConfigPaths = [
 				...expandEligibleJavaScriptFilePaths("buildawesome.config"),
-				".eleventy.js",
+				".eleventy.js", // intentionally has never included other JS extensions
 				...expandEligibleJavaScriptFilePaths("eleventy.config"),
 			];
 		}

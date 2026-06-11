@@ -234,6 +234,16 @@ export class CoreMinimal {
 		return CoreMinimal.getVersion();
 	}
 
+	static isUsingBuildAwesomeConfigurationFile(configPath) {
+		if (typeof configPath !== "string") {
+			return;
+		}
+		if (configPath.includes("buildawesome.config")) {
+			return true;
+		}
+		return false;
+	}
+
 	async initializeConfig(initOverrides) {
 		if (!this.eleventyConfig) {
 			this.eleventyConfig = new TemplateConfig(null, this.configPath);
@@ -243,6 +253,10 @@ export class CoreMinimal {
 
 		this.#activeConfigurationPath =
 			this.configPath ?? this.eleventyConfig.getLocalProjectConfigFile();
+
+		if (CoreMinimal.isUsingBuildAwesomeConfigurationFile(this.#activeConfigurationPath)) {
+			this.logger.setPrefix(`[buildawesome]`);
+		}
 
 		this.eleventyConfig.setRunMode(this.runMode);
 		this.eleventyConfig.setProjectUsingEsm(this.isEsm);
@@ -559,8 +573,8 @@ Verbose Output: ${this.verboseMode}`;
 
 	/** @param {ConsoleLogger} logger */
 	set logger(logger) {
-		this.eleventyConfig.setLogger(logger);
 		this.#logger = logger;
+		this.eleventyConfig.setLogger(logger);
 	}
 
 	disableLogger() {

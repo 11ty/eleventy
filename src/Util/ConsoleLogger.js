@@ -30,6 +30,10 @@ class ConsoleLogger {
 		return this.#logger !== false;
 	}
 
+	setPrefix(prefix) {
+		this.#logPrefix = prefix;
+	}
+
 	get isVerbose() {
 		return this.#isVerbose;
 	}
@@ -117,7 +121,8 @@ class ConsoleLogger {
 				prefix = this.#logPrefix;
 			}
 
-			message = `${this.#dim(prefix)} ${message.split("\n").join(`\n${chalk.gray(prefix)} `)}`;
+			let prefixStr = prefix ? `${this.#dim(prefix)} ` : "";
+			message = `${prefixStr}${message.split("\n").join(`\n${prefixStr}`)}`;
 
 			// default color for every type but log
 			if (chalkColor === undefined && type) {
