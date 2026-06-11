@@ -16,17 +16,19 @@
 		"./UserConfig": {
 			"types": "./src/UserConfig.js"
 		},
-		"./utils/git": "./src/Util/Git.js"
+		"./utils/git": "./src/Util/Git.js",
+		"./cli": "./cmd.cjs"
 	},
 	"bin": {
-		"build": "cmd.cjs"
+		"eleventy": "cmd.cjs"
 	},
 	"license": "MIT",
 	"engines": {
 		"node": ">=22.15"
 	},
 	"workspaces": [
-		"packages/browser"
+		"packages/browser",
+		"packages/build-awesome"
 	],
 	"funding": {
 		"type": "opencollective",

@@ -20,7 +20,7 @@ class UserConfigError extends BaseError {}
  * Eleventy’s user-land Configuration API
  * @module 11ty/eleventy/UserConfig
  */
-class UserConfig {
+export default class UserConfig {
 	/** @type {boolean} */
 	#pluginExecution = false;
 	/** @type {boolean} */
@@ -1318,5 +1318,3 @@ class UserConfig {
 	// No-op from v2
 	setBrowserSyncConfig() {}
 }
-
-export default UserConfig;

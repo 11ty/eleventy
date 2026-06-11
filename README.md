@@ -20,7 +20,7 @@ Works with HTML, Markdown, JavaScript, Liquid, Nunjucks, with addons for WebC, S
 ## Installation
 
 ```
-npm install @awesome.me/build --save-dev
+npm install @awesome.me/buildawesome --save-dev
 
 # Backwards compatible here too:
 npm install @11ty/eleventy --save-dev

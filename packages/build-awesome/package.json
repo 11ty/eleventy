@@ -1,0 +1,39 @@
+{
+  "name": "@awesome.me/buildawesome",
+  "description": "Run Build Awesome (Eleventy) in your browser.",
+  "version": "PRIVATE",
+  "private": true,
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "type": "module",
+  "exports": {
+    ".": "./src/Core.js",
+    "./UserConfig": {
+      "types": "./src/UserConfig.d.ts"
+    },
+    "./utils/git": "./src/Util/Git.js"
+  },
+	"bin": {
+    "buildawesome": "cmd.js"
+  },
+  "license": "MIT",
+  "funding": {
+    "type": "opencollective",
+    "url": "https://opencollective.com/11ty"
+  },
+  "scripts": {
+    "test": ""
+  },
+  "author": "Zach Leatherman <zachleatherman@gmail.com> (https://zachleat.com/)",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/11ty/build-awesome.git"
+  },
+  "bugs": "https://github.com/11ty/build-awesome/issues",
+  "homepage": "https://build.awesome.me/",
+  "dependencies": {
+    "@11ty/eleventy": "file:../../"
+  }
+}

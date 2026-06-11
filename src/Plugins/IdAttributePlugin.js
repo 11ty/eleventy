@@ -3,7 +3,7 @@ import { decodeHTML } from "entities";
 
 import { resolveAttributeName } from "../Util/PostHtml/Attrs.js";
 
-const POSTHTML_PLUGIN_NAME = "awesome.me/build/id-attribute";
+const POSTHTML_PLUGIN_NAME = "awesome.me/buildawesome/id-attribute";
 
 function getTextNodeContent(node) {
 	let ignoredAttrName = resolveAttributeName(node.attrs, "buildawesome:id-ignore");

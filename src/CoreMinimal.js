@@ -234,11 +234,14 @@ export class CoreMinimal {
 		return CoreMinimal.getVersion();
 	}
 
-	static isUsingBuildAwesomeConfigurationFile(configPath) {
+	static isUsingBuildAwesome(configPath) {
 		if (typeof configPath !== "string") {
 			return;
 		}
-		if (configPath.includes("buildawesome.config")) {
+		if (
+			process?.env?.BUILDAWESOME_PACKAGE === "@awesome.me/buildawesome" ||
+			configPath.includes("buildawesome.config")
+		) {
 			return true;
 		}
 		return false;
@@ -254,7 +257,7 @@ export class CoreMinimal {
 		this.#activeConfigurationPath =
 			this.configPath ?? this.eleventyConfig.getLocalProjectConfigFile();
 
-		if (CoreMinimal.isUsingBuildAwesomeConfigurationFile(this.#activeConfigurationPath)) {
+		if (CoreMinimal.isUsingBuildAwesome(this.#activeConfigurationPath)) {
 			this.logger.setPrefix(`[buildawesome]`);
 		}
 

@@ -23,7 +23,7 @@ body:
     attributes:
       label: Eleventy
       description: Which version of Build Awesome or Eleventy do you use?
-      placeholder: npx @awesome.me/build --version or npx @11ty/eleventy --version
+      placeholder: npx @awesome.me/buildawesome --version or npx @11ty/eleventy --version
     validations:
       required: true
   - type: textarea
