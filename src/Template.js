@@ -58,7 +58,6 @@ class Template extends TemplateContent {
 		this.linters = [];
 		this.transforms = {};
 
-		this.isVerbose = true;
 		this.isDryRun = false;
 		this.writeCount = 0;
 
@@ -96,8 +95,7 @@ class Template extends TemplateContent {
 
 	get logger() {
 		if (!this.#logger) {
-			this.#logger = new ConsoleLogger();
-			this.#logger.isVerbose = this.isVerbose;
+			throw new Error("Internal error: missing ConsoleLogger instance.");
 		}
 		return this.#logger;
 	}
@@ -152,11 +150,6 @@ class Template extends TemplateContent {
 	setOutputFormat(to) {
 		this.outputFormat = to;
 		this.behavior.setOutputFormat(to);
-	}
-
-	setIsVerbose(isVerbose) {
-		this.isVerbose = isVerbose;
-		this.logger.isVerbose = isVerbose;
 	}
 
 	setDryRunViaIncremental(isIncremental) {
@@ -1060,7 +1053,7 @@ class Template extends TemplateContent {
 
 			// write data map
 			if (contentMap !== undefined && page.outputPath) {
-				// TODO customize this
+				// TODO unlock option to customize this
 				let mapOutputPath = page.outputPath + ".map";
 				this.fsManager.createDirectoryForFileSync(mapOutputPath);
 				this.fsManager.writeFileSync(mapOutputPath, contentMap);
@@ -1071,7 +1064,7 @@ class Template extends TemplateContent {
 	}
 
 	async clone() {
-		// TODO do we need to even run the constructor here or can we simplify it even more
+		// QUESTION do we need to even run the constructor here or can we simplify it even more
 		let tmpl = new Template(
 			this.inputPath,
 			this.templateData,
@@ -1079,8 +1072,7 @@ class Template extends TemplateContent {
 			this.eleventyConfig,
 		);
 
-		// We use this cheap property setter below instead
-		// await tmpl.getTemplateRender();
+		tmpl.logger = this.logger;
 
 		// preserves caches too, e.g. _frontMatterDataCache
 		// Does not yet include .computedData

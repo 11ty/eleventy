@@ -298,6 +298,7 @@ export class CoreMinimal {
 		 * @description Singleton BenchmarkManager instance
 		 */
 		this.bench = this.config.benchmarkManager;
+		this.bench.setLogger(this.logger);
 
 		if (performance) {
 			debug("Eleventy warm up time: %o (ms)", performance.now());
@@ -465,13 +466,13 @@ export class CoreMinimal {
 		this.config.events.emit("buildawesome.directories", this.directories.getUserspaceInstance());
 
 		this.writer = new TemplateWriter(formats, this.templateData, this.eleventyConfig);
+		this.writer.logger = this.logger;
 
 		if (!viaConfigReset) {
 			// set or restore cache
 			this.#cache("TemplateWriter", this.writer);
 		}
 
-		this.writer.logger = this.logger;
 		this.writer.extensionMap = this.extensionMap;
 		this.writer.setRunInitialBuild(this.isRunInitialBuild);
 
@@ -488,7 +489,6 @@ Template Formats: ${formats.join(",")}
 Verbose Output: ${this.verboseMode}`;
 		debug(debugStr);
 
-		this.writer.setVerboseOutput(this.verboseMode);
 		this.writer.setDryRun(this.isDryRun);
 
 		this.#needsInit = false;
@@ -571,7 +571,6 @@ Verbose Output: ${this.verboseMode}`;
 	get errorHandler() {
 		if (!this.#errorHandler) {
 			this.#errorHandler = new ErrorHandler();
-			this.#errorHandler.isVerbose = this.verboseMode;
 			this.#errorHandler.logger = this.logger;
 		}
 
@@ -597,16 +596,6 @@ Verbose Output: ${this.verboseMode}`;
 
 		if (this.logger) {
 			this.logger.isVerbose = isVerbose;
-		}
-
-		this.bench.setVerboseOutput(isVerbose);
-
-		if (this.writer) {
-			this.writer.setVerboseOutput(isVerbose);
-		}
-
-		if (this.errorHandler) {
-			this.errorHandler.isVerbose = isVerbose;
 		}
 
 		// Set verbose mode in config file

@@ -7,30 +7,20 @@ import ErrorUtil from "./ErrorUtil.js";
 const debug = createDebug("BuildAwesome:ErrorHandler");
 
 export class ErrorHandler {
-	constructor() {
-		this._isVerbose = true;
-	}
+	#logger;
 
-	get isVerbose() {
-		return this._isVerbose;
-	}
-
-	set isVerbose(verbose) {
-		this._isVerbose = !!verbose;
-		this.logger.isVerbose = !!verbose;
-	}
+	constructor() {}
 
 	get logger() {
-		if (!this._logger) {
-			this._logger = new ConsoleLogger();
-			this._logger.isVerbose = this.isVerbose;
+		if (!this.#logger) {
+			throw new Error("Internal error: missing logger instance.");
 		}
 
-		return this._logger;
+		return this.#logger;
 	}
 
 	set logger(logger) {
-		this._logger = logger;
+		this.#logger = logger;
 	}
 
 	warn(e, msg) {

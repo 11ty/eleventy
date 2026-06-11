@@ -4,6 +4,7 @@ import FileSystemSearch from "../src/FileSystemSearch.js";
 import TemplateEngineManager from "../src/Engines/TemplateEngineManager.js";
 
 import { getTemplateConfigInstance } from "./_testHelpers.js";
+import ConsoleLogger from "../src/Util/ConsoleLogger.js";
 
 export default async function getNewTemplate(
   path,
@@ -33,6 +34,9 @@ export default async function getNewTemplate(
     templateData.extensionMap = map;
   }
   let tmpl = new Template(path, templateData, map, $config);
+  let logger = new ConsoleLogger();;
+  logger.isVerbose = false;
+  tmpl.logger = logger;
 
   await tmpl.getTemplateRender();
 

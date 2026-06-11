@@ -1,11 +1,8 @@
 import BenchmarkGroup from "./BenchmarkGroup.js";
 
-// TODO this should not be a singleton, it belongs in the config or somewhere on the Eleventy instance.
-
 class BenchmarkManager {
 	constructor() {
 		this.benchmarkGroups = {};
-		this.isVerbose = true;
 		this.start = this.getNewTimestamp();
 	}
 
@@ -24,8 +21,16 @@ class BenchmarkManager {
 		return new Date().getTime();
 	}
 
-	setVerboseOutput(isVerbose) {
-		this.isVerbose = !!isVerbose;
+	setLogger(logger) {
+		if (!logger) {
+			return;
+		}
+
+		this.logger = logger;
+
+		for (let group of Object.values(this.benchmarkGroups)) {
+			group.setLogger(logger);
+		}
 	}
 
 	hasBenchmarkGroup(name) {
@@ -34,15 +39,18 @@ class BenchmarkManager {
 
 	getBenchmarkGroup(name) {
 		if (!this.benchmarkGroups[name]) {
-			this.benchmarkGroups[name] = new BenchmarkGroup();
+			let group = new BenchmarkGroup();
+			if (this.logger) {
+				group.setLogger(this.logger);
+			}
 
 			// Special behavior for aggregate benchmarks
 			// so they don’t console.log every time
 			if (name === "Aggregate") {
-				this.benchmarkGroups[name].setIsVerbose(false);
-			} else {
-				this.benchmarkGroups[name].setIsVerbose(this.isVerbose);
+				group.setIsVerbose(false);
 			}
+
+			this.benchmarkGroups[name] = group;
 		}
 
 		return this.benchmarkGroups[name];

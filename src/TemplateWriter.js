@@ -18,6 +18,7 @@ class TemplateWriter {
 	#eleventyFiles;
 	#passthroughManager;
 	#errorHandler;
+	#logger;
 	#extensionMap;
 	#incrementalFiles = [];
 
@@ -36,7 +37,6 @@ class TemplateWriter {
 		this.templateFormats = templateFormats;
 
 		this.templateData = templateData;
-		this.isVerbose = true;
 		this.isDryRun = false;
 		this.writeCount = 0;
 		this.renderCount = 0;
@@ -69,27 +69,22 @@ class TemplateWriter {
 	/* Getter for error handler */
 	get errorHandler() {
 		if (!this.#errorHandler) {
-			this.#errorHandler = new ErrorHandler();
-			this.#errorHandler.isVerbose = this.verboseMode;
-			this.#errorHandler.logger = this.logger;
+			throw new Error("Internal error: missing ErrorHandler instance.");
 		}
 
 		return this.#errorHandler;
 	}
 
-	/* Getter for Logger */
 	get logger() {
-		if (!this._logger) {
-			this._logger = new ConsoleLogger();
-			this._logger.isVerbose = this.verboseMode;
+		if (!this.#logger) {
+			throw new Error("Internal error: missing ConsoleLogger instance.");
 		}
 
-		return this._logger;
+		return this.#logger;
 	}
 
-	/* Setter for Logger */
 	set logger(logger) {
-		this._logger = logger;
+		this.#logger = logger;
 	}
 
 	/* For testing */
@@ -200,7 +195,6 @@ class TemplateWriter {
 		tmpl.setPreprocessors(this.config.preprocessors);
 		tmpl.setLinters(this.config.linters);
 		tmpl.setDryRun(this.isDryRun);
-		tmpl.setIsVerbose(this.isVerbose);
 		tmpl.reset();
 
 		return {
@@ -545,11 +539,6 @@ class TemplateWriter {
 				return Promise.reject(e);
 			},
 		);
-	}
-
-	setVerboseOutput(isVerbose) {
-		this.isVerbose = isVerbose;
-		this.errorHandler.isVerbose = isVerbose;
 	}
 
 	setDryRun(isDryRun) {

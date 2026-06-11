@@ -9,6 +9,7 @@ import FileSystemSearch from "../src/FileSystemSearch.js";
 import TemplateWriter from "../src/TemplateWriter.js";
 import TemplateEngineManager from "../src/Engines/TemplateEngineManager.js";
 import TemplateData from "../src/Data/TemplateData.js";
+import ConsoleLogger from "../src/Util/ConsoleLogger.js";
 
 export async function getTemplateConfigInstance(configObj, dirs, configObjOverride = undefined) {
 	let $config;
@@ -55,12 +56,16 @@ export async function getTemplateConfigInstanceCustomCallback(dirObject, configC
 }
 
 export function getTemplateWriterInstance(formats, templateConfig) {
+  let logger = new ConsoleLogger();
+  logger.isVerbose = false;
+
   let { eleventyFiles, passthroughManager } = getEleventyFilesInstance(formats, templateConfig);
   let templateWriter = new TemplateWriter(
     formats,
     null,
     templateConfig,
   );
+  templateWriter.logger = logger;
 
   let engineManager = new TemplateEngineManager(templateConfig);
   let map = new ExtensionMap(templateConfig);

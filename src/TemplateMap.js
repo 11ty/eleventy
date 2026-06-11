@@ -37,7 +37,6 @@ class TemplateMap {
 		this.inputPathMap = new Map(); // NEW: O(1) lookup Map for performance
 		this.collectionsData = null;
 		this.cached = false;
-		this.verboseOutput = true;
 		this.collection = new TemplateCollection();
 	}
 

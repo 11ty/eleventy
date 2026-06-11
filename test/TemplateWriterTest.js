@@ -406,8 +406,6 @@ test("Pagination and TemplateContent", async (t) => {
   });
 
   let { templateWriter: tw } = getTemplateWriterInstance(["njk", "md"], eleventyConfig);
-
-  tw.setVerboseOutput(false);
   await tw.write();
 
   let content = fs.readFileSync("./test/stubs/pagination-templatecontent/_site/index.html", "utf8");

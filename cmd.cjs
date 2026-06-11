@@ -32,6 +32,7 @@ async function exec() {
 	// Notes about friendly error messaging with outdated Node versions: https://github.com/11ty/build-awesome/issues/3761
 	const { ErrorHandler } = await import("./src/Errors/ErrorHandler.js");
 	const { getEnvValue } = await import("./src/Util/EnvironmentVars.cjs");
+	const { default: ConsoleLogger } = await import("./src/Util/ConsoleLogger.js");
 
 	// Defensive use of Node 22.8+ Module Compile Cache
 	if(!getEnvValue("SKIP_NODE_COMPILE_CACHE")) {
@@ -44,6 +45,12 @@ async function exec() {
 	}
 
 	try {
+		function getFallbackErrorHandler() {
+			let handler = new ErrorHandler();
+			handler.logger = new ConsoleLogger();
+			return handler;
+		}
+
 		const argv = minimist(process.argv.slice(2), {
 			string: ["input", "output", "formats", "config", "pathprefix", "port", "to", "incremental", "loader"],
 			boolean: [
@@ -70,7 +77,7 @@ async function exec() {
 		debug("Arguments: %o", argv);
 		const { default: Core } = await import("./src/Core.js");
 
-		let handler = new ErrorHandler();
+		let handler = getFallbackErrorHandler();
 
 		process.on("unhandledRejection", (error, promise) => {
 			handler.fatal(error, "Unhandled rejection in promise");
@@ -101,7 +108,7 @@ async function exec() {
 			loader: argv.loader,
 		});
 
-		// reuse ErrorHandler instance in Core
+		// override with ErrorHandler instance in Core
 		handler = core.errorHandler;
 
 		// Before init
@@ -159,7 +166,7 @@ async function exec() {
 		}
 	} catch (error) {
 		if(typeof ErrorHandler !== "undefined") {
-			let handler = new ErrorHandler();
+			let handler = getFallbackErrorHandler();
 			handler.fatal(error, "Fatal Error (CLI)");
 		} else {
 			console.error(error);
