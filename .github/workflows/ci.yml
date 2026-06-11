@@ -33,6 +33,6 @@ jobs:
           node-version: ${{ matrix.node }}
       - run: npm ci
       - run: npx playwright install
-      - run: npm run test:client
+      - run: npm run test:browser
 env:
   YARN_GPG: no
