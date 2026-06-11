@@ -15,7 +15,7 @@
     },
     "./utils/git": "./src/Util/Git.js"
   },
-	"bin": {
+  "bin": {
     "buildawesome": "cmd.js"
   },
   "license": "MIT",
