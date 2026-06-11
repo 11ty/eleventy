@@ -31,10 +31,11 @@ const DEFAULT_SERVER_OPTIONS = {
 	// pathPrefix: "/",
 	// setup: function() {},
 	// ready: function(server) {},
-	// logger: { info: function() {}, error: function() {} }
+	// logger: { log: function() {}, info: function() {}, error: function() {} }
 };
 
 export default class Serve {
+	#options;
 	#eleventyConfig;
 	#savedConfigOptions;
 	#aliases;
@@ -43,10 +44,7 @@ export default class Serve {
 	// these are *not* normalized
 	#watchTargets = new Set();
 	#editCallbacks = [];
-
-	constructor() {
-		this.logger = new ConsoleLogger();
-	}
+	#logger;
 
 	get config() {
 		if (!this.eleventyConfig) {
@@ -85,6 +83,18 @@ export default class Serve {
 				this.setAliases(map);
 			});
 		}
+	}
+
+	get logger() {
+		if (!this.#logger) {
+			throw new Error("Internal error: missing ConsoleLogger instance.");
+		}
+
+		return this.#logger;
+	}
+
+	set logger(logger) {
+		this.#logger = logger;
 	}
 
 	// TODO directorynorm
@@ -158,15 +168,33 @@ export default class Serve {
 		}
 	}
 
+	getForcedOutputLogger() {
+		// Server logging overrides verbose values.
+		return {
+			log: (message) => {
+				return this.logger.logWithOptions({ message, force: true });
+			},
+			info: (message) => {
+				return this.logger.logWithOptions({ message, type: "info", force: true });
+			},
+			warn: (message) => {
+				return this.logger.logWithOptions({ message, type: "warn", force: true });
+			},
+			error: (message) => {
+				return this.logger.logWithOptions({ message, type: "error", force: true });
+			},
+		};
+	}
+
 	get options() {
-		if (this._options) {
-			return this._options;
+		if (this.#options) {
+			return this.#options;
 		}
 
-		this._options = Object.assign(
+		this.#options = Object.assign(
 			{
 				pathPrefix: PathPrefixer.normalizePathPrefix(this.config.pathPrefix),
-				logger: this.logger,
+				logger: this.getForcedOutputLogger(),
 				onClientMessage: async ({ id, type, data, timestamp }) => {
 					let paths = [];
 					if (type === "eleventy.editReset") {
@@ -209,7 +237,7 @@ export default class Serve {
 			);
 		}
 
-		return this._options;
+		return this.#options;
 	}
 
 	get server() {
@@ -322,7 +350,7 @@ export default class Serve {
 	// we can correctly handle a `module` property change (changing the server type)
 	async restart() {
 		// Blow away cached options
-		delete this._options;
+		this.#options = undefined;
 
 		await this.close();
 

@@ -2,6 +2,7 @@ import test from "ava";
 
 import Serve from "../src/Serve.js";
 import TemplateConfig from "../src/TemplateConfig.js";
+import ConsoleLogger from "../src/Util/ConsoleLogger.js";
 
 async function getServerInstance(eleventyConfig) {
   let es = new Serve();
@@ -11,6 +12,7 @@ async function getServerInstance(eleventyConfig) {
   }
 
   es.eleventyConfig = eleventyConfig;
+  es.logger = new ConsoleLogger();
 
   await es.init();
 

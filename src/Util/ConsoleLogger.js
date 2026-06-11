@@ -14,8 +14,14 @@ class ConsoleLogger {
 	#isChalkEnabled = true;
 	/** @type {object|boolean|undefined} */
 	#logger;
-
-	constructor() {}
+	/** @type {string} */
+	#logPrefix = "[11ty]";
+	/** @type {object} */
+	#colorFallbacks = {
+		info: "blue",
+		warn: "yellow",
+		error: "red",
+	};
 
 	isLoggingEnabled() {
 		if (!this.isVerbose || process.env.DEBUG) {
@@ -73,17 +79,18 @@ class ConsoleLogger {
 
 	/** @param {string} msg */
 	info(msg) {
-		this.message(msg, "log", "blue");
+		// Similar to log, but blue
+		this.message(msg, "log", this.#colorFallbacks.info);
 	}
 
 	/** @param {string} msg */
 	warn(msg) {
-		this.message(msg, "warn", "yellow");
+		this.message(msg, "warn", this.#colorFallbacks.warn);
 	}
 
 	/** @param {string} msg */
 	error(msg) {
-		this.message(msg, "error", "red");
+		this.message(msg, "error", this.#colorFallbacks.error);
 	}
 
 	/** @param {string} message */
@@ -102,17 +109,20 @@ class ConsoleLogger {
 	 * @param {string|undefined} [chalkColor=undefined] - Color name or falsy to disable
 	 * @param {boolean} [forceToConsole=false] - Enforce a log on console instead of specified target.
 	 */
-	message(
-		message,
-		type = "log",
-		chalkColor = undefined,
-		forceToConsole = false,
-		prefix = "[11ty]",
-	) {
+	message(message, type = "log", chalkColor = undefined, forceToConsole = false, prefix = "") {
 		if (!forceToConsole && (!this.isVerbose || process.env.DEBUG)) {
 			debug(message);
 		} else if (this.#logger !== false) {
+			if (!prefix) {
+				prefix = this.#logPrefix;
+			}
+
 			message = `${this.#dim(prefix)} ${message.split("\n").join(`\n${chalk.gray(prefix)} `)}`;
+
+			// default color for every type but log
+			if (chalkColor === undefined && type) {
+				chalkColor = this.#colorFallbacks[type];
+			}
 
 			if (chalkColor && this.isChalkEnabled) {
 				this.logger[type](chalk[chalkColor](message));

@@ -48,6 +48,8 @@ export default class Core extends CoreFs {
 			/** @type {object} */
 			this.eleventyServe = new Serve();
 		}
+
+		this.eleventyServe.logger = this.logger;
 		this.eleventyServe.eleventyConfig = this.eleventyConfig;
 
 		/** @type {object} */
