@@ -1,4 +1,3 @@
-import { createDebug } from "obug";
 import { Merge, TemplatePath } from "@11ty/eleventy-utils";
 
 import { Watch } from "./Watch.js";
@@ -14,6 +13,7 @@ function stringifyOptions(options) {
 }
 
 import BaseError from "./Errors/BaseError.js";
+import { createDebug } from "./Util/DebugLogUtil.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
 import PathPrefixer from "./Util/PathPrefixer.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
@@ -21,7 +21,7 @@ import { getModulePackageJson } from "./Util/ImportJsonSync.js";
 import { DynamicImport } from "./Util/Require.js";
 import { isGlobMatch } from "./Util/GlobMatcher.js";
 
-const debug = createDebug("BuildAwesome:Serve");
+const debug = createDebug("Serve");
 
 class ServeConfigError extends BaseError {}
 

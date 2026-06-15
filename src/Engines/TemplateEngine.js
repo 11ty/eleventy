@@ -1,9 +1,9 @@
-import { createDebug } from "obug";
+import { createDebug } from "../Util/DebugLogUtil.js";
 import BaseError from "../Errors/BaseError.js";
 
 class TemplateEngineConfigError extends BaseError {}
 
-const debug = createDebug("BuildAwesome:TemplateEngine");
+const debug = createDebug("TemplateEngine");
 
 const AMENDED_INSTANCES = new Set();
 

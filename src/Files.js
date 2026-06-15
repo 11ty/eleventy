@@ -1,14 +1,14 @@
 import { statSync, readFileSync } from "node:fs";
 
 import { TemplatePath } from "@11ty/eleventy-utils";
-import { createDebug } from "obug";
 
+import { createDebug } from "./Util/DebugLogUtil.js";
 import DirContains from "./Util/DirContains.js";
 import TemplateData from "./Data/TemplateData.js";
 import TemplateGlob from "./TemplateGlob.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 
-const debug = createDebug("BuildAwesome:Files");
+const debug = createDebug("Files");
 
 export class Files {
 	#extensionMap;

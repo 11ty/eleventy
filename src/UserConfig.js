@@ -1,8 +1,7 @@
-import { createDebug } from "obug";
-
 import { DeepCopy, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 
 import chalk from "./Adapters/Packages/chalk.js";
+import { createDebug } from "./Util/DebugLogUtil.js";
 import { resolvePlugin } from "./Util/ResolvePlugin.js";
 import isAsyncFunction from "./Util/IsAsyncFunction.js";
 import objectFilter from "./Util/Objects/ObjectFilter.js";
@@ -12,7 +11,7 @@ import BaseError from "./Errors/BaseError.js";
 import BenchmarkManager from "./Benchmark/BenchmarkManager.js";
 import { augmentFunction } from "./Engines/Util/ContextAugmenter.js";
 
-const debug = createDebug("BuildAwesome:UserConfig");
+const debug = createDebug("UserConfig");
 
 class UserConfigError extends BaseError {}
 

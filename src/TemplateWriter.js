@@ -1,5 +1,4 @@
 import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
-import { createDebug } from "obug";
 
 import Template from "./Template.js";
 import TemplateMap from "./TemplateMap.js";
@@ -7,8 +6,9 @@ import BaseError from "./Errors/BaseError.js";
 import { ErrorHandler } from "./Errors/ErrorHandler.js";
 import ErrorUtil from "./Errors/ErrorUtil.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
+import { createDebug } from "./Util/DebugLogUtil.js";
 
-const debug = createDebug("BuildAwesome:TemplateWriter");
+const debug = createDebug("TemplateWriter");
 
 class TemplateWriterMissingConfigArgError extends BaseError {}
 class PassthroughCopyError extends BaseError {}

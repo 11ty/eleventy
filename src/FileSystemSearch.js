@@ -1,11 +1,11 @@
 import { glob } from "tinyglobby";
 import { TemplatePath } from "@11ty/eleventy-utils";
-import { createDebug } from "obug";
 
+import { createDebug } from "./Util/DebugLogUtil.js";
 import GlobRemap from "./Util/GlobRemap.js";
 import { isGlobMatch } from "./Util/GlobMatcher.js";
 
-const debug = createDebug("BuildAwesome:FileSystemSearch");
+const debug = createDebug("FileSystemSearch");
 
 class FileSystemSearch {
 	constructor() {

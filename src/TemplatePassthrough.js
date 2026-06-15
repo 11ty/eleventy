@@ -2,15 +2,15 @@ import path from "node:path";
 
 import copy from "@11ty/recursive-copy";
 import { TemplatePath } from "@11ty/eleventy-utils";
-import { createDebug } from "obug";
 
 import { readableFileSize } from "./Util/FileSize.js";
 import { isDynamicPattern } from "./Util/GlobMatcher.js";
 import BaseError from "./Errors/BaseError.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 import ProjectDirectories from "./Util/ProjectDirectories.js";
+import { createDebug } from "./Util/DebugLogUtil.js";
 
-const debug = createDebug("BuildAwesome:TemplatePassthrough");
+const debug = createDebug("TemplatePassthrough");
 
 class TemplatePassthroughError extends BaseError {}
 

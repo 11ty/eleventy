@@ -26,8 +26,8 @@ class SimpleError extends Error {
 }
 
 async function exec() {
-	const { createDebug } = await import("obug");
-	const debug = createDebug("BuildAwesome:CLI");
+	const { createDebug } = await import("./src/Util/DebugLogUtil.js");
+	const debug = createDebug("CLI");
 
 	// Notes about friendly error messaging with outdated Node versions: https://github.com/11ty/buildawesome/issues/3761
 	const { ErrorHandler } = await import("./src/Errors/ErrorHandler.js");

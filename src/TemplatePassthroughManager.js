@@ -1,12 +1,12 @@
 import { TemplatePath } from "@11ty/eleventy-utils";
-import { createDebug } from "obug";
 
 import BaseError from "./Errors/BaseError.js";
 import TemplatePassthrough from "./TemplatePassthrough.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 import { isGlobMatch, isDynamicPattern } from "./Util/GlobMatcher.js";
+import { createDebug } from "./Util/DebugLogUtil.js";
 
-const debug = createDebug("BuildAwesome:TemplatePassthroughManager");
+const debug = createDebug("TemplatePassthroughManager");
 
 class TemplatePassthroughManagerCopyError extends BaseError {}
 

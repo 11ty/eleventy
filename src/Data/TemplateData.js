@@ -1,7 +1,6 @@
 import path from "node:path";
 import lodash from "@11ty/lodash-custom";
 import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
-import { createDebug } from "obug";
 
 import { inspect } from "../Adapters/Packages/inspect.js";
 import unique from "../Util/Objects/Unique.js";
@@ -20,11 +19,12 @@ import ProjectDirectories from "../Util/ProjectDirectories.js";
 import ReservedData from "../Util/ReservedData.js";
 import { isTypeScriptSupported } from "../Util/TypeScriptFeatureTest.cjs";
 import { ResolveConfigurationData } from "../Data/ResolveConfigurationData.js";
+import { createDebug } from "../Util/DebugLogUtil.js";
 
 const { set: lodashSet, get: lodashGet } = lodash;
 
-const debugWarn = createDebug("BuildAwesome:Warnings");
-const debug = createDebug("BuildAwesome:TemplateData");
+const debugWarn = createDebug("Warnings");
+const debug = createDebug("TemplateData");
 
 class TemplateDataParseError extends BaseError {}
 

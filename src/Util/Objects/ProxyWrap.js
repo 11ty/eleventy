@@ -1,5 +1,5 @@
-// import { createDebug } from "obug";
 import { isPlainObject } from "@11ty/eleventy-utils";
+// import { createDebug } from "../DebugLogUtil.js";
 
 // const debug = createDebug("Dev:Eleventy:Proxy");
 

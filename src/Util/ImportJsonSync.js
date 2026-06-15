@@ -1,10 +1,10 @@
 import { existsSync } from "node:fs";
-import { createDebug } from "obug";
 import { TemplatePath } from "@11ty/eleventy-utils";
 
+import { createDebug } from "./DebugLogUtil.js";
 import { importJsonSync, corePackageJson } from "./RequireUtils.js";
 
-const debug = createDebug("BuildAwesome:ImportJsonSync");
+const debug = createDebug("ImportJsonSync");
 
 function findFilePathInParentDirs(dir, filename) {
 	// `package.json` searches look in parent dirs:

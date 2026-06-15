@@ -1,4 +1,3 @@
-import { createDebug } from "obug";
 import { TemplatePath } from "@11ty/eleventy-utils";
 
 // Direct reference to avoid use of `browser` Nunjucks variant in bundles
@@ -11,8 +10,9 @@ import {
 import TemplateEngine from "./TemplateEngine.js";
 import BaseError from "../Errors/BaseError.js";
 import { augmentObject } from "./Util/ContextAugmenter.js";
+import { createDebug } from "../Util/DebugLogUtil.js";
 
-const debug = createDebug("BuildAwesome:Nunjucks");
+const debug = createDebug("Nunjucks");
 
 class EleventyNunjucksError extends BaseError {}
 

@@ -1,9 +1,8 @@
-import { createDebug } from "obug";
-
+import { createDebug } from "../Util/DebugLogUtil.js";
 import isAsyncFunction from "../Util/IsAsyncFunction.js";
 import Benchmark from "./Benchmark.js";
 
-const debugBenchmark = createDebug("BuildAwesome:Benchmark");
+const debugBenchmark = createDebug("Benchmark");
 
 class BenchmarkGroup {
 	constructor() {

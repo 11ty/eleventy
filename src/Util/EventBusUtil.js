@@ -1,7 +1,7 @@
 import eventBus from "../EventBus.js";
-import { createDebug } from "obug";
+import { createDebug } from "./DebugLogUtil.js";
 
-const debug = createDebug("BuildAwesome:EventBus");
+const debug = createDebug("EventBus");
 
 class EventBusUtil {
 	static debugCurrentListenerCounts() {

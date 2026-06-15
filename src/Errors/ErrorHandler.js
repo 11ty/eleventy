@@ -1,10 +1,9 @@
-import { createDebug } from "obug";
-
+import { createDebug } from "../Util/DebugLogUtil.js";
 import { inspect } from "../Adapters/Packages/inspect.js";
 import ConsoleLogger from "../Util/ConsoleLogger.js";
 import ErrorUtil from "./ErrorUtil.js";
 
-const debug = createDebug("BuildAwesome:ErrorHandler");
+const debug = createDebug("ErrorHandler");
 
 export class ErrorHandler {
 	#logger;

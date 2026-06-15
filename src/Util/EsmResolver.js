@@ -1,8 +1,8 @@
-import { createDebug } from "obug";
 import { fileURLToPath } from "../Adapters/Packages/url.js";
 import PathNormalizer from "./PathNormalizer.js";
+import { createDebug } from "./DebugLogUtil.js";
 
-const debug = createDebug("BuildAwesome:EsmResolver");
+const debug = createDebug("EsmResolver");
 
 let lastModifiedPaths = new Map();
 

@@ -1,7 +1,7 @@
-import { createDebug } from "obug";
+import { createDebug } from "./DebugLogUtil.js";
 import chalk from "../Adapters/Packages/chalk.js";
 
-const debug = createDebug("BuildAwesome:Logger");
+const debug = createDebug("Logger");
 
 /**
  * Logger implementation that logs to STDOUT.

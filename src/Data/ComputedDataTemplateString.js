@@ -1,8 +1,9 @@
 import lodash from "@11ty/lodash-custom";
-import { createDebug } from "obug";
+
+import { createDebug } from "../Util/DebugLogUtil.js";
 
 const { set: lodashSet } = lodash;
-const debug = createDebug("BuildAwesome:ComputedDataTemplateString");
+const debug = createDebug("ComputedDataTemplateString");
 
 /* Calculates computed data in Template Strings.
  * Ideally we would use the Proxy approach but it doesn’t work

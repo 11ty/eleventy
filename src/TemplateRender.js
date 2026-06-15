@@ -1,8 +1,8 @@
-import { createDebug } from "obug";
 import BaseError from "./Errors/BaseError.js";
 import TemplateEngineManager from "./Engines/TemplateEngineManager.js";
+import { createDebug } from "./Util/DebugLogUtil.js";
 
-const debugConfiguration = createDebug("BuildAwesome:UserConfig");
+const debugConfiguration = createDebug("UserConfig");
 
 class TemplateRenderUnknownEngineError extends BaseError {}
 

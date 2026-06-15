@@ -1,5 +1,4 @@
 import { isPlainObject, TemplatePath } from "@11ty/eleventy-utils";
-import { createDebug } from "obug";
 
 import TemplateCollection from "./TemplateCollection.js";
 import ErrorUtil from "./Errors/ErrorUtil.js";
@@ -8,8 +7,9 @@ import DuplicatePermalinkOutputError from "./Errors/DuplicatePermalinkOutputErro
 import TemplateData from "./Data/TemplateData.js";
 import GlobalDependencyMap from "./GlobalDependencyMap.js";
 import { ResolveConfigurationData } from "./Data/ResolveConfigurationData.js";
+import { createDebug } from "./Util/DebugLogUtil.js";
 
-const debug = createDebug("BuildAwesome:TemplateMap");
+const debug = createDebug("TemplateMap");
 
 // These template URL filenames are allowed to exclude file extensions
 const EXTENSIONLESS_URL_ALLOWLIST = [

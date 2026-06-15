@@ -1,5 +1,6 @@
-import { createDebug } from "obug";
-const debug = createDebug("BuildAwesome:Util:ProjectTemplateFormats");
+import { createDebug } from "./DebugLogUtil.js";
+
+const debug = createDebug("Util:ProjectTemplateFormats");
 
 class ProjectTemplateFormats {
 	#useAll = {};

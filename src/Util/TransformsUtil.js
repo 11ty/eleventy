@@ -1,8 +1,9 @@
-import BaseError from "../Errors/BaseError.js";
 import { isPlainObject } from "@11ty/eleventy-utils";
-import { createDebug } from "obug";
 
-const debug = createDebug("BuildAwesome:Transforms");
+import BaseError from "../Errors/BaseError.js";
+import { createDebug } from "./DebugLogUtil.js";
+
+const debug = createDebug("Transforms");
 
 class TransformError extends BaseError {}
 

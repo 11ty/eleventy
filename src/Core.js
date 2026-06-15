@@ -1,5 +1,4 @@
 import { relative } from "node:path";
-import { createDebug } from "obug";
 
 import { TemplatePath } from "@11ty/eleventy-utils";
 
@@ -11,13 +10,14 @@ import WatchTargets from "./WatchTargets.js";
 import BaseError from "./Errors/BaseError.js";
 
 // Utils
+import { createDebug } from "./Util/DebugLogUtil.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 import PathPrefixer from "./Util/PathPrefixer.js";
 import PathNormalizer from "./Util/PathNormalizer.js";
 import { isGlobMatch } from "./Util/GlobMatcher.js";
 import eventBus from "./EventBus.js";
 
-const debug = createDebug("BuildAwesome:Core");
+const debug = createDebug("Core");
 
 export default class Core extends CoreFs {
 	/** @type {boolean} */

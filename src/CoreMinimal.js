@@ -1,4 +1,3 @@
-import { createDebug } from "obug";
 import { isPlainObject, TemplatePath } from "@11ty/eleventy-utils";
 
 import chalk from "./Adapters/Packages/chalk.js";
@@ -11,6 +10,7 @@ import TemplateConfig from "./TemplateConfig.js";
 import TemplateEngineManager from "./Engines/TemplateEngineManager.js";
 
 /* Utils */
+import { createDebug } from "./Util/DebugLogUtil.js";
 import { readableFileSize } from "./Util/FileSize.js";
 import simplePlural from "./Util/Pluralize.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
@@ -24,7 +24,7 @@ import ProjectTemplateFormats from "./Util/ProjectTemplateFormats.js";
 import { setEnvValue } from "./Util/EnvironmentVars.cjs";
 
 const pkg = getCorePackageJson();
-const debug = createDebug("BuildAwesome:Core");
+const debug = createDebug("Core");
 
 export class CoreMinimal {
 	/**
@@ -234,13 +234,14 @@ export class CoreMinimal {
 		return CoreMinimal.getVersion();
 	}
 
-	static isUsingBuildAwesome(configPath) {
-		if (typeof configPath !== "string") {
+	isUsingBuildAwesome() {
+		if (typeof this.#activeConfigurationPath !== "string") {
 			return;
 		}
+
 		if (
 			process?.env?.BUILDAWESOME_PACKAGE === "@awesome.me/buildawesome" ||
-			configPath.includes("buildawesome.config")
+			this.#activeConfigurationPath.includes("buildawesome.config")
 		) {
 			return true;
 		}
@@ -257,7 +258,7 @@ export class CoreMinimal {
 		this.#activeConfigurationPath =
 			this.configPath ?? this.eleventyConfig.getLocalProjectConfigFile();
 
-		if (CoreMinimal.isUsingBuildAwesome(this.#activeConfigurationPath)) {
+		if (this.isUsingBuildAwesome()) {
 			this.logger.setPrefix(`[buildawesome]`);
 		}
 

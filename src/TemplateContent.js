@@ -1,10 +1,10 @@
 import { readFileSync } from "node:fs";
-import { createDebug } from "obug";
 import matter from "@11ty/gray-matter";
 import lodash from "@11ty/lodash-custom";
 import { Merge, DeepCopy, TemplatePath } from "@11ty/eleventy-utils";
 
 import JavaScriptFrontMatter from "./Engines/FrontMatter/JavaScript.js";
+import { createDebug } from "./Util/DebugLogUtil.js";
 import { EOL } from "./Util/NewLineAdapter.js";
 import TemplateData from "./Data/TemplateData.js";
 import TemplateRender from "./TemplateRender.js";
@@ -13,7 +13,7 @@ import ErrorUtil from "./Errors/ErrorUtil.js";
 import eventBus from "./EventBus.js";
 
 const { set: lodashSet } = lodash;
-const debug = createDebug("BuildAwesome:TemplateContent");
+const debug = createDebug("TemplateContent");
 
 class TemplateContentFrontMatterError extends BaseError {}
 class TemplateContentCompileError extends BaseError {}

@@ -1,11 +1,11 @@
-import { createDebug } from "obug";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import chokidar from "chokidar";
 
+import { createDebug } from "./Util/DebugLogUtil.js";
 import { isGlobMatch } from "./Util/GlobMatcher.js";
 import { GlobStripper } from "./Util/GlobStripper.js";
 
-const debug = createDebug("BuildAwesome:Watch");
+const debug = createDebug("Watch");
 
 export class Watch {
 	/** @type {module:chokidar} */

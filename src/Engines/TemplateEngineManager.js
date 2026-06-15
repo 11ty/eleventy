@@ -1,6 +1,6 @@
-import { createDebug } from "obug";
+import { createDebug } from "../Util/DebugLogUtil.js";
 
-const debug = createDebug("BuildAwesome:TemplateEngineManager");
+const debug = createDebug("TemplateEngineManager");
 
 class TemplateEngineManager {
 	#CustomEngine;

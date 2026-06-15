@@ -1,7 +1,7 @@
 import { DepGraph as DependencyGraph } from "dependency-graph";
-import { createDebug } from "obug";
+import { createDebug } from "./DebugLogUtil.js";
 
-const debug = createDebug("BuildAwesome:TemplateDepGraph");
+const debug = createDebug("TemplateDepGraph");
 
 const COLLECTION_PREFIX = "__collection:";
 
