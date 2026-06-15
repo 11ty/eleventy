@@ -10,7 +10,7 @@ export default function(BuildAwesome) {
 	});
 
 	test("Markdown (no preprocessor) template", async () => {
-		let elev = new BuildAwesome({
+		let ba = new BuildAwesome({
 			config(configApi) {
 				configApi.addEngine("md", Markdown);
 				configApi.setMarkdownTemplateEngine(false);
@@ -21,12 +21,12 @@ export default function(BuildAwesome) {
 			}
 		});
 
-		let json = await elev.toJSON();
+		let json = await ba.toJSON();
 		assert.strictEqual(json[0].content.trim(), `<h1>Heading</h1>`);
 	});
 
 	test("Markdown (via Liquid) template", async () => {
-		let elev = new BuildAwesome({
+		let ba = new BuildAwesome({
 			config(configApi) {
 				configApi.addEngine("md", Markdown);
 				configApi.addEngine("liquid", Liquid);
@@ -38,12 +38,12 @@ export default function(BuildAwesome) {
 			}
 		});
 
-		let json = await elev.toJSON();
+		let json = await ba.toJSON();
 		assert.strictEqual(json[0].content.trim(), `<h1>Heading</h1>`);
 	});
 
 	test("Liquid template", async () => {
-		let elev = new BuildAwesome({
+		let ba = new BuildAwesome({
 			config(configApi) {
 				configApi.addEngine("liquid", Liquid);
 				configApi.setTemplateFormats("liquid");
@@ -51,12 +51,12 @@ export default function(BuildAwesome) {
 			}
 		});
 
-		let json = await elev.toJSON();
+		let json = await ba.toJSON();
 		assert.strictEqual(json[0].content.trim(), `<h1>Heading</h1>`);
 	});
 
 	test("Nunjucks template", async () => {
-		let elev = new BuildAwesome({
+		let ba = new BuildAwesome({
 			config(configApi) {
 				configApi.addEngine("njk", Nunjucks);
 				configApi.setTemplateFormats("njk");
@@ -65,12 +65,12 @@ export default function(BuildAwesome) {
 			}
 		});
 
-		let json = await elev.toJSON();
+		let json = await ba.toJSON();
 		assert.strictEqual(json[0].content.trim(), `<h1>Heading</h1>`);
 	});
 
 	test("i18n Plugin Use (with 11ty.js)", async () => {
-		let elev = new BuildAwesome({
+		let ba = new BuildAwesome({
 			config(configApi) {
 				configApi.addPlugin(I18nPlugin, {
 					defaultLanguage: "en"
@@ -84,14 +84,14 @@ export default function(BuildAwesome) {
 			}
 		});
 
-		let json = await elev.toJSON();
+		let json = await ba.toJSON();
 		assert.strictEqual(json[0].content.trim(), `<a href="/en/">Home</a>`);
 		assert.strictEqual(json[1].content.trim(), `<a href="/es/">Home</a>`);
 	});
 
 	// Careful, `@11ty/client` will resolve slugify via Vite instead of it bundled with the package
 	test("slugify Filter in Liquid", async () => {
-		let elev = new BuildAwesome({
+		let ba = new BuildAwesome({
 			config(configApi) {
 				configApi.addEngine("liquid", Liquid);
 				configApi.setTemplateFormats("liquid");
@@ -99,13 +99,13 @@ export default function(BuildAwesome) {
 			}
 		});
 
-		let json = await elev.toJSON();
+		let json = await ba.toJSON();
 		assert.strictEqual(json[0].content.trim(), `this-is-a-heading`);
 	});
 
 	// Careful, `@11ty/client` will resolve slugify via Vite instead of it bundled with the package
 	test("slugify Filter in Nunjucks", async () => {
-		let elev = new BuildAwesome({
+		let ba = new BuildAwesome({
 			config(configApi) {
 				configApi.addEngine("njk", Nunjucks);
 				configApi.setTemplateFormats("njk");
@@ -113,7 +113,7 @@ export default function(BuildAwesome) {
 			}
 		});
 
-		let json = await elev.toJSON();
+		let json = await ba.toJSON();
 		assert.strictEqual(json[0].content.trim(), `this-is-a-heading`);
 	});
 }
