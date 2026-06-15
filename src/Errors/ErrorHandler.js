@@ -9,8 +9,6 @@ const debug = createDebug("BuildAwesome:ErrorHandler");
 export class ErrorHandler {
 	#logger;
 
-	constructor() {}
-
 	get logger() {
 		if (!this.#logger) {
 			throw new Error("Internal error: missing logger instance.");
