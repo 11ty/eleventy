@@ -14,7 +14,9 @@ if (
 	clientPkg.name !== "@11ty/client" ||
 	!fs.existsSync("./packages/browser/package.json")
 ) {
-	throw new Error("Did you run this script from the wrong directory?");
+	throw new Error(
+		"Did you run this script from the wrong directory? (Should be the repository root)",
+	);
 }
 
 fs.writeFileSync("./packages/browser/package.json", JSON.stringify(clientPkg, null, 2), "utf8");

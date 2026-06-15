@@ -15,7 +15,9 @@ if (
 	buildawesomePkg.name !== "@awesome.me/buildawesome" ||
 	!fs.existsSync("./packages/build-awesome/package.json")
 ) {
-	throw new Error("Did you run this script from the wrong directory?");
+	throw new Error(
+		"Did you run this script from the wrong directory? (Should be the repository root)",
+	);
 }
 
 fs.writeFileSync(
