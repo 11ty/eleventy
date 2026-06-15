@@ -3,13 +3,24 @@ const PREFIXES = {
 	buildawesome: "buildawesome:",
 };
 
+// Should always cross-map to the attribute name that exists
+// Request for eleventy: should map to buildawesome: if buildawesome: is in attrs (and vice versa)
 export function resolveAttributeName(attrs = {}, attrName = "") {
+	if (typeof attrName !== "string") {
+		return;
+	}
 	let [prefix, name] = attrName.split(":");
-	if (PREFIXES.eleventy + name in attrs) {
-		return PREFIXES.eleventy + name;
+	if (!prefix || !name) {
+		return;
+	}
+	if (prefix && !(prefix in PREFIXES)) {
+		return;
 	}
 	if (PREFIXES.buildawesome + name in attrs) {
 		return PREFIXES.buildawesome + name;
+	}
+	if (PREFIXES.eleventy + name in attrs) {
+		return PREFIXES.eleventy + name;
 	}
 }
 
