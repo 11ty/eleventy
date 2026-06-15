@@ -53,7 +53,6 @@ class TemplateConfig {
 	#existsCache = new ExistsCache();
 	#usesGraph;
 	#activeConfigPath;
-	#dataEdits = [];
 
 	constructor(customRootConfig, projectConfigPath) {
 		/** @type {object} */
@@ -582,60 +581,6 @@ class TemplateConfig {
 	 */
 	get existsCache() {
 		return this.#existsCache;
-	}
-
-	addDataEditOverride(filePath, dataSelector, value, timestamp) {
-		this.#dataEdits.push({
-			filePath,
-			dataSelector,
-			value,
-			timestamp,
-		});
-	}
-
-	getDataOverrideForPath(filePath) {
-		filePath = TemplatePath.stripLeadingDotSlash(filePath);
-
-		let edits = this.#dataEdits
-			.filter((entry) => entry.filePath === filePath)
-			.sort((a, b) => {
-				// crdt algorithm: newest timestamp wins
-				return a.timestamp - b.timestamp;
-			});
-
-		if (edits.length === 0) {
-			return;
-		}
-
-		// TODO add a cache for this
-		let obj = {};
-		for (let edit of edits) {
-			let { filePath, dataSelector, value, timestamp } = edit;
-
-			if (lodashGet(obj, dataSelector)) {
-				// console.log( "Warning: override conflict", {filePath, dataSelector, value, timestamp}, "with", lodashGet(obj, dataSelector) );
-			}
-
-			lodashSet(obj, dataSelector, value);
-		}
-
-		return obj;
-	}
-
-	resetDataOverrides() {
-		// de-duped
-		let filePaths = Array.from(new Set(this.#dataEdits.map((entry) => entry.filePath)));
-		this.#dataEdits = [];
-		return filePaths;
-	}
-
-	// only a count of files+keys changed, not individual edits
-	getPendingDataOverrides() {
-		let s = new Set();
-		for (let { filePath, dataSelector } of this.#dataEdits) {
-			s.add(`${filePath}#${dataSelector}`);
-		}
-		return Array.from(s);
 	}
 }
 

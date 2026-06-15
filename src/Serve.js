@@ -43,7 +43,6 @@ export default class Serve {
 	#chokidar;
 	// these are *not* normalized
 	#watchTargets = new Set();
-	#editCallbacks = [];
 	#logger;
 
 	get config() {
@@ -196,33 +195,7 @@ export default class Serve {
 				pathPrefix: PathPrefixer.normalizePathPrefix(this.config.pathPrefix),
 				logger: this.getForcedOutputLogger(),
 				onClientMessage: async ({ id, type, data, timestamp }) => {
-					let paths = [];
-					if (type === "eleventy.editReset") {
-						// Reset configuration file
-						paths.push(this.eleventyConfig.getActiveConfigPath());
-
-						// Reset previous modified files
-						paths.push(...this.eleventyConfig.resetDataOverrides());
-					} else if (type === "eleventy.edit") {
-						for (let dataFileSelector of Object.keys(data)) {
-							let [filePath, selector] = dataFileSelector.split("#");
-							this.eleventyConfig.addDataEditOverride(
-								filePath,
-								selector,
-								data[dataFileSelector],
-								timestamp,
-							);
-							paths.push(filePath);
-						}
-					}
-
-					for (let filePath of new Set(paths)) {
-						if (filePath) {
-							for (let fn of this.#editCallbacks) {
-								await fn(filePath);
-							}
-						}
-					}
+					// do nothing
 				},
 			},
 			DEFAULT_SERVER_OPTIONS,
@@ -393,13 +366,5 @@ export default class Serve {
 		} else {
 			await this.server.reload(reloadEvent);
 		}
-	}
-
-	// TODO change this to onmessage
-	onEdit(callback) {
-		if (typeof callback !== "function") {
-			return;
-		}
-		this.#editCallbacks.push(callback);
 	}
 }

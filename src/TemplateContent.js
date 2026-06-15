@@ -446,11 +446,6 @@ class TemplateContent {
 
 		let data = Object.assign(frontMatterData, extraData, virtualTemplateData);
 
-		let editOverrides = this.eleventyConfig.getDataOverrideForPath(this.inputPath);
-		if (editOverrides) {
-			data = Merge(data, editOverrides);
-		}
-
 		return {
 			data,
 			excerpt: fm.excerpt,

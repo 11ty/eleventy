@@ -411,7 +411,6 @@ class TemplateData {
 		if (this.dirs) {
 			global.directories = Object.assign({}, this.dirs.getUserspaceInstance());
 		}
-		global.pendingEditsCount = (this.templateConfig.getPendingDataOverrides() || []).length;
 
 		if (this.config.freezeReservedData) {
 			DeepFreeze(global);
@@ -449,10 +448,7 @@ class TemplateData {
 		}
 
 		let globalJson = await this.getAllGlobalData();
-
-		let noFilePathEditOverrides = this.templateConfig.getDataOverrideForPath();
-
-		let mergedGlobalData = Merge(globalJson, configApiGlobalData, noFilePathEditOverrides);
+		let mergedGlobalData = Merge(globalJson, configApiGlobalData);
 
 		// OK: Shallow merge when combining rawImports (pkg) with global data files
 		return Object.assign({}, mergedGlobalData, rawImports);
@@ -635,11 +631,6 @@ class TemplateData {
 			if (typeof returnValue === "function") {
 				let configApiGlobalData = await this.getInitialGlobalData();
 				returnValue = await returnValue(configApiGlobalData || {});
-			}
-
-			let editOverrides = this.templateConfig.getDataOverrideForPath(path);
-			if (editOverrides) {
-				returnValue = Merge(returnValue, editOverrides);
 			}
 
 			dataBench.after();
