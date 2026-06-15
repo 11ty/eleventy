@@ -6,7 +6,6 @@ import { createDebug } from "obug";
 import { inspect } from "../Adapters/Packages/inspect.js";
 import unique from "../Util/Objects/Unique.js";
 import TemplateGlob from "../TemplateGlob.js";
-import { DataCascadeManager } from "./DataCascade.js";
 import BaseError from "../Errors/BaseError.js";
 import ConfigurationGlobalData from "./ConfigurationGlobalData.js";
 import {
@@ -52,9 +51,6 @@ class TemplateData {
 	#rawImports;
 	#globalData;
 	#templateDirectoryData = {};
-	#dataCascadeManager = new DataCascadeManager();
-	#globalDataCascade;
-	#collectionsDataCascade;
 
 	constructor(templateConfig) {
 		if (!templateConfig || templateConfig.constructor.name !== "TemplateConfig") {
@@ -65,12 +61,6 @@ class TemplateData {
 
 		this.templateConfig = templateConfig;
 		this.config = this.templateConfig.getConfig();
-
-		if (this.config.experimentalFlags.includes(DataCascadeManager.FLAGS.DATA_LOCATION)) {
-			this.#dataCascadeManager.setEnabled(true);
-			this.#globalDataCascade = this.#dataCascadeManager.factory();
-			this.#collectionsDataCascade = this.#dataCascadeManager.factory();
-		}
 
 		this.benchmarks = {
 			data: this.config.benchmarkManager.get("Data"),
@@ -167,15 +157,6 @@ class TemplateData {
 			[this.config.keys.package]: packageJson,
 		};
 
-		if (projectPackageJsonPath) {
-			let relativeProjectPackageJsonPath =
-				ProjectDirectories.relativeToProjectRoot(projectPackageJsonPath);
-
-			if (this.#globalDataCascade) {
-				this.#globalDataCascade.mergeTopLevel(this.#rawImports, relativeProjectPackageJsonPath);
-			}
-		}
-
 		if (this.config.freezeReservedData) {
 			DeepFreeze(this.#rawImports);
 		}
@@ -187,7 +168,6 @@ class TemplateData {
 		this.#globalData = null;
 		this.configApiGlobalData = null;
 		this.#templateDirectoryData = {};
-		this.#dataCascadeManager.reset();
 	}
 
 	_getGlobalDataGlobByExtension(extension) {
@@ -382,10 +362,6 @@ class TemplateData {
 			dataFileConflicts[objectPathTargetString] = file;
 			debug(`Found global data file ${file} and adding as: ${objectPathTarget}`);
 
-			if (this.#globalDataCascade) {
-				this.#globalDataCascade.mergeToLocation(data, objectPathTargetString, file);
-			}
-
 			lodashSet(globalData, objectPathTarget, data);
 
 			if (this.config.freezeReservedData) {
@@ -442,10 +418,6 @@ class TemplateData {
 
 		// Data from the configuration API eleventyConfig.addGLobalData and `eleventy` global
 		let configApiGlobalData = await this.getInitialGlobalData();
-		// Some day we may treat the `eleventy` global assigned here as different to Config API data (readonly vs internal)
-		if (this.#globalDataCascade) {
-			this.#globalDataCascade.mergeTopLevel(configApiGlobalData);
-		}
 
 		let globalJson = await this.getAllGlobalData();
 		let mergedGlobalData = Merge(globalJson, configApiGlobalData);
@@ -463,7 +435,7 @@ class TemplateData {
 	}
 
 	/* Template and Directory data files */
-	async combineLocalData(localDataPaths, dataCascade) {
+	async combineLocalData(localDataPaths) {
 		let localData = {};
 		if (!Array.isArray(localDataPaths)) {
 			localDataPaths = [localDataPaths];
@@ -508,44 +480,21 @@ class TemplateData {
 				}
 
 				Merge(localData, cleanedDataForPath);
-
-				if (dataCascade) {
-					dataCascade.mergeTopLevel(localData, path);
-				}
 			}
 		}
 
 		return localData;
 	}
 
-	getCollectionsDataCascade() {
-		return this.#collectionsDataCascade;
-	}
-
-	getGlobalDataCascade() {
-		return this.#globalDataCascade;
-	}
-
 	async getTemplateDirectoryData(templatePath) {
 		if (!this.#templateDirectoryData[templatePath]) {
-			let cascade;
-			if (!this.#dataCascadeManager.has(templatePath)) {
-				cascade = this.#dataCascadeManager.create(templatePath);
-			} else {
-				cascade = this.#dataCascadeManager.get(templatePath);
-			}
-
 			let localDataPaths = await this.getLocalDataPaths(templatePath);
-			let importedData = await this.combineLocalData(localDataPaths, cascade);
+			let importedData = await this.combineLocalData(localDataPaths);
 
 			this.#templateDirectoryData[templatePath] = importedData;
 		}
 
 		return this.#templateDirectoryData[templatePath];
-	}
-
-	getTemplateDirectoryDataCascade(templatePath) {
-		return this.#dataCascadeManager.get(templatePath);
 	}
 
 	getUserDataExtensions() {

@@ -11,7 +11,6 @@ import {
 import TemplateEngine from "./TemplateEngine.js";
 import BaseError from "../Errors/BaseError.js";
 import { augmentObject } from "./Util/ContextAugmenter.js";
-import { ArgumentHelper } from "../Data/DataSourceLocation.js";
 
 const debug = createDebug("BuildAwesome:Nunjucks");
 
@@ -151,8 +150,7 @@ export default class Nunjucks extends TemplateEngine {
 					lazy: false, // context.env?.opts.throwOnUndefined,
 				});
 
-				let callback = ArgumentHelper.wrapFilter(fn);
-				return callback.call(this, ...args);
+				return fn.call(this, ...args);
 			} catch (e) {
 				throw new EleventyNunjucksError(
 					`Error in Nunjucks Filter \`${name}\`${this.page ? ` (${this.page.inputPath})` : ""}`,

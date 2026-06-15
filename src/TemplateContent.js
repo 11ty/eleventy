@@ -27,7 +27,6 @@ class TemplateContent {
 	#extensionMap;
 	#configOptions;
 	#frontMatterOptions;
-	#dataMapContent;
 
 	constructor(inputPath, templateConfig) {
 		if (!templateConfig || templateConfig.constructor.name !== "TemplateConfig") {
@@ -392,13 +391,6 @@ class TemplateContent {
 		return fm.content;
 	}
 
-	get dataCascade() {
-		if (!this.templateData) {
-			return;
-		}
-		return this.templateData.getTemplateDirectoryDataCascade(this.inputPath);
-	}
-
 	async #getFrontMatterData() {
 		let fm = await this.read();
 
@@ -432,17 +424,6 @@ class TemplateContent {
 			file: this.inputPath,
 			isVirtualTemplate: Boolean(virtualTemplateData),
 		});
-
-		if (this.dataCascade) {
-			this.dataCascade.mergeTopLevel(frontMatterData, this.inputPath);
-
-			if (extraData) {
-				this.dataCascade.mergeTopLevel(extraData);
-			}
-			if (virtualTemplateData) {
-				this.dataCascade.mergeTopLevel(virtualTemplateData);
-			}
-		}
 
 		let data = Object.assign(frontMatterData, extraData, virtualTemplateData);
 
@@ -677,10 +658,6 @@ class TemplateContent {
 		return suffix.join("");
 	}
 
-	getDataMapContent() {
-		return this.#dataMapContent;
-	}
-
 	async _render(str, data, options = {}) {
 		let { bypassMarkdown, type } = options;
 
@@ -710,28 +687,6 @@ class TemplateContent {
 			templateBenchmark.before();
 			if (inputPathBenchmark) {
 				inputPathBenchmark.before();
-			}
-
-			// Only HTML output files
-			if (
-				this.dataCascade &&
-				type === "Content" &&
-				(data.page?.outputPath || "").endsWith(".html")
-			) {
-				// Merge local data cascade with global
-				let globalDataCascade = this.templateData.getGlobalDataCascade();
-				let layoutDataCascade = this.getLayoutDataCascade();
-				this.dataCascade.mergeWithUpstreamDataCascade(layoutDataCascade, globalDataCascade);
-
-				let collectionsDataCascade = this.templateData.getCollectionsDataCascade();
-				this.dataCascade.assignFromUpstreamDataCascade(collectionsDataCascade);
-
-				let dataSourceLocations = this.dataCascade.getLocations();
-				let dataMapContent = await fn(dataSourceLocations);
-				// cache data map html content
-				this.#dataMapContent = dataMapContent;
-			} else {
-				this.#dataMapContent = undefined;
 			}
 
 			let rendered = await fn(data);

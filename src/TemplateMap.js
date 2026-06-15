@@ -266,42 +266,6 @@ class TemplateMap {
 			.filter(Boolean);
 	}
 
-	mergeDataCascadeLocations() {
-		let collectionsDataCascade = this.#templateData?.getCollectionsDataCascade();
-		if (!collectionsDataCascade) {
-			return;
-		}
-
-		for (let [name, collection] of Object.entries(this.collectionsData)) {
-			let index = 0;
-			for (let entry of collection) {
-				let dataWithoutCollections = {
-					...entry.data,
-				};
-				delete dataWithoutCollections.collections;
-
-				let readOnlyEntry = {
-					page: entry.page,
-					rawInput: entry.rawInput,
-					inputPath: entry.inputPath,
-					date: entry.date,
-					outputPath: entry.outputPath,
-					url: entry.url,
-					templateContent: "",
-					content: "",
-				};
-
-				collectionsDataCascade.mergeToLocation(readOnlyEntry, `collections[${name}][${index}]`);
-				collectionsDataCascade.mergeToLocation(
-					dataWithoutCollections,
-					`collections[${name}][${index}].data`,
-					entry.inputPath,
-				);
-				index++;
-			}
-		}
-	}
-
 	async cache() {
 		if (!this.#dependencyMapInitialized) {
 			this.addAllToGlobalDependencyGraph();
@@ -322,7 +286,6 @@ class TemplateMap {
 
 		await this.initDependencyMap(fullTemplateOrder);
 		await this.resolveRemainingComputedData();
-		this.mergeDataCascadeLocations();
 
 		let orderedPaths = this.#removeTagsFromTemplateOrder(fullTemplateOrder);
 

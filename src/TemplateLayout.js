@@ -3,7 +3,6 @@ import { Merge, TemplatePath } from "@11ty/eleventy-utils";
 import TemplateLayoutPathResolver from "./TemplateLayoutPathResolver.js";
 import TemplateContent from "./TemplateContent.js";
 import layoutCache from "./LayoutCache.js";
-import { DataCascade } from "./Data/DataCascade.js";
 
 // https://github.com/11ty/eleventy/issues/3954
 class CdataWrapper {
@@ -39,7 +38,6 @@ class CdataWrapper {
 
 class TemplateLayout extends TemplateContent {
 	#dataCache;
-	#layoutDataCascade = new DataCascade();
 
 	constructor(key, extensionMap, eleventyConfig) {
 		if (!eleventyConfig || eleventyConfig.constructor.name !== "TemplateConfig") {
@@ -59,10 +57,6 @@ class TemplateLayout extends TemplateContent {
 		this.key = resolver.getNormalizedLayoutKey();
 		this.dataKeyLayoutPath = key;
 		this.inputPath = resolvedPath;
-	}
-
-	getLayoutDataCascade() {
-		return this.#layoutDataCascade;
 	}
 
 	getKey() {
@@ -176,7 +170,6 @@ class TemplateLayout extends TemplateContent {
 		let dataToMerge = [];
 		for (let j = map.length - 1; j >= 0; j--) {
 			dataToMerge.push(map[j].frontMatterData);
-			this.#layoutDataCascade.mergeTopLevel(map[j].frontMatterData, map[j].inputPath);
 		}
 
 		// Deep merge of layout front matter
@@ -250,13 +243,11 @@ class TemplateLayout extends TemplateContent {
 	// Inefficient? We want to compile all the templatelayouts into a single reusable callback?
 	// Trouble: layouts may need data variables present downstream/upstream
 	// This is called from Template->renderPageEntry
-	async renderLayoutPageEntry(pageEntry, dataCascade) {
+	async renderLayoutPageEntry(pageEntry) {
 		let pageTemplateSyntax = pageEntry.template?.getEngineNames(
 			pageEntry.data[this.config.keys.engineOverride],
 		);
-		let templateContent = dataCascade
-			? pageEntry.template.getDataMapContent()
-			: pageEntry.templateContent;
+		let templateContent = pageEntry.templateContent;
 		let compiledFunctions = await this.getCompiledLayoutFunctions();
 
 		for (let { render, template } of compiledFunctions) {
@@ -265,21 +256,12 @@ class TemplateLayout extends TemplateContent {
 			let layoutTemplateSyntax = template.getEngineNames(); // templateEngineOverride not supported in layouts
 			let cdata = new CdataWrapper(pageTemplateSyntax, layoutTemplateSyntax);
 
-			if (dataCascade) {
-				let dataSources = {
-					...dataCascade.getLocations(),
-					// This should come *after* data, so `content` have override `content` props set in data cascade
-					content: cdata.wrap(templateContent),
-				};
-				templateContent = cdata.unwrap(await render(dataSources));
-			} else {
-				let data = {
-					...pageEntry.data,
-					// This should come *after* data, so `content` have override `content` props set in data cascade
-					content: cdata.wrap(templateContent),
-				};
-				templateContent = cdata.unwrap(await render(data));
-			}
+			let data = {
+				...pageEntry.data,
+				// This should come *after* data, so `content` have override `content` props set in data cascade
+				content: cdata.wrap(templateContent),
+			};
+			templateContent = cdata.unwrap(await render(data));
 		}
 
 		// Don’t set `templateContent` on pageEntry because collection items should not have layout markup
