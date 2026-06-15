@@ -83,7 +83,6 @@ class ConsoleLogger {
 
 	/** @param {string} msg */
 	info(msg) {
-		// Similar to log, but blue
 		this.message(msg, "log", this.#colorFallbacks.info);
 	}
 
