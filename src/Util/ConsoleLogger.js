@@ -111,12 +111,19 @@ class ConsoleLogger {
 	 * @param {LogType} [type='log'] - The error level to log.
 	 * @param {string|undefined} [chalkColor=undefined] - Color name or falsy to disable
 	 * @param {boolean} [forceToConsole=false] - Enforce a log on console instead of specified target.
+	 * @param {string|undefined} [prefix=undefined] - Dimmed string at the start of each line
 	 */
-	message(message, type = "log", chalkColor = undefined, forceToConsole = false, prefix = "") {
+	message(
+		message,
+		type = "log",
+		chalkColor = undefined,
+		forceToConsole = false,
+		prefix = undefined,
+	) {
 		if (!forceToConsole && (!this.isVerbose || process.env.DEBUG)) {
 			debug(message);
 		} else if (this.#logger !== false) {
-			if (!prefix) {
+			if (prefix === undefined) {
 				prefix = this.#logPrefix;
 			}
 
