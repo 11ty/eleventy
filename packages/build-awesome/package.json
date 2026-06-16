@@ -15,9 +15,9 @@
     },
     "./utils/git": "./src/Util/Git.js"
   },
-	"scripts": {
-		"test": ""
-	},
+  "scripts": {
+    "test": ""
+  },
   "bin": {
     "buildawesome": "cmd.js"
   },
