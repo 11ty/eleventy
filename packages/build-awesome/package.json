@@ -1,6 +1,6 @@
 {
   "name": "@awesome.me/buildawesome",
-  "description": "Run Build Awesome (Eleventy) in your browser.",
+  "description": "A simpler way to build awesome web sites.",
   "version": "PRIVATE",
   "private": true,
   "publishConfig": {
@@ -15,18 +15,14 @@
     },
     "./utils/git": "./src/Util/Git.js"
   },
+	"scripts": {
+		"test": ""
+	},
   "bin": {
     "buildawesome": "cmd.js"
   },
   "license": "MIT",
-  "funding": {
-    "type": "opencollective",
-    "url": "https://opencollective.com/11ty"
-  },
-  "scripts": {
-    "test": ""
-  },
-  "author": "Zach Leatherman <zachleatherman@gmail.com> (https://zachleat.com/)",
+  "author": "Zach Leatherman (https://zachleat.com/)",
   "repository": {
     "type": "git",
     "url": "git://github.com/11ty/buildawesome.git"
