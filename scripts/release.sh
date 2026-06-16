@@ -21,8 +21,8 @@ fi
 
 
 # Will skip publishing @11ty/client and @awesome.me/buildawesome if @11ty/eleventy fails
-if npm publish --provenance --access=public --tag=$NPM_PUBLISH_TAG $DRY_RUN; then
+if npm stage publish --provenance --access=public --tag=$NPM_PUBLISH_TAG $DRY_RUN; then
 	node packages/browser/update-package-json.js
 	node packages/build-awesome/update-package-json.js
-  npm publish --workspaces --provenance --access=public --tag=$NPM_PUBLISH_TAG $DRY_RUN
+  npm stage publish --workspaces --provenance --access=public --tag=$NPM_PUBLISH_TAG $DRY_RUN
 fi
