@@ -29,10 +29,6 @@ export default class Core extends CoreFs {
 	#watchDelay;
 	#interrupted = false;
 
-	// constructor(input, output, options = {}, eleventyConfig = null) {
-	// 	super(input, output, options, eleventyConfig);
-	// }
-
 	get watchQueue() {
 		if (!this.#watchQueue) {
 			this.#watchQueue = new WatchQueue();
