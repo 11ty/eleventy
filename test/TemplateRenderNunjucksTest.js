@@ -381,7 +381,7 @@ test("Nunjucks sync function Shortcode (error throwing)", async (t) => {
 
   t.true(
     error.message.indexOf(
-      "EleventyNunjucksError: Error with Nunjucks shortcode `postfixWithZach`"
+      "BuildAwesomeNunjucksError: Error with Nunjucks shortcode `postfixWithZach`"
     ) > -1
   );
   t.true(
@@ -411,7 +411,7 @@ test("Nunjucks Async function Shortcode (error throwing)", async (t) => {
   });
   t.true(
     error.message.indexOf(
-      "EleventyNunjucksError: Error with Nunjucks shortcode `postfixWithZachError`"
+      "BuildAwesomeNunjucksError: Error with Nunjucks shortcode `postfixWithZachError`"
     ) > -1
   );
   t.true(
@@ -446,7 +446,7 @@ test("Nunjucks sync function paired Shortcode (error throwing)", async (t) => {
 
   t.true(
     error.message.indexOf(
-      "EleventyNunjucksError: Error with Nunjucks paired shortcode `postfixWithZachError`"
+      "BuildAwesomeNunjucksError: Error with Nunjucks paired shortcode `postfixWithZachError`"
     ) > -1
   );
   t.true(
@@ -481,7 +481,7 @@ test("Nunjucks Async function paired Shortcode (error throwing)", async (t) => {
 
   t.true(
     error.message.indexOf(
-      "EleventyNunjucksError: Error with Nunjucks paired shortcode `postfixWithZachError`"
+      "BuildAwesomeNunjucksError: Error with Nunjucks paired shortcode `postfixWithZachError`"
     ) > -1
   );
   t.true(

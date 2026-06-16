@@ -14,7 +14,7 @@ import { createDebug } from "../Util/DebugLogUtil.js";
 
 const debug = createDebug("Nunjucks");
 
-class EleventyNunjucksError extends BaseError {}
+class BuildAwesomeNunjucksError extends BaseError {}
 
 export default class Nunjucks extends TemplateEngine {
 	constructor(name, eleventyConfig) {
@@ -152,7 +152,7 @@ export default class Nunjucks extends TemplateEngine {
 
 				return fn.call(this, ...args);
 			} catch (e) {
-				throw new EleventyNunjucksError(
+				throw new BuildAwesomeNunjucksError(
 					`Error in Nunjucks Filter \`${name}\`${this.page ? ` (${this.page.inputPath})` : ""}`,
 					e,
 				);
@@ -257,7 +257,7 @@ export default class Nunjucks extends TemplateEngine {
 					// #3286 error messaging when the shortcode is not a promise
 					if (!ret?.then) {
 						resolve(
-							new EleventyNunjucksError(
+							new BuildAwesomeNunjucksError(
 								`Error with Nunjucks shortcode \`${shortcodeName}\`: it was defined as asynchronous but was actually synchronous. This is important for Nunjucks.`,
 							),
 						);
@@ -269,7 +269,10 @@ export default class Nunjucks extends TemplateEngine {
 						},
 						function (e) {
 							resolve(
-								new EleventyNunjucksError(`Error with Nunjucks shortcode \`${shortcodeName}\``, e),
+								new BuildAwesomeNunjucksError(
+									`Error with Nunjucks shortcode \`${shortcodeName}\``,
+									e,
+								),
 							);
 						},
 					);
@@ -278,7 +281,7 @@ export default class Nunjucks extends TemplateEngine {
 						let ret = shortcodeFn.call(Nunjucks.normalizeContext(context), ...argArray);
 						return new NunjucksLib.runtime.SafeString("" + ret);
 					} catch (e) {
-						throw new EleventyNunjucksError(
+						throw new BuildAwesomeNunjucksError(
 							`Error with Nunjucks shortcode \`${shortcodeName}\``,
 							e,
 						);
@@ -313,7 +316,7 @@ export default class Nunjucks extends TemplateEngine {
 					body(function (e, bodyContent) {
 						if (e) {
 							resolve(
-								new EleventyNunjucksError(
+								new BuildAwesomeNunjucksError(
 									`Error with Nunjucks paired shortcode \`${shortcodeName}\``,
 									e,
 								),
@@ -328,7 +331,7 @@ export default class Nunjucks extends TemplateEngine {
 
 						// #3286 error messaging when the shortcode is not a promise
 						if (!ret?.then) {
-							throw new EleventyNunjucksError(
+							throw new BuildAwesomeNunjucksError(
 								`Error with Nunjucks shortcode \`${shortcodeName}\`: it was defined as asynchronous but was actually synchronous. This is important for Nunjucks.`,
 							);
 						}
@@ -339,7 +342,7 @@ export default class Nunjucks extends TemplateEngine {
 							},
 							function (e) {
 								resolve(
-									new EleventyNunjucksError(
+									new BuildAwesomeNunjucksError(
 										`Error with Nunjucks paired shortcode \`${shortcodeName}\``,
 										e,
 									),
@@ -371,7 +374,7 @@ export default class Nunjucks extends TemplateEngine {
 							shortcodeFn.call(Nunjucks.normalizeContext(context), bodyContent, ...argArray),
 						);
 					} catch (e) {
-						throw new EleventyNunjucksError(
+						throw new BuildAwesomeNunjucksError(
 							`Error with Nunjucks paired shortcode \`${shortcodeName}\``,
 							e,
 						);
