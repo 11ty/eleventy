@@ -519,7 +519,7 @@ class TemplateData {
 		return this.config.dataExtensions && this.config.dataExtensions.size > 0;
 	}
 
-	async _parseDataFile(path, parser, options = {}) {
+	async #parseDataFile(path, parser, options = {}) {
 		let readFile = !("read" in options) || options.read === true;
 		let rawInput;
 
@@ -590,12 +590,12 @@ class TemplateData {
 			// Other extensions
 			let { parser, options } = this.getUserDataParser(extension);
 
-			let returnValue = this._parseDataFile(path, parser, options);
+			let returnValue = this.#parseDataFile(path, parser, options);
 
 			return returnValue;
 		} else if (extension === "json") {
 			// File to string, parse with JSON (preprocess)
-			let returnValue = this._parseDataFile(path, (content) => JSON.parse(content));
+			let returnValue = this.#parseDataFile(path, (content) => JSON.parse(content));
 
 			return returnValue;
 		} else {
