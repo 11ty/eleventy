@@ -14,15 +14,22 @@ if ! npm test; then
 	exit 1
 fi
 
-if [ -z "$NPM_PUBLISH_TAG" ]; then
-  echo 'Release error: missing NPM_PUBLISH_TAG environment variable'
+if [ -z "$NPM_BUILDAWESOME_PUBLISH_TAG" ]; then
+  echo 'Release error: missing NPM_BUILDAWESOME_PUBLISH_TAG environment variable'
+	exit 1
+fi
+
+if [ -z "$NPM_ELEVENTY_PUBLISH_TAG" ]; then
+  echo 'Release error: missing NPM_ELEVENTY_PUBLISH_TAG environment variable'
 	exit 1
 fi
 
 
 # Will skip publishing @11ty/client and @awesome.me/buildawesome if @11ty/eleventy fails
-if npm stage publish --provenance --access=public --tag=$NPM_PUBLISH_TAG $DRY_RUN; then
+# npm stage publish requires npm 11.15 or newer.
+if npm stage publish --provenance --access=public --tag=$NPM_ELEVENTY_PUBLISH_TAG $DRY_RUN; then
 	node packages/browser/update-package-json.js
+  npm stage publish --workspace=packages/browser --provenance --access=public --tag=$NPM_ELEVENTY_PUBLISH_TAG $DRY_RUN
 	node packages/build-awesome/update-package-json.js
-  npm stage publish --workspaces --provenance --access=public --tag=$NPM_PUBLISH_TAG $DRY_RUN
+  npm stage publish --workspace=packages/build-awesome --provenance --access=public --tag=$NPM_BUILDAWESOME_PUBLISH_TAG $DRY_RUN
 fi
