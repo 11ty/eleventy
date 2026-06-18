@@ -37,5 +37,10 @@ npm stage publish --workspace=packages/browser --provenance --access=public --ta
 # workspace: packages/build-awesome
 npm run typescript --workspace=packages/build-awesome
 
+# Re-use root README
+cp README.md packages/build-awesome/README.md
+mkdir -p packages/build-awesome/docs/
+cp -R docs/*.png packages/build-awesome/docs/
+
 node packages/build-awesome/update-package-json.js
 npm stage publish --workspace=packages/build-awesome --provenance --access=public --tag=$NPM_BUILDAWESOME_PUBLISH_TAG $DRY_RUN
