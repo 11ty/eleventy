@@ -14,7 +14,7 @@
 			"require": "./src/RequireEsmFeatureTest.cjs"
 		},
 		"./UserConfig": {
-			"types": "./src/UserConfig.js"
+			"types": "./types/UserConfig.d.ts"
 		},
 		"./utils/git": "./src/Util/Git.js",
 		"./cli": "./cmd.cjs"
@@ -61,9 +61,9 @@
 		"test:browser": "cross-env CI=true npm run test --workspaces",
 		"format": "prettier . --write",
 		"check": "eslint src",
-		"check-types": "tsc",
-		"nano-staged": "nano-staged",
+		"typescript": "tsc && node scripts/prune-types.js",
 		"coverage": "npx c8 ava && npx c8 report --reporter=json-summary && cp coverage/coverage-summary.json docs/_data/coverage.json && node cmd.cjs --config=docs/eleventy.coverage.js",
+		"nano-staged": "nano-staged",
 		"prepare": "simple-git-hooks"
 	},
 	"author": "Zach Leatherman <zachleatherman@gmail.com> (https://zachleat.com/)",

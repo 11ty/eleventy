@@ -1,19 +1,23 @@
 import { DeepCopy, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 
-import chalk from "./Adapters/Packages/chalk.js";
 import { createDebug } from "./Util/DebugLogUtil.js";
 import { resolvePlugin } from "./Util/ResolvePlugin.js";
 import isAsyncFunction from "./Util/IsAsyncFunction.js";
 import objectFilter from "./Util/Objects/ObjectFilter.js";
 import EventEmitter from "./Util/AsyncEventEmitter.js";
-import EleventyCompatibility from "./Util/Compatibility.js";
+import Compatibility from "./Util/Compatibility.js";
 import BaseError from "./Errors/BaseError.js";
 import BenchmarkManager from "./Benchmark/BenchmarkManager.js";
 import { augmentFunction } from "./Engines/Util/ContextAugmenter.js";
 
 const debug = createDebug("UserConfig");
 
-class UserConfigError extends BaseError {}
+class UserConfigError extends BaseError {
+	// TypeScript slop
+	constructor(message, originalError) {
+		super(message, originalError);
+	}
+}
 
 /**
  * Eleventy’s user-land Configuration API
@@ -216,7 +220,7 @@ export default class UserConfig {
 
 	// compatibleRange is optional in 2.0.0-beta.2
 	versionCheck(compatibleRange) {
-		let compat = new EleventyCompatibility(compatibleRange);
+		let compat = new Compatibility(compatibleRange);
 
 		if (!compat.isCompatible()) {
 			throw new UserConfigError(compat.getErrorMessage());
@@ -307,7 +311,7 @@ export default class UserConfig {
 
 		if (target[name]) {
 			debug(
-				chalk.yellow(`Warning, overwriting previous ${description} "%o" via \`%o(%o)\``),
+				`Warning, overwriting previous ${description} "%o" via \`%o(%o)\``,
 				name,
 				functionName,
 				originalName,
@@ -1089,10 +1093,7 @@ export default class UserConfig {
 		name = this.getNamespacedName(name);
 
 		if (this.nunjucks.globals[name]) {
-			debug(
-				chalk.yellow("Warning, overwriting a Nunjucks global with `addNunjucksGlobal(%o)`"),
-				name,
-			);
+			debug("Warning, overwriting a Nunjucks global with `addNunjucksGlobal(%o)`", name);
 		}
 
 		if (typeof globalType === "function") {

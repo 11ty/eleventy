@@ -1,3 +1,4 @@
+import ConsoleLogger from "../Util/ConsoleLogger.js";
 import BenchmarkGroup from "./BenchmarkGroup.js";
 
 class BenchmarkManager {
@@ -21,6 +22,7 @@ class BenchmarkManager {
 		return new Date().getTime();
 	}
 
+	/** @param {ConsoleLogger=} logger */
 	setLogger(logger) {
 		if (!logger) {
 			return;
@@ -33,6 +35,7 @@ class BenchmarkManager {
 		}
 	}
 
+	/** @param {string} name */
 	hasBenchmarkGroup(name) {
 		return name in this.benchmarkGroups;
 	}

@@ -1,15 +1,13 @@
 /**
  * This class serves as basis for all Eleventy-specific errors.
- * @ignore
  */
 export default class BaseError extends Error {
 	/**
 	 * @param {string} message - The error message to display.
-	 * @param {unknown} [originalError] - The original error caught.
+	 * @param {Error} [originalError] - The original error caught.
 	 */
 	constructor(message, originalError) {
 		if (originalError) {
-			// @ts-ignore
 			super(message, { cause: originalError });
 		} else {
 			super(message);

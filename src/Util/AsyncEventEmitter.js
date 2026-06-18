@@ -6,6 +6,8 @@ import { EventEmitter } from "node:events";
  * Note that Eleventy has two separate event emitter instances it uses:
  * 1. a userland one (UserConfig.js)
  * 2. a global one for internals (EventBus.js)
+ *
+ * @typedef {'parallel'|'sequential'} HandlerModeType
  */
 class AsyncEventEmitter extends EventEmitter {
 	#handlerMode = "parallel";
@@ -64,6 +66,10 @@ class AsyncEventEmitter extends EventEmitter {
 		}
 	}
 
+	/**
+	 * @param {string} type
+	 *
+	 */
 	getAliasedListeners(type) {
 		if (this.#emitAliases[type]) {
 			let listeners = [];
@@ -131,6 +137,7 @@ class AsyncEventEmitter extends EventEmitter {
 		return this.emit.call(this, type, ...argsMap);
 	}
 
+	/** @param {HandlerModeType} mode  */
 	setHandlerMode(mode) {
 		this.#handlerMode = mode;
 	}

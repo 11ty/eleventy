@@ -55,7 +55,15 @@ class ConsoleLogger {
 	}
 
 	get logger() {
-		return this.#logger || console;
+		if (this.#logger) {
+			return this.#logger;
+		}
+		if ("console" in globalThis) {
+			return globalThis.console;
+		}
+		throw new Error(
+			"Internal JavaScript runtime error: No logger instance found (is globalThis not supported?).",
+		);
 	}
 
 	/** @param {string} msg */

@@ -20,6 +20,9 @@ api-docs/
 # Ignore build output when doing manual tests
 _site/
 
+# Don’t check-in types
+types/
+
 # Ignore test files
 .cache
 test/stubs-layout-cache/_includes/*.js

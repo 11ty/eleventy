@@ -11,12 +11,13 @@
   "exports": {
     ".": "./src/Core.js",
     "./UserConfig": {
-      "types": "./src/UserConfig.d.ts"
+      "types": "./types/UserConfig.d.ts"
     },
     "./utils/git": "./src/Util/Git.js"
   },
   "scripts": {
-    "test": ""
+    "test": "",
+		"typescript": "tsc"
   },
   "bin": {
     "buildawesome": "cmd.js"
@@ -31,5 +32,8 @@
   "homepage": "https://build.awesome.me/",
   "dependencies": {
     "@11ty/eleventy": "file:../../"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3"
   }
 }

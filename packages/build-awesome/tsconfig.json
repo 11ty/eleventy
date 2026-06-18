@@ -2,10 +2,7 @@
 	"include": [
 		// "src/Core.js",
 		"src/UserConfig.js",
-		"src/Util/ConsoleLogger.js",
-		"src/Util/ResolvePlugin.js",
-		"src/Util/AsyncEventEmitter.js",
-		"src/Benchmark/BenchmarkManager.js",
+		"src/Util/Git.js",
 	],
 	"exclude": [],
 
