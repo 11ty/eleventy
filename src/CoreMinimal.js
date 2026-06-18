@@ -22,6 +22,7 @@ import {
 } from "./Util/ImportJsonSync.js";
 import ProjectTemplateFormats from "./Util/ProjectTemplateFormats.js";
 import { setEnvValue } from "./Util/EnvironmentVars.cjs";
+import { isUsingBuildAwesome } from "./Util/IsBuildAwesome.js";
 
 const pkg = getCorePackageJson();
 const debug = createDebug("Core");
@@ -234,20 +235,6 @@ export class CoreMinimal {
 		return CoreMinimal.getVersion();
 	}
 
-	isUsingBuildAwesome() {
-		if (typeof this.#activeConfigurationPath !== "string") {
-			return;
-		}
-
-		if (
-			process?.env?.BUILDAWESOME_PACKAGE === "@awesome.me/buildawesome" ||
-			this.#activeConfigurationPath.includes("buildawesome.config")
-		) {
-			return true;
-		}
-		return false;
-	}
-
 	async initializeConfig(initOverrides) {
 		if (!this.eleventyConfig) {
 			this.eleventyConfig = new TemplateConfig(null, this.configPath);
@@ -258,7 +245,7 @@ export class CoreMinimal {
 		this.#activeConfigurationPath =
 			this.configPath ?? this.eleventyConfig.getLocalProjectConfigFile();
 
-		if (this.isUsingBuildAwesome()) {
+		if (isUsingBuildAwesome()) {
 			this.logger.setPrefix(`[buildawesome]`);
 		}
 

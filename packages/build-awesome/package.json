@@ -17,7 +17,7 @@
   },
   "scripts": {
     "test": "",
-		"typescript": "tsc"
+    "typescript": "tsc"
   },
   "bin": {
     "buildawesome": "cmd.js"

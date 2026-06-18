@@ -7,7 +7,7 @@
 1. (Optional) Update minor dependencies in package.json
    - `npx npm-check-updates --target minor -u --dep prod`
    - or `npm outdated` + `npm update --save`
-1. Stable release only: make sure there aren’t any `@11ty/*` dependencies on pre-release versions alpha/beta/canary
+1. Stable release only: make sure there aren’t any `file:` dependencies or `@11ty/*` dependencies on pre-release versions alpha/beta/canary
 1. If the minimum Node version changed, make sure you update `package.json` engines property.
    - Make sure the error message works correctly for Node versions less than 10.
      - 0.12.x+ requires Node 10+
@@ -15,7 +15,7 @@
      - 2.x+ requires Node 14+
      - 3.x+ requires Node 18+
      - 4.x+ requires Node 22+
-1. `rm -rf node_modules && rm -f package-lock.json && npm install`
+1. `npm install`
 1. `npm audit --omit=dev`
 1. Make sure `npm run check` (eslint) runs okay
 1. Make sure `npm run test` (ava) runs okay
