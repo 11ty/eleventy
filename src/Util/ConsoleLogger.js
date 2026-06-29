@@ -1,6 +1,8 @@
 import { createDebug } from "./DebugLogUtil.js";
 import chalk from "../Adapters/Packages/chalk.js";
 
+import { isUsingBuildAwesome } from "../Util/IsBuildAwesome.js";
+
 const debug = createDebug("Logger");
 
 /**
@@ -15,13 +17,20 @@ class ConsoleLogger {
 	/** @type {object|boolean|undefined} */
 	#logger;
 	/** @type {string} */
-	#logPrefix = "[11ty]";
+	#defaultLogPrefix = "[11ty]";
 	/** @type {object} */
 	#colorFallbacks = {
 		info: "blue",
 		warn: "yellow",
 		error: "red",
 	};
+
+	constructor() {
+		// via ENV variables
+		if (isUsingBuildAwesome()) {
+			this.setPrefix(`[buildawesome]`);
+		}
+	}
 
 	isLoggingEnabled() {
 		if (!this.isVerbose || process.env.DEBUG) {
@@ -31,7 +40,7 @@ class ConsoleLogger {
 	}
 
 	setPrefix(prefix) {
-		this.#logPrefix = prefix;
+		this.#defaultLogPrefix = prefix;
 	}
 
 	get isVerbose() {
@@ -132,7 +141,7 @@ class ConsoleLogger {
 			debug(message);
 		} else if (this.#logger !== false) {
 			if (prefix === undefined) {
-				prefix = this.#logPrefix;
+				prefix = this.#defaultLogPrefix;
 			}
 
 			let prefixStr = prefix ? `${this.#dim(prefix)} ` : "";
