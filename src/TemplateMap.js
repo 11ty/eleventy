@@ -356,16 +356,19 @@ class TemplateMap {
 
 			for (let pageEntry of map._pages) {
 				// Data Schema callback #879
-				let { location: dataSchemaLocation, value: dataSchema } = ResolveConfigurationData.resolve(
+				let dataSchemaCallback = ResolveConfigurationData.getValue(
 					pageEntry.data,
 					this.config.keys.dataSchema,
 				);
-				if (dataSchema !== undefined && typeof dataSchema === "function") {
+				if (dataSchemaCallback !== undefined && typeof dataSchemaCallback === "function") {
 					try {
-						await dataSchema(pageEntry.data);
+						await dataSchemaCallback(pageEntry.data);
 					} catch (e) {
+						let dataSchemaLocation = ResolveConfigurationData.getEligibleLocations(
+							this.config.keys.dataSchema,
+						);
 						throw new BaseError(
-							`Error in the data schema for: ${map.inputPath} (via \`${dataSchemaLocation}\`)`,
+							`Error in the data schema for: ${map.inputPath} (via \`${dataSchemaLocation.join("` or `")}\`)`,
 							e,
 						);
 					}

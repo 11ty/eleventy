@@ -1208,7 +1208,7 @@ test("Eleventy data schema (fails) #879", async (t) => {
   elev.disableLogger();
 
   let e = await t.throwsAsync(() => elev.toJSON(), {
-    message: 'Error in the data schema for: ./test/stubs-virtual/index1.html (via `eleventyDataSchema`)'
+    message: 'Error in the data schema for: ./test/stubs-virtual/index1.html (via `buildawesomeDataSchema` or `eleventyDataSchema`)'
   });
 
   t.is(e.cause.toString(), "Error: Invalid data type for draft.");
@@ -1234,7 +1234,7 @@ test("Eleventy data schema (fails, using zod) #879", async (t) => {
   elev.disableLogger();
 
   let e = await t.throwsAsync(() => elev.toJSON(), {
-    message: 'Error in the data schema for: ./test/stubs-virtual/index1.html (via `eleventyDataSchema`)'
+    message: 'Error in the data schema for: ./test/stubs-virtual/index1.html (via `buildawesomeDataSchema` or `eleventyDataSchema`)'
   });
 
   t.is(e.cause.toString(), 'Validation error: Invalid input: expected boolean, received number at "draft" or Invalid input: expected undefined, received number at "draft"');

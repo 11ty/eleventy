@@ -1,4 +1,5 @@
 import lodash from "@11ty/lodash-custom";
+import { isPlainObject, DeepCopy } from "@11ty/eleventy-utils";
 
 const { set: lodashSet, get: lodashGet } = lodash;
 
@@ -6,6 +7,7 @@ const { set: lodashSet, get: lodashGet } = lodash;
 // eleventyDataSchema looks for eleventyDataSchema (and not buildawesomeDataSchema)
 export class ResolveConfigurationData {
 	static ELIGIBLE_PROPS = new Set([
+		// If these props are overridden by a user’s configuration, they will not be aliased (which is ok)
 		"buildawesomeComputed",
 		"buildawesomeDataSchema",
 		"buildawesomeExcludeFromCollections",
@@ -32,31 +34,25 @@ export class ResolveConfigurationData {
 		return eligibleLocations;
 	}
 
-	static resolve(data, location) {
-		let eligible = this.getEligibleLocations(location);
-		for (let loc of eligible) {
-			let val = lodashGet(data, loc, undefined);
-			if (val !== undefined) {
-				return {
-					location: loc,
-					value: val,
-				};
-			}
-		}
-
-		return {
-			location: undefined,
-		};
-	}
-
 	static getValue(data, location) {
 		let eligible = this.getEligibleLocations(location);
+		let merging;
 
 		for (let loc of eligible) {
 			let val = lodashGet(data, loc, undefined);
-			if (val !== undefined) {
+			if (val === undefined) {
+				continue;
+			}
+
+			if (isPlainObject(val)) {
+				merging = DeepCopy(merging || {}, val);
+			} else if (Array.isArray(val)) {
+				merging = DeepCopy(merging || [], val);
+			} else if (merging === undefined) {
 				return val;
 			}
 		}
+
+		return merging;
 	}
 }
