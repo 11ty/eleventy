@@ -216,51 +216,115 @@ export default class Nunjucks extends TemplateEngine {
 		}
 	}
 
-	_getShortcodeFn(shortcodeName, shortcodeFn, isAsync = false) {
+	_getShortcodeFn(shortcodeName, shortcodeFn) {
 		return function ShortcodeFunction() {
 			this.tags = [shortcodeName];
 
 			this.parse = function (parser, nodes) {
-				let args;
 				let tok = parser.nextToken();
-
-				args = parser.parseSignature(true, true);
+				let args = parser.parseSignature(true, true);
 
 				// Nunjucks bug with non-paired custom tags bug still exists even
 				// though this issue is closed. Works fine for paired.
 				// https://github.com/mozilla/nunjucks/issues/158
 				// https://github.com/11ty/eleventy/issues/372
-				if (args.children.length === 0) {
-					// Changed from an empty string to an empty NodeList
-					// https://github.com/11ty/eleventy/issues/3788
-					args.addChild(new nodes.NodeList());
-				}
+
+				// v4.0.0-alpha.1 changed from an empty string to an empty NodeList
+				// https://github.com/11ty/eleventy/issues/3788
+
+				// v4.0.0-alpha.9 fixed the issue upstream in Nunjucks core.
 
 				parser.advanceAfterBlockEnd(tok.value);
-				if (isAsync) {
-					return new nodes.CallExtensionAsync(this, "run", args);
-				}
-				return new nodes.CallExtension(this, "run", args);
+
+				return new nodes.CallExtensionAsync(this, "run", args, null);
 			};
 
 			this.run = function (...args) {
-				let resolve;
-				if (isAsync) {
-					resolve = args.pop();
-				}
-
+				let resolve = args.pop();
 				let [context, ...argArray] = args;
 
-				if (isAsync) {
-					let ret = shortcodeFn.call(Nunjucks.normalizeContext(context), ...argArray);
+				let ret;
 
-					// #3286 error messaging when the shortcode is not a promise
-					if (!ret?.then) {
+				try {
+					ret = shortcodeFn.call(Nunjucks.normalizeContext(context), ...argArray);
+				} catch (e) {
+					resolve(
+						new BuildAwesomeNunjucksError(`Error with Nunjucks shortcode \`${shortcodeName}\``, e),
+					);
+				}
+
+				// v4.0.0-alpha.9: reverts #3286 error messaging when the shortcode is not a promise to return content
+				if (!Boolean(ret?.then)) {
+					resolve(null, new NunjucksLib.runtime.SafeString("" + ret));
+					return;
+				}
+
+				ret.then(
+					function (returnValue) {
+						resolve(null, new NunjucksLib.runtime.SafeString("" + returnValue));
+					},
+					function (e) {
 						resolve(
 							new BuildAwesomeNunjucksError(
-								`Error with Nunjucks shortcode \`${shortcodeName}\`: it was defined as asynchronous but was actually synchronous. This is important for Nunjucks.`,
+								`Error with Nunjucks shortcode \`${shortcodeName}\``,
+								e,
 							),
 						);
+					},
+				);
+			};
+		};
+	}
+
+	_getPairedShortcodeFn(shortcodeName, shortcodeFn) {
+		return function PairedShortcodeFunction() {
+			this.tags = [shortcodeName];
+
+			this.parse = function (parser, nodes) {
+				var tok = parser.nextToken();
+
+				var args = parser.parseSignature(true, true);
+				parser.advanceAfterBlockEnd(tok.value);
+
+				var body = parser.parseUntilBlocks("end" + shortcodeName);
+				parser.advanceAfterBlockEnd();
+
+				return new nodes.CallExtensionAsync(this, "run", args, [body]);
+			};
+
+			this.run = function (...args) {
+				let resolve = args.pop();
+				let body = args.pop();
+				let [context, ...argArray] = args;
+
+				body(function (e, bodyContent) {
+					if (e) {
+						resolve(
+							new BuildAwesomeNunjucksError(
+								`Error with Nunjucks paired shortcode \`${shortcodeName}\``,
+								e,
+							),
+						);
+					}
+
+					let ret;
+
+					try {
+						ret = shortcodeFn.call(Nunjucks.normalizeContext(context), bodyContent, ...argArray);
+					} catch (e) {
+						resolve(
+							new BuildAwesomeNunjucksError(
+								`Error with Nunjucks paired shortcode \`${shortcodeName}\``,
+								e,
+							),
+						);
+					}
+
+					// #3286 error messaging when the shortcode is not a promise
+					// v4.0.0-alpha.9 swapped to handle silently (async-everything)
+					if (!Boolean(ret?.then)) {
+						resolve(null, new NunjucksLib.runtime.SafeString("" + ret));
+						return;
 					}
 
 					ret.then(
@@ -270,117 +334,14 @@ export default class Nunjucks extends TemplateEngine {
 						function (e) {
 							resolve(
 								new BuildAwesomeNunjucksError(
-									`Error with Nunjucks shortcode \`${shortcodeName}\``,
+									`Error with Nunjucks paired shortcode \`${shortcodeName}\``,
 									e,
 								),
 							);
 						},
 					);
-				} else {
-					try {
-						let ret = shortcodeFn.call(Nunjucks.normalizeContext(context), ...argArray);
-						return new NunjucksLib.runtime.SafeString("" + ret);
-					} catch (e) {
-						throw new BuildAwesomeNunjucksError(
-							`Error with Nunjucks shortcode \`${shortcodeName}\``,
-							e,
-						);
-					}
-				}
+				});
 			};
-		};
-	}
-
-	_getPairedShortcodeFn(shortcodeName, shortcodeFn, isAsync = false) {
-		return function PairedShortcodeFunction() {
-			this.tags = [shortcodeName];
-
-			if (isAsync) {
-				this.parse = function (parser, nodes) {
-					var tok = parser.nextToken();
-
-					var args = parser.parseSignature(true, true);
-					parser.advanceAfterBlockEnd(tok.value);
-
-					var body = parser.parseUntilBlocks("end" + shortcodeName);
-					parser.advanceAfterBlockEnd();
-
-					return new nodes.CallExtensionAsync(this, "run", args, [body]);
-				};
-
-				this.run = function (...args) {
-					let resolve = args.pop();
-					let body = args.pop();
-					let [context, ...argArray] = args;
-
-					body(function (e, bodyContent) {
-						if (e) {
-							resolve(
-								new BuildAwesomeNunjucksError(
-									`Error with Nunjucks paired shortcode \`${shortcodeName}\``,
-									e,
-								),
-							);
-						}
-
-						let ret = shortcodeFn.call(
-							Nunjucks.normalizeContext(context),
-							bodyContent,
-							...argArray,
-						);
-
-						// #3286 error messaging when the shortcode is not a promise
-						if (!ret?.then) {
-							throw new BuildAwesomeNunjucksError(
-								`Error with Nunjucks shortcode \`${shortcodeName}\`: it was defined as asynchronous but was actually synchronous. This is important for Nunjucks.`,
-							);
-						}
-
-						ret.then(
-							function (returnValue) {
-								resolve(null, new NunjucksLib.runtime.SafeString(returnValue));
-							},
-							function (e) {
-								resolve(
-									new BuildAwesomeNunjucksError(
-										`Error with Nunjucks paired shortcode \`${shortcodeName}\``,
-										e,
-									),
-								);
-							},
-						);
-					});
-				};
-			} else {
-				this.parse = function (parser, nodes) {
-					var tok = parser.nextToken();
-
-					var args = parser.parseSignature(true, true);
-					parser.advanceAfterBlockEnd(tok.value);
-
-					var body = parser.parseUntilBlocks("end" + shortcodeName);
-					parser.advanceAfterBlockEnd();
-
-					return new nodes.CallExtension(this, "run", args, [body]);
-				};
-
-				this.run = function (...args) {
-					let body = args.pop();
-					let [context, ...argArray] = args;
-					let bodyContent = body();
-
-					try {
-						return new NunjucksLib.runtime.SafeString(
-							shortcodeFn.call(Nunjucks.normalizeContext(context), bodyContent, ...argArray),
-						);
-					} catch (e) {
-						throw new BuildAwesomeNunjucksError(
-							`Error with Nunjucks paired shortcode \`${shortcodeName}\``,
-							e,
-						);
-					}
-				};
-			}
 		};
 	}
 
