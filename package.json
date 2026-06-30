@@ -164,7 +164,7 @@
 		"picomatch": "^4.0.4",
 		"posthtml": "^0.16.7",
 		"posthtml-match-helper": "^2.0.3",
-		"semver": "^7.8.4",
+		"semver": "^7.8.5",
 		"tinyglobby": "^0.2.17"
 	}
 }
