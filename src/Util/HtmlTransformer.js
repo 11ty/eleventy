@@ -17,6 +17,7 @@ export class HtmlTransformer {
 
 		/** @type {object} */
 		this.posthtmlProcessOptions = {
+			xmlMode: false,
 			recognizeNoValueAttribute: true,
 			closingSingleTag: "closeAs",
 		};

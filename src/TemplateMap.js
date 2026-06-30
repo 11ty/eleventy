@@ -2,6 +2,7 @@ import { isPlainObject, TemplatePath } from "@11ty/eleventy-utils";
 
 import TemplateCollection from "./TemplateCollection.js";
 import ErrorUtil from "./Errors/ErrorUtil.js";
+import BaseError from "./Errors/BaseError.js";
 import UsingCircularTemplateContentReferenceError from "./Errors/UsingCircularTemplateContentReferenceError.js";
 import DuplicatePermalinkOutputError from "./Errors/DuplicatePermalinkOutputError.js";
 import TemplateData from "./Data/TemplateData.js";
@@ -363,9 +364,9 @@ class TemplateMap {
 					try {
 						await dataSchema(pageEntry.data);
 					} catch (e) {
-						throw new Error(
+						throw new BaseError(
 							`Error in the data schema for: ${map.inputPath} (via \`${dataSchemaLocation}\`)`,
-							{ cause: e },
+							e,
 						);
 					}
 				}

@@ -22,7 +22,6 @@ import {
 } from "./Util/ImportJsonSync.js";
 import ProjectTemplateFormats from "./Util/ProjectTemplateFormats.js";
 import { setEnvValue } from "./Util/EnvironmentVars.cjs";
-import { isUsingBuildAwesome } from "./Util/IsBuildAwesome.js";
 
 const pkg = getCorePackageJson();
 const debug = createDebug("Core");
@@ -245,10 +244,6 @@ export class CoreMinimal {
 		this.#activeConfigurationPath =
 			this.configPath ?? this.eleventyConfig.getLocalProjectConfigFile();
 
-		if (isUsingBuildAwesome()) {
-			this.logger.setPrefix(`[buildawesome]`);
-		}
-
 		this.eleventyConfig.setRunMode(this.runMode);
 		this.eleventyConfig.setProjectUsingEsm(this.isEsm);
 		this.eleventyConfig.setLogger(this.logger);
@@ -273,7 +268,7 @@ export class CoreMinimal {
 
 		this.eleventyConfig.userConfig.directories = this.directories;
 
-		/* Programmatic API config */
+		/* Programmatic API config, this runs before the default config is initialized */
 		if (this.options.config && typeof this.options.config === "function") {
 			debug("Running options.config configuration callback (passed to constructor)");
 			// TODO use return object here?

@@ -34,7 +34,7 @@ export default async function getNewTemplate(
     templateData.extensionMap = map;
   }
   let tmpl = new Template(path, templateData, map, $config);
-  let logger = new ConsoleLogger();;
+  let logger = new ConsoleLogger();
   logger.isVerbose = false;
   tmpl.logger = logger;
 

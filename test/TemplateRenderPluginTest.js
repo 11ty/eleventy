@@ -159,6 +159,11 @@ test("Capture liquid render output to a njk variable", async (t) => {
   t.is(html, `4`);
 });
 
+test("Capture liquid render output to a njk variable (new async support for set)", async (t) => {
+  let html = await getTestOutputForFile("./test/stubs-render-plugin/capture-liquid-set.njk");
+  t.is(html, `4`);
+});
+
 test("Remap non-object data to data._ if object is not passed in", async (t) => {
   let html = await getTestOutputForFile("./test/stubs-render-plugin/bad-data.njk");
   t.is(html, "string");

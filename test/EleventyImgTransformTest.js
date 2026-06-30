@@ -38,7 +38,7 @@ test("Default image transform with multiple images", async (t) => {
   });
 
   let [result] = await elev.toJSON();
-	t.deepEqual(normalizeNewLines(result.content), `<img src="/multiple/IdthKOzqFA-350.png" alt="it’s a possum" loading="eager" decoding="async" width="350" height="685">
+	t.deepEqual(normalizeNewLines(result.content).trim(), `<img src="/multiple/IdthKOzqFA-350.png" alt="it’s a possum" loading="eager" decoding="async" width="350" height="685">
 <img src="/multiple/IdthKOzqFA-350.png" alt="it’s a possum" loading="lazy" decoding="async" width="350" height="685">`);
 });
 
