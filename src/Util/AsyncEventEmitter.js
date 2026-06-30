@@ -10,7 +10,8 @@ import { EventEmitter } from "node:events";
  * @typedef {'parallel'|'sequential'} HandlerModeType
  */
 class AsyncEventEmitter extends EventEmitter {
-	#handlerMode = "parallel";
+	// Breaking change v4.0.0-alpha.9, changed from "parallel". See #4293
+	#handlerMode = "sequential";
 
 	/* Order matters */
 	#emitAliases = {
