@@ -116,9 +116,8 @@ export default class Nunjucks extends TemplateEngine {
 		this.addFilters(this.config.nunjucksFilters);
 		this.addFilters(this.config.nunjucksAsyncFilters, true);
 
-		// TODO these all go to the same place (addTag), add warnings for overwrites
-		// TODO(zachleat): variableName should work with quotes or without quotes (same as {% set %})
-		// This was changed to be an async function in v4 but notably previous versions of synchronous paired shortcodes used CallExtensionAsync
+		// Changed from sync to async function in v4.0.0-alpha.9 (notably previous versions of synchronous paired shortcodes used CallExtensionAsync)
+		// Deprecated in v4.0.0-alpha.9. Use `{% set %}` which is now async-friendly
 		this.addPairedShortcode(
 			"setAsync",
 			async function (content, variableName) {
