@@ -1,6 +1,6 @@
 {
 	"name": "@11ty/eleventy",
-	"version": "4.0.0-alpha.9",
+	"version": "4.0.0-alpha.10",
 	"description": "A simpler way to build awesome web sites.",
 	"publishConfig": {
 		"access": "public",
