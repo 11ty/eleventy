@@ -27,7 +27,6 @@ const SPECIAL_COLLECTION_NAMES = {
 
 class TemplateMap {
 	#dependencyMapInitialized = false;
-	#templateData;
 
 	constructor(eleventyConfig) {
 		if (!eleventyConfig || eleventyConfig.constructor.name !== "TemplateConfig") {
@@ -59,10 +58,6 @@ class TemplateMap {
 			this._config = this.eleventyConfig.getConfig();
 		}
 		return this._config;
-	}
-
-	setTemplateData(templateData) {
-		this.#templateData = templateData;
 	}
 
 	async add(template) {

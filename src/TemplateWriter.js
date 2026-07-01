@@ -3,9 +3,7 @@ import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import Template from "./Template.js";
 import TemplateMap from "./TemplateMap.js";
 import BaseError from "./Errors/BaseError.js";
-import { ErrorHandler } from "./Errors/ErrorHandler.js";
 import ErrorUtil from "./Errors/ErrorUtil.js";
-import ConsoleLogger from "./Util/ConsoleLogger.js";
 import { createDebug } from "./Util/DebugLogUtil.js";
 
 const debug = createDebug("TemplateWriter");
@@ -402,9 +400,6 @@ class TemplateWriter {
 
 	async createTemplateMap(paths, to) {
 		this.templateMap = new TemplateMap(this.templateConfig);
-		if (this.templateData) {
-			this.templateMap.setTemplateData(this.templateData);
-		}
 
 		await this.#addToTemplateMap(paths, to);
 		await this.templateMap.cache();

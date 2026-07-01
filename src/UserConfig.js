@@ -1291,7 +1291,7 @@ export default class UserConfig {
 		throw new Error("The internal _normalizeTemplateFormats() method was removed in Eleventy v3");
 	}
 
-	configureTemplateHandling(options = {}) {
+	configureTemplateHandling() {
 		// Was used for sync/async swapping on file write operations
 		throw new Error("Internal configuration API method `configureTemplateHandling` was removed.");
 	}

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import matter from "@11ty/gray-matter";
 import lodash from "@11ty/lodash-custom";
-import { Merge, DeepCopy, TemplatePath } from "@11ty/eleventy-utils";
+import { DeepCopy, TemplatePath } from "@11ty/eleventy-utils";
 
 import JavaScriptFrontMatter from "./Engines/FrontMatter/JavaScript.js";
 import { createDebug } from "./Util/DebugLogUtil.js";

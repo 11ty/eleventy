@@ -15,7 +15,6 @@ import {
 import { DynamicImport, LoadContent } from "../Util/Require.js";
 import { DeepFreeze } from "../Util/Objects/DeepFreeze.js";
 import { coerce } from "../Util/SemverCoerce.js";
-import ProjectDirectories from "../Util/ProjectDirectories.js";
 import ReservedData from "../Util/ReservedData.js";
 import { isTypeScriptSupported } from "../Util/TypeScriptFeatureTest.cjs";
 import { ResolveConfigurationData } from "../Data/ResolveConfigurationData.js";

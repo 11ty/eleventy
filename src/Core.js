@@ -81,9 +81,8 @@ export default class Core extends CoreFs {
 
 	/**
 	 * @param {string} changedFilePath - File that triggered a re-run (added or modified)
-	 * @param {boolean} [isResetConfig] - are we doing a config reset
 	 */
-	#resetFileInWatchQueue(changedFilePath, isResetConfig) {
+	#resetFileInWatchQueue(changedFilePath) {
 		// v3.1.0: `eleventy.templateModified` is no longer used internally
 		// v4.0.0-alpha.8 `eleventy.templateModified` event removed
 

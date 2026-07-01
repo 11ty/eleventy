@@ -254,7 +254,7 @@ export default class Nunjucks extends TemplateEngine {
 				}
 
 				// v4.0.0-alpha.9: reverts #3286 error messaging when the shortcode is not a promise to return content
-				if (!Boolean(ret?.then)) {
+				if (!ret?.then) {
 					resolve(null, new NunjucksLib.runtime.SafeString("" + ret));
 					return;
 				}
@@ -322,7 +322,7 @@ export default class Nunjucks extends TemplateEngine {
 
 					// #3286 error messaging when the shortcode is not a promise
 					// v4.0.0-alpha.9 swapped to handle silently (async-everything)
-					if (!Boolean(ret?.then)) {
+					if (!ret?.then) {
 						resolve(null, new NunjucksLib.runtime.SafeString("" + ret));
 						return;
 					}

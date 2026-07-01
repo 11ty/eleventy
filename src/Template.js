@@ -5,7 +5,6 @@ import lodash from "@11ty/lodash-custom";
 import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 
 import chalk from "./Adapters/Packages/chalk.js";
-import ConsoleLogger from "./Util/ConsoleLogger.js";
 import { createDebug } from "./Util/DebugLogUtil.js";
 import { getCreatedTimestamp, getUpdatedTimestamp } from "./Util/Git.js";
 import TemplateContent from "./TemplateContent.js";
@@ -38,7 +37,6 @@ class Template extends TemplateContent {
 
 	#cacheRenderedPromise;
 	#cacheRenderedTransformsAndLayoutsPromise;
-	#cacheRenderedDataLocationsTransformsAndLayoutsPromise;
 	#preprocessors;
 	#preprocessorCache;
 
@@ -142,7 +140,6 @@ class Template extends TemplateContent {
 		if (types.render) {
 			this.#cacheRenderedPromise = undefined;
 			this.#cacheRenderedTransformsAndLayoutsPromise = undefined;
-			this.#cacheRenderedDataLocationsTransformsAndLayoutsPromise = undefined;
 		}
 	}
 

@@ -1,10 +1,9 @@
-import { statSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 
 import { TemplatePath } from "@11ty/eleventy-utils";
 
 import { createDebug } from "./Util/DebugLogUtil.js";
 import DirContains from "./Util/DirContains.js";
-import TemplateData from "./Data/TemplateData.js";
 import TemplateGlob from "./TemplateGlob.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 

@@ -1,7 +1,7 @@
 import lodash from "@11ty/lodash-custom";
 import { isPlainObject, DeepCopy } from "@11ty/eleventy-utils";
 
-const { set: lodashSet, get: lodashGet } = lodash;
+const { get: lodashGet } = lodash;
 
 // buildawesomeDataSchema looks for buildawesomeDataSchema and eleventyDataSchema (this is what we use internally)
 // eleventyDataSchema looks for eleventyDataSchema (and not buildawesomeDataSchema)

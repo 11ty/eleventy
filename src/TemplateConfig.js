@@ -1,5 +1,4 @@
 import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
-import lodash from "@11ty/lodash-custom";
 
 import chalk from "./Adapters/Packages/chalk.js";
 import getDefaultConfig from "./Adapters/getDefaultConfig.js";
@@ -13,7 +12,6 @@ import eventBus from "./EventBus.js";
 import ProjectTemplateFormats from "./Util/ProjectTemplateFormats.js";
 import { expandEligibleJavaScriptFilePaths } from "./Util/FilePathUtil.js";
 
-const { set: lodashSet, get: lodashGet } = lodash;
 const debug = createDebug("TemplateConfig");
 
 /**

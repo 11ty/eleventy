@@ -1,6 +1,4 @@
 import module from "node:module";
-import { fileURLToPath } from "../Adapters/Packages/url.js";
-import PathNormalizer from "./PathNormalizer.js";
 import { resolve, addToModifiedPaths } from "./EsmResolver.js";
 import { getEnvValue } from "./EnvironmentVars.cjs";
 
